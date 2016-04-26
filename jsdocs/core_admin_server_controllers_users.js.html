@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: core/admin/server/controllers/users.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: core/admin/server/controllers/users.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>'use strict';
+
+/**
+ * Module dependencies.
+ */
+var mongoose = require('mongoose'),
+    User = mongoose.model('User'),
+    _ = require('lodash');
+
+/**
+ * Create user
+ *
+ * @param req - the required credentials to make a user
+ * @param res - the result of adding a new user
+ * @param next 
+ */
+exports.create = function(req, res, next) {
+    var user = new User(req.body);
+
+    user.provider = 'local';
+
+    // because we set our user.provider to local our models/user.js validation will always be true
+    req.assert('email', 'You must enter a valid email address').isEmail();
+    req.assert('password', 'Password must be between 8-20 characters long').len(8, 20);
+    req.assert('username', 'Username cannot be more than 20 characters').len(1, 20);
+    req.assert('confirmPassword', 'Passwords do not match').equals(req.body.password);
+
+    var errors = req.validationErrors();
+    console.log(errors);
+    if (errors) {
+        return res.status(400).send(errors);
+    }
+
+    // Hard coded for now. Will address this with the user permissions system in v0.3.5
+    //user.roles = ['authenticated'];
+    user.roles = req.body.roles;
+    user.save(function(err) {
+        if (err) {
+            switch (err.code) {
+                case 11000:
+                case 11001:
+                    res.status(400).send('Username already taken');
+                    break;
+                default:
+                    res.status(400).send('Please fill all the required fields');
+            }
+
+            return res.status(400);
+        }
+        res.jsonp(user);
+    });
+};
+
+/**
+ * Find user by id
+ *
+ * @param req - the required credentials to find a user
+ * @param res - the result of finding a new user
+ * @param next 
+ * @param id - the id of user
+ */
+exports.user = function(req, res, next, id) {
+    User
+        .findOne({
+            _id: id
+        })
+        .exec(function(err, user) {
+            if (err) return next(err);
+            if (!user) return next(new Error('Failed to load User ' + id));
+            req.profile = user;
+            next();
+        });
+};
+/**
+ * Update a user
+ *
+ * @param req - the required credentials to update a user
+ * @param res - the result of updating a new user
+ */
+exports.update = function(req, res) {
+    var user = req.profile;
+    user = _.extend(user, req.body);
+
+    user.save(function(err) {
+        res.jsonp(user);
+    });
+};
+
+/**
+ * Delete an user
+ *
+ * @param req - the required credentials to delete a user
+ * @param res - the result of deleting a new user
+ */
+exports.destroy = function(req, res) {
+    var user = req.profile;
+
+    user.remove(function(err) {
+        if (err) {
+            res.render('error', {
+                status: 500
+            });
+        } else {
+            res.jsonp(user);
+        }
+    });
+};
+
+/**
+ * List of Users
+ * 
+ *  @param req - the required credentials to find users
+ *  @param res - the result of list of ussers
+ */
+exports.all = function(req, res) {
+    User.find().sort('-created').populate('user', 'name username').exec(function(err, users) {
+        if (err) {
+            res.render('error', {
+                status: 500
+            });
+        } else {
+            res.jsonp(users);
+        }
+    });
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#all">all</a></li><li><a href="global.html#article">article</a></li><li><a href="global.html#authCallback">authCallback</a></li><li><a href="global.html#create">create</a></li><li><a href="global.html#destroy">destroy</a></li><li><a href="global.html#ExpertiseGraph">ExpertiseGraph</a></li><li><a href="global.html#forgotpassword">forgotpassword</a></li><li><a href="global.html#me">me</a></li><li><a href="global.html#mkdir_p">mkdir_p</a></li><li><a href="global.html#mongoose">mongoose</a></li><li><a href="global.html#publishEvent">publishEvent</a></li><li><a href="global.html#rename">rename</a></li><li><a href="global.html#resetpassword">resetpassword</a></li><li><a href="global.html#sendMail">sendMail</a></li><li><a href="global.html#session">session</a></li><li><a href="global.html#show">show</a></li><li><a href="global.html#signin">signin</a></li><li><a href="global.html#signout">signout</a></li><li><a href="global.html#update">update</a></li><li><a href="global.html#user">user</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Thu Mar 31 2016 17:12:55 GMT-0600 (MDT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

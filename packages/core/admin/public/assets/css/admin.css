@@ -1,0 +1,267 @@
+#admin-menu {
+    z-index:1;
+    position: fixed;
+    background-color: #176583;
+    height: 100%;
+    top: 50px;
+    width: 60px;
+}
+
+#admin-menu .nav > li > a:hover, .nav > li > a:focus {
+    text-decoration: none;
+    background-color: #103c4d;
+}
+
+#admin-menu .nav , #admin-menu .open-icon, #admin-menu .wrapper-ninja {
+    width: 60px;
+    background-color: #176583;
+    -webkit-transition-duration: 0.5s;
+    -moz-transition-duration: 0.5s;
+    -o-transition-duration: 0.5s;
+    -ms-transition-duration: 0.5s;
+}
+#admin-menu .open-icon {
+    padding: 15px 15px;
+    font-size: 1.5em;
+    color: #89D7F3;
+    cursor: pointer;
+    top: 0px;
+}
+#admin-menu .opened .open-icon {
+    text-align: right;
+}
+
+#admin-menu ul li {
+    border-bottom: solid 1px #217D99;
+}
+
+#admin-menu .stable .showbox {
+    position: absolute;
+    top: 0;
+    width: 0;
+    left: 60px;
+    line-height: 44px;
+    -webkit-transition-duration: 0.5s;
+    -moz-transition-duration: 0.5s;
+    -o-transition-duration: 0.5s;
+    -ms-transition-duration: 0.5s;
+    transition-property: width, font-size;
+    font-size: 0;
+    color: #89D7F3;
+    cursor: pointer;
+    background-color: #176583;
+    border-bottom: solid 1px #217D99;
+}
+
+#admin-menu .opened .nav, #admin-menu .opened .wrapper-ninja , #admin-menu .opened .open-icon {
+  width: 250px;
+}
+#admin-menu .opened .showbox {
+    font-size: inherit;
+}
+
+#admin-menu .wrapper-ninja {
+    height: 100%;
+    position: fixed;
+}
+
+#admin-menu .opened .ninja {
+    position:absolute;
+    width: 287px;
+}
+#admin-menu .ninja {
+    width: 0;
+    height: 305px;
+    background: url(/admin/assets/img/ninja/ninja.png) no-repeat;
+    position: absolute;
+    bottom: 60px;
+    left: 0px;
+    -webkit-transition-duration: 0.4s;
+    -moz-transition-duration: 0.5s;
+    -o-transition-duration: 0.5s;
+    -ms-transition-duration: 0.5s;
+}
+
+
+tr.disabled {
+    pointer-events: none;
+    opacity: 0.4;
+}
+
+span.editable-wrapper input {
+    width: 80%;
+}
+
+#admin-example-page form {
+    margin-top: 85px;
+}
+#modules-tab .wrapper {
+    margin-top: 35px;
+}
+
+
+#modules-tab .wrapper .grid-title.row {
+    background: white;
+    border: solid 1px rgb(232, 228, 225);
+    padding: 10px 0;
+}
+
+#modules-tab .wrapper .module {
+    background: rgb(254, 250, 247);
+    border: solid 1px rgb(232, 228, 225);
+    border-top: none;
+    padding: 10px 0;
+}
+
+#modules-tab .wrapper .module {
+    background: rgb(254, 250, 247);
+    border: solid 1px rgb(232, 228, 225);
+    border-top: none;
+    padding: 10px 0;
+    border-left: solid 3px #176583;
+}
+
+#modules-tab .wrapper .module .name {
+    font-weight: bold;
+}
+#modules-tab .wrapper .module a {
+    color: rgb(34, 134, 173);
+    font-size: 12px;
+}
+#tagSearchForm{
+    float: left;
+    margin-top: 5px;
+    margin-right: 10px;
+}
+#userinputgraph{
+    position: absolute;
+    left: 79%;
+    top: 2%;
+
+}
+.dimmed{
+    opacity: .3;
+}
+.hideLine{
+    opacity: 0!important;
+}
+#configImage{
+    float: right;
+    width: 35px;
+}
+.users .actions-bar {
+    clear: both;
+    margin: 20px 0;
+}
+/*  OPTIONS MENU
+
+*/
+.centeringContainer2{
+    z-index: 20000;
+    position: absolute;
+    pointer-events: none;
+    width: 100%;
+    height: 100%;
+    /*visibility: hidden;*/
+}
+
+#tutStart, #notesNrefs, #FAQs{
+  position: relative;
+  max-width: 780px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.dialog {
+    position: relative;
+    background: #fff;
+    border: solid 1px grey;
+    padding: 0px;
+    box-shadow: 6px 6px 12px;
+    min-width: 300px;
+    max-height: 800px;
+    overflow-y: auto;
+}
+.dlogContent {
+  font-size: 10pt;
+  color: #555;
+  margin: 25px 25px 5px 25px;
+}
+#butSp{
+  display:inline-block;
+  margin: 0 10px 0 0;
+  float:right;
+}
+.hiddenElem {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.dlogContent h2 {
+	margin-bottom:0px;
+   font-weight: bold;
+   color: rgb(0,108,144);
+}
+.dlogContent h2 {
+    font-size:16pt;
+	margin-bottom:0px;
+   font-weight: bold;
+   color: rgb(0,108,144);
+}
+.dlogContent p {
+	font-size: 10pt;
+	margin-bottom:3px;
+	margin-top:0px;
+}
+.dlogNext, .dlogExit, .dlogBack, .dlDataCancel, .dlDataSubmit{
+  float:right;
+  min-width: 50px;
+  padding: 1px 4px;
+  text-align: center;
+  font-size: 10pt;
+  border: solid 1px grey;
+  margin-left:auto;
+  margin-right:3px;
+  margin-top: 10px;
+  margin-bottom:15px;
+  color: grey;
+  cursor: pointer;
+}
+#graphOptionsMenu{
+    width:50%;
+    min-width: 400px;
+    margin: 0px auto;
+    pointer-events: all;
+}
+.optionButton, .optionText{
+    display: inline-block;
+}
+.optionButton{
+    float: right;
+}
+.graphOptionSection{
+    max-width: 30%
+}
+input[type=radio]:not(old):checked + label > span > span{
+  display          : block;
+  width            : 0.5em;
+  height           : 0.5em;
+  margin           : 0.125em;
+  border           : 0.0625em solid rgb(115,153,77);
+  border-radius    : 0.125em;
+  background       : rgb(153,204,102);
+  background-image :    -moz-linear-gradient(rgb(179,217,140),rgb(153,204,102));
+  background-image :     -ms-linear-gradient(rgb(179,217,140),rgb(153,204,102));
+  background-image :      -o-linear-gradient(rgb(179,217,140),rgb(153,204,102));
+  background-image : -webkit-linear-gradient(rgb(179,217,140),rgb(153,204,102));
+  background-image :         linear-gradient(rgb(179,217,140),rgb(153,204,102));
+}
+
+/*ul {
+  list-style-type: none;
+}*/
+#loadingImage{
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+}

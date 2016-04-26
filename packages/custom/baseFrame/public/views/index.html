@@ -1,0 +1,157 @@
+<div id="baseApplication" data-ng-controller="BaseFrameController">
+
+    <div class="repo" ng-controller="MyHeaderController as hdrctr" ng-show="!hdrctr.hdrvars.authenticated">
+        <div ng-controller="RepositoryController">
+            <div class='centeringContainer2' style="top:0px; ">
+                <div id="graphOptionsMenu" class="dialog hidden">
+                    <div class="dlogContent">
+                        <h3>
+                            Graph Options
+                        </h3>
+
+                        <h2 style="margin-bottom:10px;">
+                            For Stackoverflow occurrences and co-occurrences, use: <br>
+                        </h2>
+                        <div id='soOptions' class='graphOptionSection'>
+                            <p class='optionText'>Linear scale:</p><input ng-click='setGraphOptionSO("linear")' id="linearSizeOccurrences" type="checkbox" name="field" value="option" class='optionButton'> </br>
+                            <p class='optionText'>Log Scale</p><input ng-click='setGraphOptionSO("log")' id="logSizeOccurrences" type="checkbox" name="field" value="option" class='optionButton'></br>
+                            <p class='optionText'>Square Root Scale</p><input ng-click='setGraphOptionSO("sqrt")' id="sqrtSizeOccurrences" type="checkbox" name="field" value="option" class='optionButton'></br>
+                        </div>
+
+                        <h2 style="margin-bottom:10px;">
+                            For Developer or text occurrences, use: <br>
+
+                        </h2>
+                        <div id='gitOptions' class='graphOptionSection'>
+                            <p class='optionText'>Linear scale:</p><input ng-click='setGraphOptionGit("linear")' id="linearSizeOccurrences" type="checkbox" name="field" value="option" class='optionButton'> </br>
+                            <p class='optionText'>Log Scale</p><input ng-click='setGraphOptionGit("log")' id="logSizeOccurrences" type="checkbox" name="field" value="option" class='optionButton'></br>
+                            <p class='optionText'>Square Root Scale</p><input ng-click='setGraphOptionGit("sqrt")' id="sqrtSizeOccurrences" type="checkbox" name="field" value="option" class='optionButton'></br>
+                        </div>
+
+                        <h2 style="margin-bottom:10px;">
+                            For Graph Edges, use: <br>
+                        </h2>
+                        <div id='directionOptions' class='graphOptionSection'>
+                            <p class='optionText'>Directed</p><input ng-click='setGraphOptionDirected(true)' id="directedtrue" type="checkbox" name="field" value="option" class='optionButton'></br>
+                            <p class='optionText'>Undirected</p><input ng-click='setGraphOptionDirected(false)' id="directedfalse" type="checkbox" name="field" value="option" class='optionButton'></br>
+                        </div>
+
+                        <h2 style="margin-bottom:10px">
+                            For Similarity use Cosine similarity:
+                        </h2>
+                        <div id='directionOptions' class='graphOptionSection'>
+                            <p class='optionText'>Directed</p><input ng-click='setGraphOptionCosine(true)' id="cosineTrue" type="checkbox" name="field" value="option" class='optionButton'></br>
+                        </div>
+                        <h2 style="margin-bottom:10px">
+                            For Similarity use Jacard similarity:
+                        </h2>
+                        <div id='directionOptions' class='graphOptionSection'>
+                            <p class='optionText'>Adjusted Node Weights</p><input ng-click='setGraphOptionAdjustedWeight(true)' id="adjTrue" type="checkbox" name="field" value="option" class='optionButton'></br>
+                        </div>
+                        <!-- <div id='directionOptions' class='graphOptionSection'>
+                            <p class='optionText'>Adjusted Node and Edge Weight</p><input ng-click='setGraphOptionCosine(true)' id="cosineTrue" type="checkbox" name="field" value="option" class='optionButton'></br>
+                        </div> -->
+
+                    </div>
+                    <div id="butSp">&nbsp;</div><div id="closeNotes" ng-click='closeAndResetOptions()'class="dlogExit">Close</div><div id="waitMsg" style="margin-bottom:15px">&nbsp;</div>
+                </div>
+
+            </div>
+            <div id='leftSelectionPanel'>
+                <div id='repositorySearch'>
+                    <div class='searchBoxInput'>
+                        <p>Search for a repository:</p>
+                        <form ng-submit="queryRepos()">
+                            <input type='text' ng-model="repoSearchBox" name='repoSearchBox' class='searchTextBox' placeholder='Find A Repo'>
+                        </form>
+                    </div>
+                    <div id='repoSelection' class='hidden'>
+                        <!-- <h2>Repositories Matching {{ repoSearchBox }}: </h2> -->
+                        <div class='searchResults repoResluts'>
+                            <div ng-repeat="repo in repos ">
+                                <button class='repoInfo repoListItem' ng-click="getRepoInformation(repo.name)">
+                                    {{ repo.name}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id='repositoyInfoDisplay' class='hidden'>
+                    <h2> {{ repoName }}: </h2>
+                    <div id='userSelection' class='graphSelection'>
+                        <h3>Users</h3>
+                        <div class='searchResults userResults '>
+                            <div ng-repeat="user in users ">
+                                <button class='userInfo repoListItem' ng-click="displayUserExpertise(user.name)">
+                                    {{ user.name}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id='issueSelection' class='graphSelection'>
+                        <h3>Issues</h3>
+
+                        <div class='searchResults issueResults '>
+                            <div ng-repeat="issue in issues ">
+                                <button class='issueInfo repoListItem' ng-click="displayIssueTags(issue.title,issue.body,issue.id)">
+                                    {{ issue.title}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- <div id='displayMatchingResults' style="display:none;">
+                    <ul ng-repeat="matches in matchingTags ">
+                      <li> {{matches.tag}} : {{matches.count}}</li>
+                    </ul>
+                  <!-- <ul ng-repeat="matches in tagOccurrences ">
+                    <li > {{matches}}</li>
+                  </ul>
+                </div> -->
+            </div>
+            <div id="expertiseGraphDiv">
+                <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
+                <p id='similarText' class='hidden' style="position: absolute;"> The user and bug have a similarity of : <span id = 'similarityValue'></span> </p>
+                <div id='userinputgraph'>
+                    <form ng-submit="findTag()" id="tagSearchForm">
+                        <input type='text' ng-model="nodeSearchBox" name='nodeSearchBox' class='searchTextBox' placeholder='Find A Tag'>
+                    </form>
+                    <img id="configImage"  ng-click="displayOptionsMenu(true)" src="/baseFrame/assets/img/settings-grey1.png">
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+    <div style="background-image: url(/theme/assets/img/bg.png);  height: 1030px; " ng-controller="MyHeaderController as hdrctr" ng-show="hdrctr.hdrvars.authenticated">
+        <br>
+         <div class="form tsv-form login-form__right">
+
+                    <br>
+                    <h3 style="text-align:center"> Welcome Adminstrator {{hdrctr.hdrvars.user.name}} </h3>
+                    <br>
+                    <div class="greyside col-md-12 example-block">
+                    <h4 style="text-align:center">You have the ability to: </h4>
+                    <br>
+                    <ul>
+                        <li >Register an Administator </li>
+                        <li >Download or Upload a new tag.tsv, coOccurences.tsv, or commonUsers.tsv</li>
+                    </ul>
+                    </div>
+                     <div class="col-md-12 separator"><p>_____________________________________________________________________</p></div>
+
+                    <h4 style="text-align:center"> To return to the Software Expertise HomePage
+                        <br> please logout: </br> </h4>
+                        <br>
+                    <div class="button_greenbutton" style="text-align:center">
+                        <button id="adminLogOutPage" ng-click="hdrctr.logout()" class="submit_button">Log Out</button>
+                </div>
+
+        </div>
+    </div>

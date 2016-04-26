@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites>
+ <testsuite name="acceptance testing" timestamp="2016-03-17T21:58:29" hostname="localhost" time="8.314" errors="0" tests="2" skipped="0" disabled="0" failures="0">
+  <testcase classname="acceptance testing" name="should select a project that is not in database" time="6.193" />
+  <testcase classname="acceptance testing" name="should log an admin in and out" time="2.117" />
+ </testsuite>
+</testsuites>
