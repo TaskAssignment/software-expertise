@@ -78,7 +78,6 @@ var https = require('https');
 
     app.post('/api/baseFrame/soTags',function(req,res,next){
         res.send(JSON.stringify(soTAGS));
-
     });
     app.post('/api/baseFrame/graphConfig', function(req, res, next){
         var graphConfig = {
@@ -104,7 +103,6 @@ var https = require('https');
         res.send(JSON.stringify(commonUserFilter.top(Infinity)));
     });
     function calculateSimilarity (bugTags, userTags, TagCountServices){
-        // if()
         var countValues = function(ary, classifier) {
             return ary.reduce(function(counter, item) {
                 var p = (classifier || String)(item);
@@ -274,14 +272,10 @@ var https = require('https');
         }
         function calculateEdgeAndNodeSimilarity(){
             var justNodeSim = calculateJustNodeSimilarity();
-
         }
         if(graphConfig['similarityType'] == 'jacard') {
-
             return calculateJustNodeSimilarity();
-
         } else  {
-
             return calculateCosineSimilarity();
         }
     }
@@ -352,8 +346,6 @@ var https = require('https');
             var tagsForDev =[];
             var gitReq = https.get(getReqOptions, function(results){
                 // Buffer the body entirely for processing as a whole.
-
-
                  var bodyChunks = '';
                  results.on('data', function(chunk) {
                    // You can process streamed parts here...
@@ -383,12 +375,8 @@ var https = require('https');
                    }
 
                   });
-
-
                    // ...and/or process the entire body here.
             })
-
-
         } else {
             var textA = req.body['textA'];
             var textAWords = textA.split(' ');
@@ -415,8 +403,6 @@ var https = require('https');
             var tagsForDev =[];
             var gitReq = https.get(getReqOptions, function(results){
                 // Buffer the body entirely for processing as a whole.
-
-
                  var bodyChunks = '';
                  results.on('data', function(chunk) {
                    // You can process streamed parts here...
@@ -491,143 +477,52 @@ var https = require('https');
                                 res.send(similarityBetweenBugAndUser.toString());
                             }
                         });
-
-
                           // ...and/or process the entire body here.
                    })
-
-
-
                   });
-
-
                    // ...and/or process the entire body here.
             })
         }
 
     })
     app.post('/api/baseFrame/coOccurence', function (req, res, next) {
-        //   d3.tsv().defer(fileName)
-        //     .await(function(error,file){
-        //             coOccurrencesData = file;
-        //     });
         var stringRes = '';
         if (req.body['getEverything'] == "true"){
-
-            //console.log("in get everything");
 
              tag1Filter.filter(null);
 
              var f1Data =tag1Filter.top(Infinity);
-            // var f2Data = tag2Filter.top(Infinity);
-            // var allCoocurrences = f2Data.concat(f1Data);
-            // coOccurenceResults  = coOccurenceResults.concat(f1Data);
-        // }
 
           res.send(JSON.stringify(f1Data));
           tag1Filter.filter();
 
         } else {
-
-          //console.log("NOT in get everything");
-         // console.log(req.body['getEverything']);
-          // var tagsToFilter = ['d3.js','javascript','jquery','html'];
           var tagsToFilter;
           for(var key in req.body) {
               if(req.body.hasOwnProperty(key))
               {
-                  //do something with e.g. req.body[key]
-                  // tagsToFilter.push(req.body[key]);
                   tagsToFilter = req.body[key];
               }
           }
 
-
           var filterPairings = [];
-          // for(var i = 0; i < tagsToFilter.length - 1; i++){ //match all but last
-          //     for(var j = i + 1; j < tagsToFilter.length; j++){
-          //         filterPairings.push({
-          //             'tag1': tagsToFilter[i],
-          //             'tag2': tagsToFilter[j]
-          //         });
-          //     }
-          // }
-          // res.send(JSON.stringify(filterPairings));
 
-          var coOccurenceResults =[];
-          // for(var i = 0; i < filterPairings.length; i++){
-          // tag2Filter.filter();
+          var coOccurenceResults = [];
           tag1Filter.filter(function(d,i){
-
               if(tagsToFilter.indexOf(d.Tag1) !== -1 &&
                   tagsToFilter.indexOf(d.Tag2) !== -1){
-
                   return true;
-
               } else {
                   return false;
               }
-              // if(filterPairings[i].tag1 === d ||
-              //     filterPairings[i].tag2 === d) {
-              //     return true;
-              // } else {
-              //     return false;
-              // }
           });
-          // tag1Filter.filter();
 
           var f1Data =tag1Filter.top(Infinity);
-          // var f2Data = tag2Filter.top(Infinity);
-          // var allCoocurrences = f2Data.concat(f1Data);
-          // coOccurenceResults  = coOccurenceResults.concat(f1Data);
-      // }
 
           res.send(JSON.stringify(f1Data));
           tag1Filter.filter();
         }
 
-    });
-
-    // Joel's API Test
-    app.get('/api', function (req, res, next) {
-      // Could be pulling from Mongo or w/e you want here
-      res.send('API is running, we can add any request here');
-    });
-    app.get('/', function(req, res){
-        res.send('hello world');
-    });
-
-    // Joel's API Test w/ params
-    app.post('/api/fuzzyDistance', function (req, res, next) {
-      // Could be pulling from Mongo or w/e you want here
-        var paramString = '';
-        for(var key in req.body) {
-            if(req.body.hasOwnProperty(key))
-            {
-                //do something with e.g. req.body[key]
-                paramString = paramString + ' ' + key + ': ' + req.body[key] + '\n';
-            }
-        }
-        res.send(paramString);
-      //res.send('Stack Overflow ID: ' + req.body.stackId + '\nGithub ID: ' + req.body.githubId +
-      //    '\nUsername: ' + req.body.name + '\nKeyword: ' +  req.body.keyword);
-    });
-
-    app.get('/api/baseFrame/example/auth', auth.requiresLogin, function (req, res, next) {
-      res.send('Only authenticated users can access this');
-    });
-
-    app.get('/api/baseFrame/example/admin', auth.requiresAdmin, function (req, res, next) {
-      res.send('Only users with Admin role can access this');
-    });
-
-    app.get('/api/baseFrame/example/render', function (req, res, next) {
-      BaseFrame.render('index', {
-        package: 'baseFrame'
-      }, function (err, html) {
-        //Rendering a view from the Package server/views
-        res.send(html);
-      });
     });
   };
 })();
