@@ -34,19 +34,7 @@ var https = require('https');
     var commonUserFilter;
     var TagCountServices = {};
     var graphConfig;
-    // d3.tsv('tags.tsv', function(d) { return {Id: d.Id, TagName: d.TagName, Count: d.Count}; },
-    // function(error, dataLoaded) {
-    //     console.log(dataLoaded[0]);
-    //     soTAGS =dataLoaded;
 
-    // var user = req.body['userName'];
-    // updateDeeplink();
-    // var usersRepos = 'https://api.github.com/users/' +
-    //    user +
-    //    '/repos';
-
-
-    // });
     fs.readFile(fileName, 'utf8', function (err, result){
         if(err)  console.error(err);
         else {
@@ -107,15 +95,11 @@ var https = require('https');
         res.send(JSON.stringify(graphConfig));
     });
     app.post('/api/baseFrame/soIDFromUser', function(req, res, next){
-        // console.log(req.body.gitName);
         if(req.body.getAll == 'true'){
             commonUsers.filter(null);
-
         } else {
-
             commonUserFilter.filter(req.body.gitName);
         }
-        // console.log(commonUserFilter.top(Infinity));
 
         res.send(JSON.stringify(commonUserFilter.top(Infinity)));
     });
@@ -357,11 +341,6 @@ var https = require('https');
             var user = req.body['userName'];
             var repoName = req.body['repoName'];
 
-
-            // updateDeeplink();
-            // var usersRepos = 'https://api.github.com/users/' +
-            //    user +
-            //    '/repos';
             var getReqOptions = {
                 host : 'api.github.com',
                 protocol:'https:',
@@ -380,7 +359,6 @@ var https = require('https');
                    // You can process streamed parts here...
                    bodyChunks+= chunk;
                  }).on('end', function() {
-                //    var body = Buffer.concat(bodyChunks);
                     var usersResponse = JSON.parse(bodyChunks);
 
 
@@ -426,11 +404,6 @@ var https = require('https');
             var user = req.body['userName'];
             var repoName = req.body['repoName'];
 
-
-            // updateDeeplink();
-            // var usersRepos = 'https://api.github.com/users/' +
-            //    user +
-            //    '/repos';
             var getReqOptions = {
                 host : 'api.github.com',
                 protocol:'https:',
@@ -639,25 +612,6 @@ var https = require('https');
       //res.send('Stack Overflow ID: ' + req.body.stackId + '\nGithub ID: ' + req.body.githubId +
       //    '\nUsername: ' + req.body.name + '\nKeyword: ' +  req.body.keyword);
     });
-    // app.get('/api/coOccurence', function(req,res){
-    //     // console.log('hit')
-    //     // var fileName = '../models/data.tsv';
-    //     //
-    //     // var readStream = fs.createReadStream(fileName);
-    //     res.writeHead(200,{'Content-Type': 'text/tab-separated-values'});
-    //     //
-    //     // rs.on('readable',function (){
-    //     //     var d = rs.read();
-    //     //     if(typeof d == 'string'){
-    //     //         res.write(d);
-    //     //     } else if (typeof d = 'object' && d instanceof Buffer){
-    //     //         res.write(d.toString('utf8'));
-    //     //     }
-    //     // });
-    //     // rs.on('end',function(){
-    //     //     res.end();
-    //     // });
-    // });
 
     app.get('/api/baseFrame/example/auth', auth.requiresLogin, function (req, res, next) {
       res.send('Only authenticated users can access this');
