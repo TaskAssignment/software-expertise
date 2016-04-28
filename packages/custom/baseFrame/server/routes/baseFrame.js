@@ -5,18 +5,18 @@ var http = require('http');
 
 var https = require('https');
 (function () {
-  'use strict';
-  Array.prototype.getUnique = function(){
-          var u = {}, a = [];
-          for(var i = 0, l = this.length; i < l; ++i){
-            if(u.hasOwnProperty(this[i])) {
-               continue;
-            }
-            a.push(this[i]);
-            u[this[i]] = 1;
+    'use strict';
+    Array.prototype.getUnique = function(){
+        var u = {}, a = [];
+        for(var i = 0, l = this.length; i < l; ++i){
+          if(u.hasOwnProperty(this[i])) {
+             continue;
           }
-          return a;
-      }
+          a.push(this[i]);
+          u[this[i]] = 1;
+        }
+        return a;
+    }
   /* jshint -W098 */
   // The Package is past automatically as first parameter
   module.exports = function (BaseFrame, app, auth, database) {
@@ -27,7 +27,6 @@ var https = require('https');
     var tag1Filter;
     var tag2Filter;
     var cooccurenceFilter;
-    var soTAGS;
 
     var commonUserData;
     var commonUserDataCF;
@@ -51,7 +50,6 @@ var https = require('https');
                     var convertResults = d3.tsv.parse(result);
 
                     console.log('load data files 2/3');
-                    soTAGS = convertResults;
                     for(var i = 0; i < convertResults.length; i++){
                         var tag = convertResults[i];
                         TagCountServices[tag.TagName] = {
@@ -77,7 +75,7 @@ var https = require('https');
     });
 
     app.post('/api/baseFrame/soTags',function(req,res,next){
-        res.send(JSON.stringify(soTAGS));
+        res.send(JSON.stringify(TagCountServices));
     });
     app.post('/api/baseFrame/graphConfig', function(req, res, next){
         var graphConfig = {
@@ -452,8 +450,6 @@ var https = require('https');
                                 if (req.body['issueNumb'] == issueResponse[i].id) {
                                     matchingIssue = issueResponse[i];
                                 }
-
-
                             }
                             var issueText ='';
                             issueText += matchingIssue.title;
@@ -504,10 +500,9 @@ var https = require('https');
                   tagsToFilter = req.body[key];
               }
           }
+          //These tags com from 'displayIssueTags' on repository.js
+          console.log(tagsToFilter);
 
-          var filterPairings = [];
-
-          var coOccurenceResults = [];
           tag1Filter.filter(function(d,i){
               if(tagsToFilter.indexOf(d.Tag1) !== -1 &&
                   tagsToFilter.indexOf(d.Tag2) !== -1){
@@ -517,7 +512,9 @@ var https = require('https');
               }
           });
 
-          var f1Data =tag1Filter.top(Infinity);
+          var f1Data = tag1Filter.top(Infinity);
+          console.log(f1Data);
+
 
           res.send(JSON.stringify(f1Data));
           tag1Filter.filter();
