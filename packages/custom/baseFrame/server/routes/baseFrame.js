@@ -1,6 +1,5 @@
 var fs = require('fs');
 var cf = require('crossfilter');
-var tsv = require("node-tsv-json");
 var d3 = require("d3");
 var http = require('http');
 
@@ -33,7 +32,7 @@ var https = require('https');
     var commonUserData;
     var commonUserDataCF;
     var commonUserFilter;
-    var TagCountServices ={};
+    var TagCountServices = {};
     var graphConfig;
     // d3.tsv('tags.tsv', function(d) { return {Id: d.Id, TagName: d.TagName, Count: d.Count}; },
     // function(error, dataLoaded) {
@@ -48,73 +47,47 @@ var https = require('https');
 
 
     // });
-    tsv({
-            input: fileName,
-            output: "output.json",
-            //array of arrays, 1st array is column names
-            parseRows: false
-        }, function(err, result) {
-            if(err) {
-                console.error(err);
-            }else {
-                console.log('load data files 1/3');
-                coOccurrencesData = result;
-                coOccurrences = cf(result);
-                tag1Filter = coOccurrences.dimension(function(d) { return d; });
-                //   tag2Filter = coOccurrences.dimension(function(d) { return d.Tag2; });
-                cooccurenceFilter = coOccurrences.dimension(function(d) { return d.CoOccurrence; });
+    fs.readFile(fileName, 'utf8', function (err, result){
+        if(err)  console.error(err);
+        else {
+            result = d3.tsv.parse(result);
+            console.log('load data files 1/3');
+            coOccurrencesData = result;
+            coOccurrences = cf(result);
+            tag1Filter = coOccurrences.dimension(function(d) { return d; });
+            cooccurenceFilter = coOccurrences.dimension(function(d) { return d.CoOccurrence; });
+            cooccurenceFilter.filter( function(d){ return d >= 10; } );
+            fs.readFile('tags.tsv', 'utf8', function (err, result){
+                if(err) console.error(err);
+                else {
+                    var convertResults = d3.tsv.parse(result);
 
-                cooccurenceFilter.filter(function(d){
-                    if( d < 10){
-                        return false;
-                    } else {
-                        return true;
+                    console.log('load data files 2/3');
+                    soTAGS = convertResults;
+                    for(var i = 0; i < convertResults.length; i++){
+                        var tag = convertResults[i];
+                        TagCountServices[tag.TagName] = {
+                            Id: tag.Id,
+                            TagName: tag.TagName,
+                            Count: tag.Count
+                        };
                     }
-                });
-                tsv({
-                    input: 'tags.tsv',
-                    output: "output1.json",
-                    //array of arrays, 1st array is column names
-                    // id: tagname: count:
-                    parseRows: false
-                }, function(err, convertResults) {
-                    if(err) {
-                        console.error(err);
-                    }else {
-                        console.log('load data files 2/3');
+                    fs.readFile('commonUsers.tsv', 'utf8', function(err, result){
+                        if(err) console.error(err);
+                        else {
+                            var commonUserResult = d3.tsv.parse(result);
 
-                        soTAGS = convertResults;
-                        for(var i = 0; i < convertResults.length; i++){
-                              TagCountServices[convertResults[i].TagName] = {
-                                  Id: +convertResults[i].Id,
-                                  TagName: +convertResults[i].TagName,
-                                  Count: +convertResults[i].Count
-                              };
-                          }
-
-                        tsv({
-                            input: 'commonUsers.tsv',
-                            output: "output3.json",
-                            //array of arrays, 1st array is column names
-                            // id: tagname: count:
-                            parseRows: false
-                        }, function(err, commonUserResult) {
-                            if(err) {
-                                console.error(err);
-                            }else {
-                                console.log('load data files 3/3');
-
-                                commonUserData = commonUserResult;
-                                commonUserDataCF = cf(commonUserResult);
-                                commonUserFilter = commonUserDataCF.dimension(function(d) { return d.login; });
-                                //   tag2Filter = coOccurrences.dimension(function(d) { return d.Tag2; });
-                            }
-                        });
-                    }
-                });
-
-            }
+                            console.log('load data files 3/3');
+                            commonUserData = commonUserResult;
+                            commonUserDataCF = cf(commonUserResult);
+                            commonUserFilter = commonUserDataCF.dimension(function(d) { return d.login; });
+                        }
+                    });
+                }
+            });
+        }
     });
+
     app.post('/api/baseFrame/soTags',function(req,res,next){
         res.send(JSON.stringify(soTAGS));
 
