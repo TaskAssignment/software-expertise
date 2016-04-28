@@ -12,10 +12,7 @@ angular.module('mean.baseFrame')
   ['$scope', 'Global', 'BaseFrame', '$http', '$location',
   function ($scope, Global, BaseFrame, $http, $location) {
 
-      // var temp={};
-      // for(var i=0;i<TagCountServices.length;i++){
-      //   temp[TagCountServices[i].TagName];
-      var TagCountServices ={};
+      var TagCountServices = {};
       var urlStr = window.location.href.toString();
       var questionMarkIndex = urlStr.indexOf('?');
       if(questionMarkIndex!=-1){
@@ -37,13 +34,8 @@ angular.module('mean.baseFrame')
           data: '',
           headers: {'Content-Type': 'application/x-www-form-urlencoded'}
       }).success(function (response){
-          for(var i = 0; i < response.length; i++){
-              TagCountServices[response[i].TagName] = {
-                  Id: +response[i].Id,
-                  TagName: +response[i].TagName,
-                  Count: +response[i].Count
-              };
-          }
+          console.log(response);
+          TagCountServices = response;
           getDefaultOptions();
       });
       // }
@@ -466,6 +458,8 @@ angular.module('mean.baseFrame')
                 .split(' ');
 
             var tags = [];
+            //Any word from the issue that is an SO tag will be in this array.
+            //This is the array that is sent to '/api/baseFrame/coOccurence'
             for (var i = 0; i < wordsFromBody.length; i++) {
                 if (TagCountServices[wordsFromBody[i]] !== undefined) {
                     tags.push(wordsFromBody[i]);
