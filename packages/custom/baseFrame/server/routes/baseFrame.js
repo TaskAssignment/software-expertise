@@ -482,7 +482,7 @@ var https = require('https');
                   tagsToFilter = req.body[key];
               }
           }
-          //These tags com from 'displayIssueTags' on repository.js
+          //These tags come from 'displayIssueTags' on repository.js
           console.log(tagsToFilter);
 
           tag1Filter.filter(function(d,i){

@@ -576,7 +576,7 @@ function ExpertiseGraph(initConfig) {
      * @param tagsFromIssue, userSOTags, TagCountServices
      *
      */
-    function formatSOData(tagsFromIssue = {}, userSOTags = {}) {
+    function formatSOData(tagsFromIssue = {}, userSOTags = {}, TagCountServices = {}) {
         //User SO tags and issue tags together
         var allTags = tagsFromIssue;
         for(var tag in userSOTags){
@@ -585,8 +585,17 @@ function ExpertiseGraph(initConfig) {
             else
                 allTags[tag] += userSOTags[tag];
         }
-
-        return allTags;
+        var formattedData = [];
+        for(var tag in allTags){
+            var formattedTag = {
+                name: tag,
+                soCount: TagCountServices[tag] ? TagCountServices[tag] : 0,
+                userCount: userSOTags[tag] ? userSOTags[tag] : 0,
+                issueCount: tagsFromIssue[tag] ? tagsFromIssue[tag] : 0,
+            }
+            formattedData.push(formattedTag);
+        }
+        return formattedData;
     }
 
     /**
@@ -743,16 +752,8 @@ function ExpertiseGraph(initConfig) {
         }
     }
     function calculateSimilarity (bugTags, userTags, TagCountServices){
-        // if()
-        var countValues = function(ary, classifier) {
-            return ary.reduce(function(counter, item) {
-                var p = (classifier || String)(item);
-                counter[p] = counter.hasOwnProperty(p) ? counter[p] + 1 : 1;
-                return counter;
-            }, {})
-        }
-        var bugTagCounts = countValues(bugTags);
-        var userTagCounts = countValues(userTags);
+        var bugTagCounts = bugTags;
+        var userTagCounts = userTags;
         function calculateCosineSimilarity (){
             var nominatorSum=0;
             var uniqueBugTags = bugTags.getUnique();
@@ -934,17 +935,14 @@ function ExpertiseGraph(initConfig) {
 
         //&tag=javascript&tag=d3.js&tag=html&tag=jquery&tag=css&tag=svg'
 
-        var fullData = formatSOData(tagsFromIssue, userSOTags);
+        var fullData = formatSOData(tagsFromIssue, userSOTags, TagCountServices);
 
         console.log(fullData);
 
         var dataString='';
 
-        for(var i = 0; i < fullData.length; i++){
-            dataString += 'tag=' + fullData[i].tagName;
-            if(i!== fullData.length - 1){
-                dataString+='&';
-            }
+        for(var tag in fullData){
+            dataString += 'tag=' + tag + '&';
         }
         showLoadingScreen();
 
@@ -954,7 +952,7 @@ function ExpertiseGraph(initConfig) {
             data: dataString,
             headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         }).success(function (response) {
-            fullData = formatSOData(tagsFromIssue, userSOTags);
+            fullData = formatSOData(tagsFromIssue, userSOTags, TagCountServices);
             graphLinks=[];
             nodes={};
             hideLoadingScreen();
