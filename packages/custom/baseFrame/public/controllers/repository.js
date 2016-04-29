@@ -34,154 +34,64 @@ angular.module('mean.baseFrame')
           data: '',
           headers: {'Content-Type': 'application/x-www-form-urlencoded'}
       }).success(function (response){
-          console.log(response);
           TagCountServices = response;
           getDefaultOptions();
       });
-      // }
       /**
        * Updates the url based on the current state of the project
        *
        *
        */
         function updateDeeplink (){
-
             try {
                 $location.search(optionsState);
-                // history.replaceState({}, '', myURL);
             } catch (e) {
             }
         }
 
-
+        /**
+        * Add default configurations to this variable instead of doing an API
+        * request everytime just to get this.
+        */
         var optionsState = {
-            'repoName':undefined,
-            'issueId': undefined,
-            'userName':undefined,
-            'directed':undefined,
-            'soWeight':undefined,
-            'gitWeight':undefined,
-            'showDirectChildren':undefined
+            'repoName' : undefined,
+            'issueId' :  undefined,
+            'userName' : undefined,
+            'directed' : false,
+            'soWeight' : 'log',
+            'userWeight' : 'log',
+            'bugWeight' : 'log',
+            'showDirectChildren' : false
         };
+
         /**
-         * example of server calculation for the similarity
-         */
-        //  var urlStr = window.location.href.toString();
-        //  var questionMarkIndex = urlStr.indexOf('?');
-        //  if(questionMarkIndex!=-1){
-        //      urlStr = urlStr.slice(0,questionMarkIndex);
-        //  }
-        //  var apiCallUrl  = urlStr+'api/baseFrame/getSimilarity';
-        //
-        //  $http({
-        //      method: 'POST',
-        //      url: apiCallUrl,
-        //      data: 'directed=false&' +
-        //      'soWeight=linear&' +
-        //      'similarity=cosine&' +
-        //      'comparisonType=textToText&' +
-        //      'textA=hi%20I%20am%20r%20java&' +
-        //      'textB=hi%20I%20am%20r%20c',
-        //      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-        //  }).success(function (response) {
-        //      console.log(response)
-        //
-        //  });
-        //  var urlStr = window.location.href.toString();
-        //  var questionMarkIndex = urlStr.indexOf('?');
-        //  if(questionMarkIndex!=-1){
-        //      urlStr = urlStr.slice(0,questionMarkIndex);
-        //  }
-        //  var apiCallUrl  = urlStr+'api/baseFrame/getSimilarity';
-        //
-        //  $http({
-        //      method: 'POST',
-        //      url: apiCallUrl,
-        //      data: 'directed=false&' +
-        //      'soWeight=linear&' +
-        //      'similarity=cosine&' +
-        //      'comparisonType=textToDev&' +
-        //      'textA=hi%20I%20am%20r%20this%20r.js%20function&' +
-        //      'userName=mbostock&'+
-        //      'repoName=mbostock/d3',
-        //      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-        //  }).success(function (response) {
-        //      console.log(response)
-        //  });
-        //  var urlStr = window.location.href.toString();
-        //  var questionMarkIndex = urlStr.indexOf('?');
-        //  if(questionMarkIndex!=-1){
-        //      urlStr = urlStr.slice(0,questionMarkIndex);
-        //  }
-        //  var apiCallUrl  = urlStr+'api/baseFrame/getSimilarity';
-        //
-        //  $http({
-        //      method: 'POST',
-        //      url: apiCallUrl,
-        //      data: 'directed=false&' +
-        //      'soWeight=linear&' +
-        //      'similarity=cosine&' +
-        //      'comparisonType=issueToDev&' +
-        //      'textA=hi%20I%20am%20r%20this%20r.js%20function&' +
-        //      'issueNumb=145030871&' +
-        //      'userName=mbostock&'+
-        //      'repoName=mbostock/d3',
-        //      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-        //  }).success(function (response) {
-        //      console.log(response)
-        //
-        //  });
-        /**
-         * Makes an http post request to get json back with the tags.
-         * uses call to get defaults
-         * calls initializeStates and updates the state
-         *
-         *
          *
          */
         function getDefaultOptions(){
+            var deepLinkParams = $location.search();
+            for (var key in deepLinkParams) {
+                if(optionsState[key] === undefined)
+                    optionsState[key] = deepLinkParams[key];
+            }
 
+            // Not sure if I'll keep this in this function
+            var cosineChecked = true;
+            var adjChecked = false;
 
-            var apiCallUrl  = urlStr+'api/baseFrame/graphConfig';
-            $http({
-                method: 'POST',
-                url: apiCallUrl,
-                data: '',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-            }).success(function (response) {
-                optionsState = response;
-                var deepLinkParams = $location.search();
-                for (var key in deepLinkParams) {
-                    if (deepLinkParams.hasOwnProperty(key)) {
-                        if(deepLinkParams[key] == 'false'){
-                            deepLinkParams[key] = false;
-                        } else if (deepLinkParams[key] == 'true'){
-                            deepLinkParams[key] = true;
-                        }
-                        optionsState[key] =  deepLinkParams[key];
-                    }
-                }
-                if(optionsState.similarityType == 'jacard') {
+            if(optionsState.similarityType == 'jacard') {
+                cosineChecked = false;
+                adjChecked = true;
+            }
 
-                    d3.select('#cosineTrue').property('checked', false);
-                    d3.select('#adjTrue').property('checked', true);
+            d3.select('#cosineTrue').property('checked', cosineChecked);
+            d3.select('#adjTrue').property('checked', adjChecked);
 
-                } else {
-                    d3.select('#cosineTrue').property('checked', true);
-                    d3.select('#adjTrue').property('checked', false);
-
-                }
-
-                console.log(optionsState)
-                initializeStates();
-
-            });
+            initializeStates();
         }
+
         var graphs;
         /**
          * sets menus to match states and inits the expertise graph
-         *
-
          */
         function initializeStates() {
 
@@ -198,7 +108,6 @@ angular.module('mean.baseFrame')
             d3.select('#directionOptions').select('#directed' + optionsState.directed).property('checked', true);
 
             if(optionsState.repoName !== undefined){
-                // $scope.repoSearchBox = optionsState.repoName;
                 $scope.getRepoInformation(optionsState.repoName);
             }
             graphs = new ExpertiseGraph(optionsState);
@@ -471,8 +380,6 @@ angular.module('mean.baseFrame')
                 }
             }
             tags.sort();
-            //   $scope.tagOccurrences = tags;
-            //   $scope.matchingTags = matchingTags;
             issueTagData = tags;
             if(callback === undefined){
                 graphs.drawWithNewData(issueTagData, userCommitDataTags,TagCountServices,  $http, optionsState);

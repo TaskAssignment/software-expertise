@@ -77,20 +77,7 @@ var https = require('https');
     app.post('/api/baseFrame/soTags',function(req,res,next){
         res.send(JSON.stringify(TagCountServices));
     });
-    app.post('/api/baseFrame/graphConfig', function(req, res, next){
-        var graphConfig = {
-            'repoName':undefined,
-            'issueId': undefined,
-            'userName':undefined,
-            'directed':true,
-            'soWeight':'log',
-            'userWeight':'log',
-            'bugWeight':'log',
-            'showDirectChildren':false
-        };
 
-        res.send(JSON.stringify(graphConfig));
-    });
     app.post('/api/baseFrame/soIDFromUser', function(req, res, next){
         if(req.body.getAll == 'true'){
             commonUsers.filter(null);
