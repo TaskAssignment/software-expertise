@@ -62,7 +62,11 @@
                     <div class='searchBoxInput'>
                         <p>Search for a repository:</p>
                         <form ng-submit="queryRepos()">
-                            <input type='text' ng-model="repoSearchBox" name='repoSearchBox' class='searchTextBox' placeholder='Find A Repo'>
+                            <input type='text' ng-model="repositoryName" name='repositoryName' class='searchTextBox' placeholder='Name'>
+                            <input type='text' ng-model="repoDescription" name='repoDescription' class='searchTextBox' placeholder='Description'>
+                            <input type='text' ng-model="repoReadme" name='repoReadme' class='searchTextBox' placeholder='Readme'>
+                            <input type='text' ng-model="repoUser" name='repoUser' class='searchTextBox' placeholder='User or Organization'>
+                            <button ng-submit="queryRepos()"> Search </button>
                         </form>
                     </div>
                     <div id='repoSelection' class='hidden'>
