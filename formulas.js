@@ -352,7 +352,7 @@ function coOccurrence(tag1, tag2)
 // only if both tags 'tag1' & 'tag2' are in vector v; otherwise return 0.
 // eg. var v = ["java", "javascript", "html", ".a", ".lib"]
 // 'graphType' is 1 for directed and 0 for undirected
-// relies on coOccurence function and occurrenceSO function
+// relies on coOccurrence function and occurrenceSO function
 function edgeWeight(tag1, tag2, v, txt, graphType)
 {
 	var yesTag1 = false;
@@ -408,7 +408,7 @@ function edgeWeight(tag1, tag2, v, txt, graphType)
 // only if both tags 'tag1' & 'tag2' are in vector v; otherwise return 0.
 // eg. var v = ["java", "javascript", "html", ".a", ".lib"]
 // 'graphType' is 1 for directed and 0 for undirected
-// relies on coOccurence function and occurrenceSO function
+// relies on coOccurrence function and occurrenceSO function
 function edgeWeightV(tag1, tag2, v, graphType)
 {
 	var yesTag1 = false;

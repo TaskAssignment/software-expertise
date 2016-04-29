@@ -77,7 +77,7 @@ describe('acceptance test', function(){
 
 
 
- it('should be able to upload files and download coOccurences.tsv and tags.tsv', function(){
+ it('should be able to upload files and download coOccurrences.tsv and tags.tsv', function(){
 
  		console.log('\nStarting test suite "SPRINT 3"');
  		browser.get('http://localhost:3000');
@@ -100,7 +100,7 @@ describe('acceptance test', function(){
 
  		var uploadButton = element(by.id('mainnavbar')).all(By.tagName('a')).get(1).click();
 
- 		var coOccurences = element(by.id('coOccruenceDownload')).click();
+ 		var coOccurrences = element(by.id('coOccruenceDownload')).click();
  		browser.sleep(1000);
  		var sOtags = element(by.id('tagDownload')).click();
  		browser.sleep(1000);

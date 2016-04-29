@@ -28,12 +28,12 @@ angular.module('mean.upload').controller('MeanUploadController', ['$scope', 'Glo
 
 
     /**
-     * Makes an http post request to get json back with the CoOccurences.
+     * Makes an http post request to get json back with the coOccurrences.
      * Converts to a .tsv and starts the download
-     * Please note: the file is filtered in the API so that low count CoOccurences don't waste space
+     * Please note: the file is filtered in the API so that low count coOccurrences don't waste space
      *
      * @param apiCallUrl
-     * @return the CoOccurence File
+     * @return the coOccurrence File
      * @see coOccurrences.tsv
      */
 
@@ -42,7 +42,7 @@ angular.module('mean.upload').controller('MeanUploadController', ['$scope', 'Glo
      var dataString='getEverything=true';
      var urlStr = window.location.href.toString();
      urlStr = urlStr.slice(0,-3);
-     var apiCallUrl  = urlStr+'api/baseFrame/coOccurence'
+     var apiCallUrl  = urlStr+'api/baseFrame/coOccurrence'
 
      console.log(apiCallUrl);
      var rows = '';

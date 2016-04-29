@@ -26,7 +26,7 @@ var https = require('https');
     var coOccurrences;
     var tag1Filter;
     var tag2Filter;
-    var cooccurenceFilter;
+    var coOccurrenceFilter;
 
     var commonUserDataCF;
     var commonUserFilter;
@@ -41,8 +41,8 @@ var https = require('https');
             coOccurrencesData = result;
             coOccurrences = cf(result);
             tag1Filter = coOccurrences.dimension(function(d) { return d; });
-            cooccurenceFilter = coOccurrences.dimension(function(d) { return d.CoOccurrence; });
-            cooccurenceFilter.filter( function(d){ return d >= 10; } );
+            coOccurrenceFilter = coOccurrences.dimension(function(d) { return d.CoOccurrence; });
+            coOccurrenceFilter.filter( function(d){ return d >= 10; } );
             fs.readFile('tags.tsv', 'utf8', function (err, result){
                 if(err) console.error(err);
                 else {
@@ -51,11 +51,7 @@ var https = require('https');
                     console.log('load data files 2/3');
                     for(var i = 0; i < convertResults.length; i++){
                         var tag = convertResults[i];
-                        TagCountServices[tag.TagName] = {
-                            Id: tag.Id,
-                            TagName: tag.TagName,
-                            Count: tag.Count
-                        };
+                        TagCountServices[tag.TagName] = tag.Count
                     }
                     fs.readFile('commonUsers.tsv', 'utf8', function(err, result){
                         if(err) console.error(err);
@@ -210,10 +206,10 @@ var https = require('https');
         function calculateEdgeWeight( occurenceIName, occurenceJName ) {
 
             var coOIJ; // co occurence I and J
-            if(coOccurenceDictionary[occurenceIName + occurenceJName] !== undefined) {
-                coOIJ = coOccurenceDictionary[occurenceIName + occurenceJName];
-            } else if (coOccurenceDictionary[occurenceJName + occurenceIName] !== undefined) {
-                coOIJ = coOccurenceDictionary[occurenceJName + occurenceIName];
+            if(coOccurrenceDictionary[occurenceIName + occurenceJName] !== undefined) {
+                coOIJ = coOccurrenceDictionary[occurenceIName + occurenceJName];
+            } else if (coOccurrenceDictionary[occurenceJName + occurenceIName] !== undefined) {
+                coOIJ = coOccurrenceDictionary[occurenceJName + occurenceIName];
 
             } else {
                 return 0;
@@ -466,7 +462,7 @@ var https = require('https');
         }
 
     })
-    app.post('/api/baseFrame/coOccurence', function (req, res, next) {
+    app.post('/api/baseFrame/coOccurrence', function (req, res, next) {
         var stringRes = '';
         if (req.body['getEverything'] == "true"){
 
@@ -478,7 +474,8 @@ var https = require('https');
           tag1Filter.filter();
 
         } else {
-          var tagsToFilter;
+          var tagsToFilter = [];
+          console.log(req.body);
           for(var key in req.body) {
               if(req.body.hasOwnProperty(key))
               {

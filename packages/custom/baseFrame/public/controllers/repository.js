@@ -330,9 +330,9 @@ angular.module('mean.baseFrame')
             var wordsFromBody = issue.body.toLowerCase().split(' ');
 
             //Any word from the issue that is an SO tag will be in this array.
-            //This is the array that is sent to '/api/baseFrame/coOccurence'
+            //This is the array that is sent to '/api/baseFrame/coOccurrence'
             tagsFromIssue = {}; //Global variable. Ugh
-            console.log(wordsFromBody);
+
             for(let word of wordsFromBody) {
                 addTagToAllTags(word);
             }
@@ -353,7 +353,7 @@ angular.module('mean.baseFrame')
                 }
             }
 
-            userSOTags = [];
+            userSOTags = {};
             graphs.drawWithNewData(tagsFromIssue, userSOTags, TagCountServices, $http, optionsState);
         }
         $scope.package = {
@@ -576,49 +576,17 @@ function ExpertiseGraph(initConfig) {
      * @param tagsFromIssue, userSOTags, TagCountServices
      *
      */
-    function formatSOData(tagsFromIssue, userSOTags, TagCountServices) {
-        /**
-         * generates js obj of counts for tags in a array.
-         *
-         * @param ary, classifier
-         *
-         */
-
-        console.log(tagsFromIssue, userSOTags);
-        allTags = tagsFromIssue;
-        for(let tags of userSOTags)
-        allTags = allTags.getUnique();
-        allTags.sort();
-        var formattedData =[];
-
-        for(var i = 0;i < allTags.length; i++){
-            var countFromIssue = 0;
-            var countFromUser = 0;
-            if (tagsFromIssue !== undefined) {
-                if (tagsFromIssue.indexOf(allTags[i])!==-1){
-                    countFromIssue = issueCounts[allTags[i]];
-                } else {
-                    countFromIssue = 0;
-                }
-            }
-            if (userSOTags !== undefined){
-                if (userSOTags.indexOf(allTags[i])!==-1){
-                    countFromUser = userCounts[allTags[i]];
-                } else {
-                    countFromUser = 0;
-                }
-            }
-
-            formattedData.push({
-                'tagName': allTags[i],
-                'soCount': TagCountServices[allTags[i]].Count,
-                'userCount': countFromUser,
-                'issueCount': countFromIssue,
-
-            });
-
+    function formatSOData(tagsFromIssue = {}, userSOTags = {}) {
+        //User SO tags and issue tags together
+        var allTags = tagsFromIssue;
+        for(var tag in userSOTags){
+            if(allTags[tag] === undefined)
+                allTags[tag] = userSOTags[tag];
+            else
+                allTags[tag] += userSOTags[tag];
         }
-        return formattedData;
+
+        return allTags;
     }
 
     /**
@@ -818,6 +786,7 @@ function ExpertiseGraph(initConfig) {
             return similarity
         }
         function getSOWeight(soNodeCount) {
+            console.lot(soNodeCount);
             if (graphConfig['soWeight'] == 'linear') {
                 return 1 / soNodeCount;
             } else if (graphConfig['soWeight'] == 'log') {
@@ -900,10 +869,10 @@ function ExpertiseGraph(initConfig) {
         function calculateEdgeWeight( occurenceIName, occurenceJName ) {
 
             var coOIJ; // co occurence I and J
-            if(coOccurenceDictionary[occurenceIName + occurenceJName] !== undefined) {
-                coOIJ = coOccurenceDictionary[occurenceIName + occurenceJName];
-            } else if (coOccurenceDictionary[occurenceJName + occurenceIName] !== undefined) {
-                coOIJ = coOccurenceDictionary[occurenceJName + occurenceIName];
+            if(coOccurrenceDictionary[occurenceIName + occurenceJName] !== undefined) {
+                coOIJ = coOccurrenceDictionary[occurenceIName + occurenceJName];
+            } else if (coOccurrenceDictionary[occurenceJName + occurenceIName] !== undefined) {
+                coOIJ = coOccurrenceDictionary[occurenceJName + occurenceIName];
 
             } else {
                 return 0;
@@ -957,22 +926,18 @@ function ExpertiseGraph(initConfig) {
         }
     }
     //get new data and redraw
-    var coOccurenceDictionary = {};
+    var coOccurrenceDictionary = {};
 
     expertGraph.drawWithNewData = function(tagsFromIssue, userSOTags,TagCountServices, $http, optionsState){
         graphConfig = optionsState;
-
-        // http://blog.thomsonreuters.com/index.php/mobile-patent-suits-graphic-of-the-day/
-        var urlStr = window.location.href.toString();
-        var questionMarkIndex = urlStr.indexOf('?');
-        if(questionMarkIndex!=-1){
-            urlStr = urlStr.slice(0,questionMarkIndex);
-        }
-        var apiCallUrl  = urlStr+'api/baseFrame/coOccurence';
+        var apiCallUrl  = '/api/baseFrame/coOccurrence';
 
         //&tag=javascript&tag=d3.js&tag=html&tag=jquery&tag=css&tag=svg'
 
-        var fullData = formatSOData(tagsFromIssue, userSOTags, TagCountServices);
+        var fullData = formatSOData(tagsFromIssue, userSOTags);
+
+        console.log(fullData);
+
         var dataString='';
 
         for(var i = 0; i < fullData.length; i++){
@@ -989,13 +954,13 @@ function ExpertiseGraph(initConfig) {
             data: dataString,
             headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         }).success(function (response) {
-            fullData = formatSOData(tagsFromIssue, userSOTags, TagCountServices);
+            fullData = formatSOData(tagsFromIssue, userSOTags);
             graphLinks=[];
             nodes={};
             hideLoadingScreen();
 
             for(var i = 0; i < response.length; i++) {
-                coOccurenceDictionary[response[i].Tag1 + response[i].Tag2] =  +response[i].CoOccurrence;
+                coOccurrenceDictionary[response[i].Tag1 + response[i].Tag2] =  +response[i].CoOccurrence;
                 graphLinks.push({
                     'source': response[i].Tag1,
                     'target': response[i].Tag2,
@@ -1149,7 +1114,7 @@ function ExpertiseGraph(initConfig) {
             if(tagsFromIssue.length !== 0 &&
                 userSOTags.length !== 0){
 
-                similarityBetweenBugAndUser = calculateSimilarity(tagsFromIssue,userCommitDataTags, TagCountServices);
+                similarityBetweenBugAndUser = calculateSimilarity(tagsFromIssue, userSOTags, TagCountServices);
             } else {
                 similarityBetweenBugAndUser = 0;
             }
