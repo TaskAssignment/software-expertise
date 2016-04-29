@@ -86,8 +86,8 @@
                         <h3>Users</h3>
                         <div class='searchResults userResults '>
                             <div ng-repeat="user in users ">
-                                <button class='userInfo repoListItem' ng-click="displayUserExpertise(user.name)">
-                                    {{ user.name}}
+                                <button class='userInfo repoListItem' ng-click="displayUserExpertise(user)">
+                                    {{ user }}
                                 </button>
                             </div>
                         </div>
@@ -104,14 +104,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- <div id='displayMatchingResults' style="display:none;">
-                    <ul ng-repeat="matches in matchingTags ">
-                      <li> {{matches.tag}} : {{matches.count}}</li>
-                    </ul>
-                  <!-- <ul ng-repeat="matches in tagOccurrences ">
-                    <li > {{matches}}</li>
-                  </ul>
-                </div> -->
+
             </div>
             <div id="expertiseGraphDiv">
                 <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">

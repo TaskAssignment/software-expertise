@@ -113,7 +113,6 @@ angular.module('mean.baseFrame')
             graphs = new ExpertiseGraph(optionsState);
 
         }
-        var fullRepoName;
 
         var issueTagData;
         var userCommitDataTags;
@@ -161,84 +160,88 @@ angular.module('mean.baseFrame')
          *
          */
         $scope.getRepoInformation = function (nameSelected) {
-          // var URL = 'https://api.github.com/repositories';
-          fullRepoName = nameSelected;
-          optionsState.repoName =  nameSelected;
-          updateDeeplink();
-          var userURL = 'https://api.github.com/repos/' +
-            fullRepoName +
-            '/contributors';
+            getRepoContributors(nameSelected);
+            getRepoIssues(nameSelected);
+        }
 
-          $http.get(userURL)
-            .success(function (response) {
+        /**
+        * Gets the contributors of the selected repository
+        */
+        function getRepoContributors(repo){
+            optionsState.repoName =  repo;
+            updateDeeplink();
+            var userURL = 'https://api.github.com/repos/' +
+              nameSelected +
+              '/contributors';
+
+            $http.get(userURL).success(function (response) {
                 var results = response;
                 $('#repositoyInfoDisplay').removeClass('hidden')
                 $('#repoSelection').addClass('hidden')
-                var users = [];
-                for (var i = 0; i < results.length; i++) {
-                    users.push(
-                      {
-                          name: results[i].login
-                      }
-                    )
-                }
-                $scope.repoName = fullRepoName;
-                $scope.users = users;
 
-            });
-          var issueURL = 'https://api.github.com/repos/' +
-            fullRepoName +
-            '/issues';
-          $http.get(issueURL)
-            .success(function (response) {
-                var results = response;
-                $('#userSelection').removeClass('hidden')
-                // $('#repoSelection').addClass('hidden')
-                var issues = [];
-                // issue matching deep linking
-                var matchingIssue;
+                $scope.users = [];
                 for (var i = 0; i < results.length; i++) {
-                    if(optionsState.issueId !== undefined) {
-                        if (optionsState.issueId == results[i].id) {
-                            matchingIssue = results[i];
+                    $scope.users.push( results[i].login );
+                }
+                $scope.repoName = nameSelected;
+            });
+        }
+
+        /**
+        * Gets the github issues of the selected repository
+        */
+        function getRepoIssues(repo){
+            var issueURL = 'https://api.github.com/repos/' +
+              nameSelected +
+              '/issues';
+            $http.get(issueURL)
+              .success(function (response) {
+                  var results = response;
+                  $('#userSelection').removeClass('hidden')
+                  // $('#repoSelection').addClass('hidden')
+                  var issues = [];
+                  // issue matching deep linking
+                  var matchingIssue;
+                  for (var i = 0; i < results.length; i++) {
+                      if(optionsState.issueId !== undefined) {
+                          if (optionsState.issueId == results[i].id) {
+                              matchingIssue = results[i];
+                          }
+                      }
+                      issues.push(
+                        {
+                            title: results[i].title,
+                            body: results[i].body,
+                            id:results[i].id,
                         }
-                    }
-                    issues.push(
-                      {
-                          title: results[i].title,
-                          body: results[i].body,
-                          id:results[i].id,
+                      )
+                  }
+                  $scope.repoName = nameSelected;
+                  $scope.issues = issues;
+
+                  if(optionsState.issueId !== undefined &&
+                      optionsState.userName===undefined
+                      ){
+                      $scope.displayIssueTags(
+                          matchingIssue.title,
+                          matchingIssue.body,
+                          matchingIssue.id
+                      );
+                  } else if(optionsState.issueId === undefined &&
+                      optionsState.userName !== undefined
+                      ){
+                      $scope.displayUserExpertise(optionsState.userName);
+                  } else if (optionsState.issueId !== undefined &&
+                      optionsState.userName !== undefined){
+                          $scope.displayIssueTags(
+                              matchingIssue.title,
+                              matchingIssue.body,
+                              matchingIssue.id,
+                              $scope.displayUserExpertise
+                          );
                       }
-                    )
-                }
-                $scope.repoName = fullRepoName;
-                $scope.issues = issues;
 
-                if(optionsState.issueId !== undefined &&
-                    optionsState.userName===undefined
-                    ){
-                    $scope.displayIssueTags(
-                        matchingIssue.title,
-                        matchingIssue.body,
-                        matchingIssue.id
-                    );
-                } else if(optionsState.issueId === undefined &&
-                    optionsState.userName !== undefined
-                    ){
-                    $scope.displayUserExpertise(optionsState.userName);
-                } else if (optionsState.issueId !== undefined &&
-                    optionsState.userName !== undefined){
-                        $scope.displayIssueTags(
-                            matchingIssue.title,
-                            matchingIssue.body,
-                            matchingIssue.id,
-                            $scope.displayUserExpertise
-                        );
-                    }
-
-            });
-            //https://api.github.com/repos/owner/name/comments/
-
+              });
         }
         /**
          * displays the user portion of the expertise graph
