@@ -62,10 +62,10 @@
                     <div class='searchBoxInput'>
                         <p>Search for a repository:</p>
                         <form ng-submit="queryRepos()">
-                            <input type='text' ng-model="repositoryName" name='repositoryName' class='searchTextBox' placeholder='Name'>
-                            <input type='text' ng-model="repoDescription" name='repoDescription' class='searchTextBox' placeholder='Description'>
-                            <input type='text' ng-model="repoReadme" name='repoReadme' class='searchTextBox' placeholder='Readme'>
-                            <input type='text' ng-model="repoUser" name='repoUser' class='searchTextBox' placeholder='User or Organization'>
+                            <input type='text' ng-model="repoUser" name='repoUser' class='searchTextBox col-md-2' placeholder='User or Organization'>/
+                            <input type='text' ng-model="repositoryName" name='repositoryName' class='searchTextBox' placeholder='Repository name'>
+                            <input type='text' ng-model="repoDescription" name='repoDescription' class='searchTextBox' placeholder='Any phrase in the repo deescription'>
+                            <input type='text' ng-model="repoReadme" name='repoReadme' class='searchTextBox' placeholder='Any thing in the repository readme'>
                             <button ng-submit="queryRepos()"> Search </button>
                         </form>
                     </div>
@@ -97,8 +97,8 @@
 
                         <div class='searchResults issueResults '>
                             <div ng-repeat="issue in issues ">
-                                <button class='issueInfo repoListItem' ng-click="displayIssueTags(issue.title,issue.body,issue.id)">
-                                    {{ issue.title}}
+                                <button class='issueInfo repoListItem' ng-click="displayIssueTags(issue)">
+                                    {{ issue.title }}
                                 </button>
                             </div>
                         </div>

@@ -137,9 +137,10 @@ angular.module('mean.baseFrame')
               URL += '+' + $scope.repoReadme + '+in:readme';
           if($scope.repoUser)
               URL += '+user:' + $scope.repoUser;
-          URL += '&sort=stars&order=desc';
+          URL += '&sort=stars&order=desc&per_page=100';
 
           $http.get(URL).success(function (response) {
+                console.log(response);
                 var results = response.items;
                 // TODO: Figure out how to get next items
 
@@ -170,11 +171,11 @@ angular.module('mean.baseFrame')
         function getRepoContributors(repo){
             optionsState.repoName =  repo;
             updateDeeplink();
-            var userURL = 'https://api.github.com/repos/' +
-              nameSelected +
+            var contributorsURL = 'https://api.github.com/repos/' +
+              repo +
               '/contributors';
 
-            $http.get(userURL).success(function (response) {
+            $http.get(contributorsURL).success(function (response) {
                 var results = response;
                 $('#repositoyInfoDisplay').removeClass('hidden')
                 $('#repoSelection').addClass('hidden')
@@ -183,7 +184,7 @@ angular.module('mean.baseFrame')
                 for (var i = 0; i < results.length; i++) {
                     $scope.users.push( results[i].login );
                 }
-                $scope.repoName = nameSelected;
+                $scope.repoName = repo;
             });
         }
 
@@ -191,57 +192,24 @@ angular.module('mean.baseFrame')
         * Gets the github issues of the selected repository
         */
         function getRepoIssues(repo){
-            var issueURL = 'https://api.github.com/repos/' +
-              nameSelected +
+            var issuesURL = 'https://api.github.com/repos/' +
+              repo +
               '/issues';
-            $http.get(issueURL)
-              .success(function (response) {
-                  var results = response;
-                  $('#userSelection').removeClass('hidden')
-                  // $('#repoSelection').addClass('hidden')
-                  var issues = [];
-                  // issue matching deep linking
-                  var matchingIssue;
-                  for (var i = 0; i < results.length; i++) {
-                      if(optionsState.issueId !== undefined) {
-                          if (optionsState.issueId == results[i].id) {
-                              matchingIssue = results[i];
-                          }
-                      }
-                      issues.push(
-                        {
-                            title: results[i].title,
-                            body: results[i].body,
-                            id:results[i].id,
-                        }
-                      )
-                  }
-                  $scope.repoName = nameSelected;
-                  $scope.issues = issues;
+            $http.get(issuesURL).success(function (response) {
+                var results = response;
+                $('#userSelection').removeClass('hidden')
 
-                  if(optionsState.issueId !== undefined &&
-                      optionsState.userName===undefined
-                      ){
-                      $scope.displayIssueTags(
-                          matchingIssue.title,
-                          matchingIssue.body,
-                          matchingIssue.id
-                      );
-                  } else if(optionsState.issueId === undefined &&
-                      optionsState.userName !== undefined
-                      ){
-                      $scope.displayUserExpertise(optionsState.userName);
-                  } else if (optionsState.issueId !== undefined &&
-                      optionsState.userName !== undefined){
-                          $scope.displayIssueTags(
-                              matchingIssue.title,
-                              matchingIssue.body,
-                              matchingIssue.id,
-                              $scope.displayUserExpertise
-                          );
-                      }
+                $scope.issues = [];
+                for (var i = 0; i < results.length; i++) {
+                    var issue = {
+                        id: results[i].id,
+                        body: results[i].body,
+                        title: results[i].title
+                    }
 
-              });
+                    $scope.issues.push(issue);
+                }
+            });
         }
         /**
          * displays the user portion of the expertise graph
@@ -358,41 +326,32 @@ angular.module('mean.baseFrame')
         /**
          * display information based on issues
          *
-         * @param title, body, id, callback -
+         * @param issue - Dictionary with id, title and body from github issue
+         * @param callback - Function to execute after the tags have been discovered
          *
          */
-        $scope.displayIssueTags = function (title, body, id, callback) {
-            // var URL = 'https://api.github.com/repositories';
-            optionsState.issueId = id;
+        $scope.displayIssueTags = function (issue) {
+            optionsState.issueId = issue.id;
             updateDeeplink();
-            var wordsFromTitle = title
-                .toLowerCase()
-                .split(' ');
+            var wordsFromTitle = issue.title.toLowerCase().split(' ');
+            var wordsFromBody = issue.body.toLowerCase().split(' ');
 
-
-            var wordsFromBody = body.toLowerCase()
-                .split(' ');
-
-            var tags = [];
             //Any word from the issue that is an SO tag will be in this array.
             //This is the array that is sent to '/api/baseFrame/coOccurence'
+            issueTagData = []; //Global variable. Ugh
             for (var i = 0; i < wordsFromBody.length; i++) {
                 if (TagCountServices[wordsFromBody[i]] !== undefined) {
-                    tags.push(wordsFromBody[i]);
+                    issueTagData.push(wordsFromBody[i]);
                 }
             }
             for (var i = 0; i < wordsFromTitle.length; i++) {
                 if (TagCountServices[wordsFromTitle[i]] !== undefined) {
-                    tags.push(wordsFromTitle[i]);
+                    issueTagData.push(wordsFromTitle[i]);
                 }
             }
-            tags.sort();
-            issueTagData = tags;
-            if(callback === undefined){
-                graphs.drawWithNewData(issueTagData, userCommitDataTags,TagCountServices,  $http, optionsState);
-            } else {
-                callback(optionsState.userName);
-            }
+            issueTagData.sort();
+
+            graphs.drawWithNewData(issueTagData, userCommitDataTags,TagCountServices,  $http, optionsState);
         }
         $scope.package = {
           name: 'baseFrame'
