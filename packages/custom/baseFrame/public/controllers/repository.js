@@ -131,33 +131,26 @@ angular.module('mean.baseFrame')
         $scope.queryRepos = function () {
           var URL = 'https://api.github.com/search/repositories?q=';
           if($scope.repositoryName)
-              URL += $scope.repositoryName + '+in:name+';
+              URL += $scope.repositoryName + '+in:name';
           if($scope.repoDescription)
-              URL += $scope.repoDescription + '+in:description+';
+              URL += '+' + $scope.repoDescription + '+in:description';
           if($scope.repoReadme)
-              URL += $scope.repoReadme + '+in:readme+';
+              URL += '+' + $scope.repoReadme + '+in:readme';
           if($scope.repoUser)
               URL += '+user:' + $scope.repoUser;
           URL += '&sort=stars&order=desc';
 
-          console.log(URL);
-
-          $http.get(URL)
-            .success(function (response) {
+          $http.get(URL).success(function (response) {
                 var results = response.items;
-                console.log(response);
-                $('#repoSelection').removeClass('hidden')
-                var repos = [];
-                for (var i = 0; i < results.length; i++) {
-                    repos.push(
-                      {
-                          name: results[i].full_name
-                      }
-                    );
-                }
-                $scope.repos = repos;
+                // TODO: Figure out how to get next items
 
-            });
+                $('#repoSelection').removeClass('hidden')
+                $scope.repos = [];
+                for (var i = 0; i < results.length; i++) {
+                    $scope.repos.push( results[i].full_name );
+                }
+                console.log($scope.repos);
+          });
         }
         /**
          *

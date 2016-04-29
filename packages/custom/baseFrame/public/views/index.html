@@ -73,8 +73,8 @@
                         <!-- <h2>Repositories Matching {{ repoSearchBox }}: </h2> -->
                         <div class='searchResults repoResluts'>
                             <div ng-repeat="repo in repos ">
-                                <button class='repoInfo repoListItem' ng-click="getRepoInformation(repo.name)">
-                                    {{ repo.name}}
+                                <button class='repoInfo repoListItem' ng-click="getRepoInformation(repo)">
+                                    {{ repo }}
                                 </button>
                             </div>
                         </div>
