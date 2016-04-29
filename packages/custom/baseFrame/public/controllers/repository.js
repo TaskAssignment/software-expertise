@@ -213,115 +213,116 @@ angular.module('mean.baseFrame')
         }
         /**
          * displays the user portion of the expertise graph
-         *
+         * I think this should be in a different file.
+
          * @param user - github username
-         *
-         *
          */
         $scope.displayUserExpertise = function(user){
             optionsState.userName = user;
             updateDeeplink();
-            var usersRepos = 'https://api.github.com/users/' +
-               user +
-               '/repos';
 
-           $http.get(usersRepos)
-               .success(function(repoResponse) {
-                   var tags =[];
+            var soId = getSOIDForUser(user);
 
-                   var numberOfReposQueried = 0;
-                   // TODO: replace 1 with actual amount repoResponse.length
-                   for (var i = 0; i <1; i++) {
-                       // TODO: switch commented section
-                    //    var commitsURL = 'https://api.github.com/repos/' +
-                    //        repoResponse[i].full_name +
-                    //        '/commits?author=' + user +'&per_page=100';
+            if(soId){
+                getSOTagsFromUser(soId);
+            } else {
+                console.log("User is not on StackOverflow");
+                return "User is not on StackOverflow";
+            }
 
-                        var commitsURL = 'https://api.github.com/repos/' +
-                            optionsState.repoName +
-                            '/commits?author=' + user +'&per_page=100';
-                       $http.get(commitsURL)
-                           .success(function (usersResponse) {
-                               //   .toLowerCase()
-                               //   .split(' ');
-                               // TODO: refactor in to function by text
-                               for(var i=0;i<usersResponse.length;i++){
-                                   var wordsFromCommitMessage = usersResponse[i].commit.message.toLowerCase()
-                                     .split(' ');
-                                   for(var j=0;j<wordsFromCommitMessage.length;j++){
-                                       if (TagCountServices[wordsFromCommitMessage[j]] !== undefined) {
-                                           tags.push(wordsFromCommitMessage[j]);
-                                       }
-                                   }
-                               }
-                               numberOfReposQueried++
-                               // HACK: should use promise instead
-                            //    if (numberOfReposQueried == repoResponse.length) {
-                                //    drawData();
-                            //    }
-                                getSOIDForUser(user);
-                           });
+            // var usersRepos = 'https://api.github.com/users/' +
+            //    user +
+            //    '/repos';
+            //
+            // $http.get(usersRepos).success(function(repoResponse) {
+            //     console.log(repoResponse);
+            //     var tags =[];
+            //
+            //     var numberOfReposQueried = 0;
+            //     for (var i = 0; i <1; i++) {
+            //        // TODO: switch commented section
+            //     //    var commitsURL = 'https://api.github.com/repos/' +
+            //     //        repoResponse[i].full_name +
+            //     //        '/commits?author=' + user +'&per_page=100';
+            //
+            //         var commitsURL = 'https://api.github.com/repos/' +
+            //             optionsState.repoName +
+            //             '/commits?author=' + user +'&per_page=100';
+            //        $http.get(commitsURL)
+            //            .success(function (usersResponse) {
+            //                //   .toLowerCase()
+            //                //   .split(' ');
+            //                // TODO: refactor in to function by text
+            //                for(var i=0;i<usersResponse.length;i++){
+            //                    var wordsFromCommitMessage = usersResponse[i].commit.message.toLowerCase()
+            //                      .split(' ');
+            //                    for(var j=0;j<wordsFromCommitMessage.length;j++){
+            //                        if (TagCountServices[wordsFromCommitMessage[j]] !== undefined) {
+            //                            tags.push(wordsFromCommitMessage[j]);
+            //                        }
+            //                    }
+            //                }
+            //                numberOfReposQueried++
+            //                // HACK: should use promise instead
+            //             //    if (numberOfReposQueried == repoResponse.length) {
+            //                 //    drawData();
+            //             //    }
+            //            });
 
-                   }
-                   /**
-                    * Makes an http post request to get the users matching SO information
-                    *
-                    * @param userName
-                    *
-                    */
-                   function getSOIDForUser(userName){
-                    //    ///// SO call
-                       // https://api.stackexchange.com/docs/tags-on-users#order=desc&sort=popular&ids=1321917&filter=default&site=stackoverflow
-                       // actual link http://api.stackexchange.com/2.2/users/1321917/tags?order=desc&sort=popular&site=stackoverflow&filter=!-.G.68phH_FJ
-                       var urlStr = window.location.href.toString();
-                       var questionMarkIndex = urlStr.indexOf('?');
-                       if(questionMarkIndex!=-1){
-                           urlStr = urlStr.slice(0,questionMarkIndex);
-                       }
-                       var apiCallUrl  = urlStr+'api/baseFrame/soIDFromUser';
+             /**
+              * Makes an http post request to get the users matching SO information
+              *
+              * @param userName - GitHub user name
+              * @return soId - Stack Overflow id for the given username
+              */
+            function getSOIDForUser(userName){
+                var apiCallUrl  = '/api/baseFrame/soIDFromUser'; //Not sure if this will work everytime
+                $http({
+                    method: 'POST',
+                    url: apiCallUrl,
+                    data: 'gitName='+userName,
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+                }).success(function (response) {
+                    var soId = undefined;
+                    if(response.lenght == 1){
+                        soId = response[0].soId;
+                    }
 
-                       $http({
-                           method: 'POST',
-                           url: apiCallUrl,
-                           data: 'gitName='+userName,
-                           headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-                       }).success(function (soId) {
-                                if(soId.length==1){
-                                    var soURLStr = 'http://api.stackexchange.com/2.2/users/' +
-                                        soId[0].SOId + '/tags?pagesize=10&order=desc&sort=popular&site=stackoverflow&filter=!-.G.68phH_FJ'
-                                    $http.get(soURLStr)
-                                        .success(function(soTags) {
-                                            for(var i =0; i< soTags.items.length; i ++){
-                                                for( var j =0; j<soTags.items[i].count; j++){
-                                                    tags.push(soTags.items[i].name);
-                                                }
-                                            }
-                                            drawData();
-
-                                        });
-                                } else {
-                                    drawData();
-
-                                }
-
-                        });
-                   }
-                   /**
-                    * convience function to ensure calling draw is done the same way
-                    *
-                    *
-                    */
-                   function drawData (){
-
-                       tags.sort();
-                       userCommitDataTags = tags;
-
-                       graphs.drawWithNewData(issueTagData, userCommitDataTags,TagCountServices, $http, optionsState);
-                   }
-
+                    return soId;
                 });
-           // https://api.github.com/users/dbsigurd/repos
-           // while(i<)
+            }
+
+            /**
+            * Gets the Stack Overflow tags related to the given user.
+            *
+            * @param soId - StackOverflow Id
+            */
+            function getSOTagsFromUser(soId){
+                var soURLStr = 'http://api.stackexchange.com/2.2/users/' +
+                    soId[0].SOId + '/tags?pagesize=10&order=desc&sort=popular&site=stackoverflow&filter=!-.G.68phH_FJ'
+                $http.get(soURLStr).success(function(soTags) {
+                    for(var i = 0; i < soTags.items.length; i ++){
+                        for( var j = 0; j < soTags.items[i].count; j++){
+                            tags.push(soTags.items[i].name);
+                        }
+                    }
+                    drawData();
+                });
+            }
+
+             /**
+              * convience function to ensure calling draw is done the same way
+              *
+              *
+              */
+            function drawData (){
+
+                //  tags.sort();
+                //  userCommitDataTags = tags;
+                 //
+                //  graphs.drawWithNewData(issueTagData, userCommitDataTags,TagCountServices, $http, optionsState);
+            }
+
         }
         /**
          * display information based on issues
