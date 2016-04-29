@@ -114,7 +114,7 @@ angular.module('mean.baseFrame')
 
         }
 
-        var issueTagData;
+        var tagsFromIssue;
         var userCommitDataTags;
 
         var issueSOTagData;
@@ -140,7 +140,6 @@ angular.module('mean.baseFrame')
           URL += '&sort=stars&order=desc&per_page=100';
 
           $http.get(URL).success(function (response) {
-                console.log(response);
                 var results = response.items;
                 // TODO: Figure out how to get next items
 
@@ -149,7 +148,6 @@ angular.module('mean.baseFrame')
                 for (var i = 0; i < results.length; i++) {
                     $scope.repos.push( results[i].full_name );
                 }
-                console.log($scope.repos);
           });
         }
         /**
@@ -221,21 +219,16 @@ angular.module('mean.baseFrame')
             optionsState.userName = user;
             updateDeeplink();
 
-            var soId = getSOIDForUser(user);
+            userCommitDataTags = [];
+            getSOIDForUser(user);
 
-            if(soId){
-                getSOTagsFromUser(soId);
-            } else {
-                console.log("User is not on StackOverflow");
-                return "User is not on StackOverflow";
-            }
+
 
             // var usersRepos = 'https://api.github.com/users/' +
             //    user +
             //    '/repos';
             //
             // $http.get(usersRepos).success(function(repoResponse) {
-            //     console.log(repoResponse);
             //     var tags =[];
             //
             //     var numberOfReposQueried = 0;
@@ -282,13 +275,18 @@ angular.module('mean.baseFrame')
                     url: apiCallUrl,
                     data: 'gitName='+userName,
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-                }).success(function (response) {
+                }).success(function (response, soId) {
                     var soId = undefined;
-                    if(response.lenght == 1){
-                        soId = response[0].soId;
+                    if(response.length == 1){
+                        soId = response[0].SOId;
                     }
 
-                    return soId;
+                    if(soId){
+                        getSOTagsFromUser(soId);
+                    } else {
+                        console.log("User is not on StackOverflow");
+                        return "User is not on StackOverflow";
+                    }
                 });
             }
 
@@ -299,28 +297,19 @@ angular.module('mean.baseFrame')
             */
             function getSOTagsFromUser(soId){
                 var soURLStr = 'http://api.stackexchange.com/2.2/users/' +
-                    soId[0].SOId + '/tags?pagesize=10&order=desc&sort=popular&site=stackoverflow&filter=!-.G.68phH_FJ'
+                    soId + '/tags?pagesize=100&order=desc&sort=popular&site=stackoverflow&filter=!-.G.68phH_FJ'
                 $http.get(soURLStr).success(function(soTags) {
-                    for(var i = 0; i < soTags.items.length; i ++){
-                        for( var j = 0; j < soTags.items[i].count; j++){
-                            tags.push(soTags.items[i].name);
-                        }
-                    }
+                    userCommitDataTags = soTags.items;
                     drawData();
                 });
             }
 
              /**
               * convience function to ensure calling draw is done the same way
-              *
-              *
               */
             function drawData (){
-
-                //  tags.sort();
-                //  userCommitDataTags = tags;
-                 //
-                //  graphs.drawWithNewData(issueTagData, userCommitDataTags,TagCountServices, $http, optionsState);
+                userCommitDataTags.sort();
+                graphs.drawWithNewData(tagsFromIssue, userCommitDataTags, TagCountServices, $http, optionsState);
             }
 
         }
@@ -339,20 +328,30 @@ angular.module('mean.baseFrame')
 
             //Any word from the issue that is an SO tag will be in this array.
             //This is the array that is sent to '/api/baseFrame/coOccurence'
-            issueTagData = []; //Global variable. Ugh
-            for (var i = 0; i < wordsFromBody.length; i++) {
-                if (TagCountServices[wordsFromBody[i]] !== undefined) {
-                    issueTagData.push(wordsFromBody[i]);
-                }
+            tagsFromIssue = {}; //Global variable. Ugh
+            console.log(wordsFromBody);
+            for(let word of wordsFromBody) {
+                addTagToAllTags(word);
             }
-            for (var i = 0; i < wordsFromTitle.length; i++) {
-                if (TagCountServices[wordsFromTitle[i]] !== undefined) {
-                    issueTagData.push(wordsFromTitle[i]);
-                }
-            }
-            issueTagData.sort();
 
-            graphs.drawWithNewData(issueTagData, userCommitDataTags,TagCountServices,  $http, optionsState);
+            for(let word of wordsFromTitle) {
+                addTagToAllTags(word)
+            }
+
+            function addTagToAllTags(word){
+                //Is this word a SO tag?
+                if (TagCountServices[word] !== undefined) {
+                    //Has this been added to all tags?
+                    if(tagsFromIssue[word] === undefined){
+                        tagsFromIssue[word] = 0;
+                    } else {
+                        tagsFromIssue[word] += 1;
+                    }
+                }
+            }
+
+            userCommitDataTags = [];
+            graphs.drawWithNewData(tagsFromIssue, userCommitDataTags, TagCountServices, $http, optionsState);
         }
         $scope.package = {
           name: 'baseFrame'
@@ -416,10 +415,10 @@ angular.module('mean.baseFrame')
         $scope.closeAndResetOptions = function(){
             if(optionsChanged){
                 updateDeeplink();
-                if (issueTagData == undefined &&
+                if (tagsFromIssue == undefined &&
                     userCommitDataTags == undefined){
                 } else{
-                    graphs.draw(issueTagData, userCommitDataTags,TagCountServices,  $http);
+                    graphs.draw(tagsFromIssue, userCommitDataTags,TagCountServices,  $http);
                 }
             } else {
 
@@ -571,16 +570,18 @@ function ExpertiseGraph(initConfig) {
     /**
      * formats SO Data so it can be graphed
      *
-     * @param issueTagData, userCommitDataTags, TagCountServices
+     * @param tagsFromIssue, userCommitDataTags, TagCountServices
      *
      */
-    function formatSOData(issueTagData, userCommitDataTags, TagCountServices) {
+    function formatSOData(tagsFromIssue, userCommitDataTags, TagCountServices) {
         /**
          * generates js obj of counts for tags in a array.
          *
          * @param ary, classifier
          *
          */
+
+        console.log(userCommitDataTags);
         var countValues = function(ary, classifier) {
             return ary.reduce(function(counter, item) {
                 var p = (classifier || String)(item);
@@ -589,20 +590,19 @@ function ExpertiseGraph(initConfig) {
             }, {})
         }
 
-
         var allTags;
         var issueCounts;
         var userCounts;
 
-        if(issueTagData !== undefined &&
-            userCommitDataTags !==undefined){
-            allTags = issueTagData.concat(userCommitDataTags);
+        if(tagsFromIssue !== undefined &&
+            userCommitDataTags !== undefined){
+            allTags = tagsFromIssue.concat(userCommitDataTags);
             userCounts = countValues(userCommitDataTags);
-            issueCounts = countValues(issueTagData);
+            issueCounts = countValues(tagsFromIssue);
 
-        } else if( issueTagData !== undefined) {
-            allTags = issueTagData;
-            issueCounts = countValues(issueTagData);
+        } else if( tagsFromIssue !== undefined) {
+            allTags = tagsFromIssue;
+            issueCounts = countValues(tagsFromIssue);
 
         } else if(userCommitDataTags!== undefined){
             allTags = userCommitDataTags;
@@ -611,6 +611,9 @@ function ExpertiseGraph(initConfig) {
         } else {
             return [];
         }
+
+        console.log(issueCounts, userCounts);
+
         allTags = allTags.getUnique();
         allTags.sort();
         var formattedData =[];
@@ -618,8 +621,8 @@ function ExpertiseGraph(initConfig) {
         for(var i = 0;i < allTags.length; i++){
             var countFromIssue = 0;
             var countFromUser = 0;
-            if (issueTagData !== undefined) {
-                if (issueTagData.indexOf(allTags[i])!==-1){
+            if (tagsFromIssue !== undefined) {
+                if (tagsFromIssue.indexOf(allTags[i])!==-1){
                     countFromIssue = issueCounts[allTags[i]];
                 } else {
                     countFromIssue = 0;
@@ -983,7 +986,7 @@ function ExpertiseGraph(initConfig) {
     //get new data and redraw
     var coOccurenceDictionary = {};
 
-    expertGraph.drawWithNewData = function(issueTagData, userCommitDataTags,TagCountServices, $http, optionsState){
+    expertGraph.drawWithNewData = function(tagsFromIssue, userCommitDataTags,TagCountServices, $http, optionsState){
         graphConfig = optionsState;
 
         // http://blog.thomsonreuters.com/index.php/mobile-patent-suits-graphic-of-the-day/
@@ -996,7 +999,7 @@ function ExpertiseGraph(initConfig) {
 
         //&tag=javascript&tag=d3.js&tag=html&tag=jquery&tag=css&tag=svg'
 
-        var fullData = formatSOData(issueTagData, userCommitDataTags, TagCountServices);
+        var fullData = formatSOData(tagsFromIssue, userCommitDataTags, TagCountServices);
         var dataString='';
 
         for(var i = 0; i < fullData.length; i++){
@@ -1013,7 +1016,7 @@ function ExpertiseGraph(initConfig) {
             data: dataString,
             headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         }).success(function (response) {
-            fullData = formatSOData(issueTagData, userCommitDataTags, TagCountServices);
+            fullData = formatSOData(tagsFromIssue, userCommitDataTags, TagCountServices);
             graphLinks=[];
             nodes={};
             hideLoadingScreen();
@@ -1071,7 +1074,6 @@ function ExpertiseGraph(initConfig) {
                 .links(graphLinks)
                 .size([width, height])
                 .linkDistance(function(d,i){
-                    // console.log(d);
                     return Math.random()*200 + 200;
                 })
                 .alpha(0.001)
@@ -1153,28 +1155,28 @@ function ExpertiseGraph(initConfig) {
                 .text(function(d) { return d.name; });
             // Use elliptical arc path segments to doubly-encode directionality.
 
-            expertGraph.draw(issueTagData, userCommitDataTags);
-            if(issueTagData !== undefined &&
+            expertGraph.draw(tagsFromIssue, userCommitDataTags);
+            if(tagsFromIssue !== undefined &&
                 userCommitDataTags !== undefined){
-                if(issueTagData.length !== 0 &&
+                if(tagsFromIssue.length !== 0 &&
                     userCommitDataTags.length !== 0){
 
-                    similarityBetweenBugAndUser = calculateSimilarity(issueTagData,userCommitDataTags, TagCountServices);
+                    similarityBetweenBugAndUser = calculateSimilarity(tagsFromIssue,userCommitDataTags, TagCountServices);
                 } else {
                     similarityBetweenBugAndUser = 0;
                 }
             }
         });
     }
-    expertGraph.draw = function(issueTagData, userCommitDataTags,TagCountServices, $http) {
+    expertGraph.draw = function(tagsFromIssue, userCommitDataTags,TagCountServices, $http) {
         // graphConfig = optionsState;
 
-        if(issueTagData !== undefined &&
+        if(tagsFromIssue !== undefined &&
             userCommitDataTags !== undefined){
-            if(issueTagData.length !== 0 &&
+            if(tagsFromIssue.length !== 0 &&
                 userCommitDataTags.length !== 0){
 
-                similarityBetweenBugAndUser = calculateSimilarity(issueTagData,userCommitDataTags, TagCountServices);
+                similarityBetweenBugAndUser = calculateSimilarity(tagsFromIssue,userCommitDataTags, TagCountServices);
             } else {
                 similarityBetweenBugAndUser = 0;
             }
