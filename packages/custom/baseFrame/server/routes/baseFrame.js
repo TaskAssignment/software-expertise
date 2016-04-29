@@ -28,7 +28,6 @@ var https = require('https');
     var tag2Filter;
     var cooccurenceFilter;
 
-    var commonUserData;
     var commonUserDataCF;
     var commonUserFilter;
     var TagCountServices = {};
@@ -62,9 +61,9 @@ var https = require('https');
                         if(err) console.error(err);
                         else {
                             var commonUserResult = d3.tsv.parse(result);
-
                             console.log('load data files 3/3');
-                            commonUserData = commonUserResult;
+
+                            //Save this to Database!!!
                             commonUserDataCF = cf(commonUserResult);
                             commonUserFilter = commonUserDataCF.dimension(function(d) { return d.login; });
                         }
@@ -84,7 +83,6 @@ var https = require('https');
         } else {
             commonUserFilter.filter(req.body.gitName);
         }
-
         res.send(JSON.stringify(commonUserFilter.top(Infinity)));
     });
     function calculateSimilarity (bugTags, userTags, TagCountServices){
