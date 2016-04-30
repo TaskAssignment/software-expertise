@@ -564,9 +564,9 @@ function ExpertiseGraph(initConfig) {
         for(var tag in allTags){
             var formattedTag = {
                 name: tag,
-                soCount: TagCountServices[tag] || 1,
-                userCount: userSOTags[tag] || 1,
-                issueCount: tagsFromIssue[tag] || 1,
+                soCount: parseInt(TagCountServices[tag]) || 1,
+                userCount: userSOTags[tag] || 0,
+                issueCount: tagsFromIssue[tag] || 0,
             }
             formattedData.push(formattedTag);
         }
@@ -608,7 +608,7 @@ function ExpertiseGraph(initConfig) {
      */
     function tick() {
         linkPath.attr('d', linkArc);
-        soNode.attr('transform', transform);
+        // soNode.attr('transform', transform);
         userNode.attr('transform', transform);
         issueNode.attr('transform', transform);
         nodeLabels.attr('transform', transform);
@@ -926,61 +926,21 @@ function ExpertiseGraph(initConfig) {
             data: dataString,
             headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         }).success(function (response) {
-          console.log(response);
-            fullData = formatSOData(tagsFromIssue, userSOTags, TagCountServices);
+            var nodes = formatSOData(tagsFromIssue, userSOTags, TagCountServices);
             var graphLinks = [];
-            var nodes = {};
+            //  = {};
             hideLoadingScreen();
 
-            for(var i = 0; i < response.length; i++) {
-                coOccurrenceDictionary[response[i].Tag1 + response[i].Tag2] =
-                    +response[i].CoOccurrence;
-                graphLinks.push({
-                    'source': response[i].Tag1,
-                    'target': response[i].Tag2,
-                    'coOccurrence': +response[i].CoOccurrence,
-                    'name': response[i].Tag1 + response[i].Tag2,
-                    'type': 'resolved'
-                });
-                graphLinks.push({
-                    'source': response[i].Tag2,
-                    'target': response[i].Tag1,
-                    'coOccurrence': +response[i].CoOccurrence,
-                    'name': response[i].Tag2 + response[i].Tag1,
-                    'type': 'resolved'
-                });
-            }
-            var tempSetupNode = {};
-            for(var i = 0; i < fullData.length; i++){
-                tempSetupNode[fullData[i].tagName] = {
-                    name: fullData[i].tagName,
-                    soCount: fullData[i].soCount,
-                    userCount: fullData[i].userCount,
-                    issueCount: fullData[i].issueCount,
+            for(let occurrence of response) {
+                var link = {
+                    source: occurrence.Tag1,
+                    target: occurrence.Tag2,
+                    coOccurrence: occurrence.coOccurrence
                 }
+                graphLinks.push(link);
             }
-            // Compute the distinct nodes from the graphLinks.
 
-            graphLinks.forEach(function(link) {
-                link.source = nodes[link.source] || (nodes[link.source] = {
-                    name: link.source,
-                    coOccurrence: link.coOccurrence,
-                    soCount:10,
-                    userCount:20,
-                    issueCount:30,
-                });
-                link.target = nodes[link.target] || (nodes[link.target] = {
-                    name: link.target,
-                    coOccurrence: link.coOccurrence,
-                    soCount:40,
-                    userCount:50,
-                    issueCount:60	,
-                });
-            });
-            linkedByIndex = [];
-            graphLinks.forEach(function(d) {
-                linkedByIndex[d.source + ',' + d.target] = true;
-            });
+            console.log(d3.values(nodes));
             force = d3.layout.force()
                 .nodes(d3.values(nodes))
                 .links(graphLinks)
@@ -999,85 +959,85 @@ function ExpertiseGraph(initConfig) {
                 .data(force.links(),function(d){
                     return d.name;
                 });
-
-            linkPath.enter().append('path')
-                .attr('class', function(d) { return 'link ' + d.type; })
-                .attr('pointer-events','none')
-                .attr('marker-end', function(d) {
-                    var urlStr = window.location.href.toString();
-                    var questionMarkIndex = urlStr.indexOf('?');
-                    if(questionMarkIndex!==-1){
-                        urlStr = urlStr.slice(questionMarkIndex,urlStr.length);
-                    } else {
-                        urlStr = '';
-                    }
-                    if(graphConfig.directed){
-
-                        return 'url('+urlStr +'#' + 'resolved' + ')';
-                    } else {
-                        return 'url(#none)';
-                    }
-                })
-                .attr('id', function(d){
-                    return 'link'+d.name;
-                })
-                .style('opacity', function(o) {
-                    return 0.5
-                });
-            linkPath.exit().remove();
-            soNode = outerG.selectAll('.soNode')
-                .data(force.nodes(), function(d){
-                    return d.name;
-                });
-
-            soNode.enter().append('circle')
-                .attr('r', 0)
-                .attr('id', function(d){
-                    return 'soNode'+d.name;
-                })
-                .classed('soNode',true);
-
-            userNode = outerG.selectAll('.userNode')
-                .data(force.nodes(), function(d){
-                    return d.name;
-                });
-            userNode.enter().append('circle')
-                .attr('r', 0)
-                .classed('userNode',true)
-
-
-            issueNode = outerG.selectAll('.issueNode')
-                .data(force.nodes(), function(d){
-                    return d.name;
-                });
-            issueNode.enter().append('circle')
-                .attr('r', 0)
-                .classed('issueNode',true);
-                // .call(drag);
-
-
-            nodeLabels = outerG.selectAll('text')
-                .data(force.nodes(), function(d){
-                    return d.name;
-                });
-            nodeLabels.enter().append('text')
-                .attr('x', 8)
-                .attr('pointer-events','none')
-                .attr('y', '.31em')
-                .text(function(d) { return d.name; });
-            // Use elliptical arc path segments to doubly-encode directionality.
-
-            expertGraph.draw(tagsFromIssue, userSOTags);
-            if(tagsFromIssue !== undefined &&
-                userSOTags !== undefined){
-                if(tagsFromIssue.length !== 0 &&
-                    userSOTags.length !== 0){
-
-                    similarityBetweenBugAndUser = calculateSimilarity(tagsFromIssue,userSOTags, TagCountServices);
-                } else {
-                    similarityBetweenBugAndUser = 0;
-                }
-            }
+            //
+            // linkPath.enter().append('path')
+            //     .attr('class', function(d) { return 'link ' + d.type; })
+            //     .attr('pointer-events','none')
+            //     .attr('marker-end', function(d) {
+            //         var urlStr = window.location.href.toString();
+            //         var questionMarkIndex = urlStr.indexOf('?');
+            //         if(questionMarkIndex!==-1){
+            //             urlStr = urlStr.slice(questionMarkIndex,urlStr.length);
+            //         } else {
+            //             urlStr = '';
+            //         }
+            //         if(graphConfig.directed){
+            //
+            //             return 'url('+urlStr +'#' + 'resolved' + ')';
+            //         } else {
+            //             return 'url(#none)';
+            //         }
+            //     })
+            //     .attr('id', function(d){
+            //         return 'link'+d.name;
+            //     })
+            //     .style('opacity', function(o) {
+            //         return 0.5
+            //     });
+            // linkPath.exit().remove();
+            // soNode = outerG.selectAll('.soNode')
+            //     .data(force.nodes(), function(d){
+            //         return d.name;
+            //     });
+            //
+            // soNode.enter().append('circle')
+            //     .attr('r', 0)
+            //     .attr('id', function(d){
+            //         return 'soNode'+d.name;
+            //     })
+            //     .classed('soNode',true);
+            //
+            // userNode = outerG.selectAll('.userNode')
+            //     .data(force.nodes(), function(d){
+            //         return d.name;
+            //     });
+            // userNode.enter().append('circle')
+            //     .attr('r', 0)
+            //     .classed('userNode',true)
+            //
+            //
+            // issueNode = outerG.selectAll('.issueNode')
+            //     .data(force.nodes(), function(d){
+            //         return d.name;
+            //     });
+            // issueNode.enter().append('circle')
+            //     .attr('r', 0)
+            //     .classed('issueNode',true);
+            //     // .call(drag);
+            //
+            //
+            // nodeLabels = outerG.selectAll('text')
+            //     .data(force.nodes(), function(d){
+            //         return d.name;
+            //     });
+            // nodeLabels.enter().append('text')
+            //     .attr('x', 8)
+            //     .attr('pointer-events','none')
+            //     .attr('y', '.31em')
+            //     .text(function(d) { return d.name; });
+            // // Use elliptical arc path segments to doubly-encode directionality.
+            //
+            // expertGraph.draw(tagsFromIssue, userSOTags);
+            // if(tagsFromIssue !== undefined &&
+            //     userSOTags !== undefined){
+            //     if(tagsFromIssue.length !== 0 &&
+            //         userSOTags.length !== 0){
+            //
+            //         similarityBetweenBugAndUser = calculateSimilarity(tagsFromIssue,userSOTags, TagCountServices);
+            //     } else {
+            //         similarityBetweenBugAndUser = 0;
+            //     }
+            // }
 
         });
     }
