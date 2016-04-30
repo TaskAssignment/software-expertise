@@ -589,9 +589,9 @@ function ExpertiseGraph(initConfig) {
         for(var tag in allTags){
             var formattedTag = {
                 name: tag,
-                soCount: TagCountServices[tag] ? TagCountServices[tag] : 0,
-                userCount: userSOTags[tag] ? userSOTags[tag] : 0,
-                issueCount: tagsFromIssue[tag] ? tagsFromIssue[tag] : 0,
+                soCount: TagCountServices[tag] || 1,
+                userCount: userSOTags[tag] || 1,
+                issueCount: tagsFromIssue[tag] || 1,
             }
             formattedData.push(formattedTag);
         }
@@ -756,7 +756,7 @@ function ExpertiseGraph(initConfig) {
         var userTagCounts = userTags;
         function calculateCosineSimilarity (){
             var nominatorSum=0;
-            var uniqueBugTags = bugTags.getUnique();
+            var uniqueBugTags = bugTags;
             for (var i =0;i<uniqueBugTags.length; i++){
                 if (userTagCounts[uniqueBugTags[i]] !== undefined){
                     nominatorSum += bugTagCounts[uniqueBugTags[i]]*userTagCounts[uniqueBugTags[i]];
@@ -764,7 +764,7 @@ function ExpertiseGraph(initConfig) {
             }
 
             var developerSum = 0;
-            var uniqueDevTags = userTags.getUnique();
+            var uniqueDevTags = userTags;
 
             for (var i = 0; i <uniqueDevTags.length; i++){
                 developerSum+= userTagCounts[uniqueDevTags[i]]*userTagCounts[uniqueDevTags[i]];
@@ -929,7 +929,8 @@ function ExpertiseGraph(initConfig) {
     //get new data and redraw
     var coOccurrenceDictionary = {};
 
-    expertGraph.drawWithNewData = function(tagsFromIssue, userSOTags,TagCountServices, $http, optionsState){
+    expertGraph.drawWithNewData = function(tagsFromIssue, userSOTags,
+      TagCountServices, $http, optionsState){
         graphConfig = optionsState;
         var apiCallUrl  = '/api/baseFrame/coOccurrence';
 
@@ -941,8 +942,8 @@ function ExpertiseGraph(initConfig) {
 
         var dataString='';
 
-        for(var tag in fullData){
-            dataString += 'tag=' + tag + '&';
+        for(var tag of fullData){
+            dataString += 'tag=' + tag.name + '&';
         }
         showLoadingScreen();
 
@@ -952,13 +953,15 @@ function ExpertiseGraph(initConfig) {
             data: dataString,
             headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         }).success(function (response) {
+          console.log(response);
             fullData = formatSOData(tagsFromIssue, userSOTags, TagCountServices);
             graphLinks=[];
             nodes={};
             hideLoadingScreen();
 
             for(var i = 0; i < response.length; i++) {
-                coOccurrenceDictionary[response[i].Tag1 + response[i].Tag2] =  +response[i].CoOccurrence;
+                coOccurrenceDictionary[response[i].Tag1 + response[i].Tag2] =
+                    +response[i].CoOccurrence;
                 graphLinks.push({
                     'source': response[i].Tag1,
                     'target': response[i].Tag2,
@@ -989,16 +992,16 @@ function ExpertiseGraph(initConfig) {
                 link.source = nodes[link.source] || (nodes[link.source] = {
                     name: link.source,
                     coOccurrence: link.coOccurrence,
-                    soCount: tempSetupNode[link.source].soCount,
-                    userCount: tempSetupNode[link.source].userCount,
-                    issueCount: tempSetupNode[link.source].issueCount,
+                    soCount:10,
+                    userCount:20,
+                    issueCount:30,
                 });
                 link.target = nodes[link.target] || (nodes[link.target] = {
                     name: link.target,
                     coOccurrence: link.coOccurrence,
-                    soCount: tempSetupNode[link.target].soCount,
-                    userCount: tempSetupNode[link.target].userCount,
-                    issueCount: tempSetupNode[link.target].issueCount,
+                    soCount:40,
+                    userCount:50,
+                    issueCount:60	,
                 });
             });
             linkedByIndex = [];

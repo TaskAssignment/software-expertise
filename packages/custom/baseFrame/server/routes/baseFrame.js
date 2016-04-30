@@ -483,7 +483,7 @@ var https = require('https');
               }
           }
           //These tags come from 'displayIssueTags' on repository.js
-          console.log(tagsToFilter);
+          // console.log(tagsToFilter);
 
           tag1Filter.filter(function(d,i){
               if(tagsToFilter.indexOf(d.Tag1) !== -1 &&
