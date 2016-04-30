@@ -1,6 +1,6 @@
 var fs = require('fs');
 var cf = require('crossfilter');
-var d3 = require("d3");
+var d3 = require('d3');
 var http = require('http');
 
 var https = require('https');
@@ -74,7 +74,7 @@ var https = require('https');
     });
 
     app.post('/api/baseFrame/soIDFromUser', function(req, res, next){
-        if(req.body.getAll == 'true'){
+        if(req.body.getAll === 'true'){
             commonUsers.filter(null);
         } else {
             commonUserFilter.filter(req.body.gitName);
@@ -113,7 +113,7 @@ var https = require('https');
             }
 
             var denominator= Math.sqrt(developerSum) * Math.sqrt(bugSum);
-            if (denominator == 0 ){
+            if (denominator === 0 ){
                 console.log('div by 0 err')
                 var similarity = 0;
             } else {
@@ -124,10 +124,10 @@ var https = require('https');
             return similarity
         }
         function getSOWeight(soNodeCount) {
-            if (graphConfig['soWeight'] == 'linear') {
+            if (graphConfig['soWeight'] === 'linear') {
                 return 1 / soNodeCount;
-            } else if (graphConfig['soWeight'] == 'log') {
-                if (soNodeCount == 1) return 0;
+            } else if (graphConfig['soWeight'] === 'log') {
+                if (soNodeCount === 1) return 0;
                 return 1/ Math.log(soNodeCount);
             } else {
                 return 1/Math.sqrt(soNodeCount);
@@ -135,7 +135,7 @@ var https = require('https');
         }
 
         function getWeightOfNode (nodeCount,nodeName,accessor) {
-            if (graphConfig[accessor] == 'sqrt'){
+            if (graphConfig[accessor] === 'sqrt'){
                 var weight;
                 if (nodeCount === 0){
                     weight = 0;
@@ -145,7 +145,7 @@ var https = require('https');
 
                 return weight;
 
-            } else if (graphConfig[accessor] == 'linear') {
+            } else if (graphConfig[accessor] === 'linear') {
                 var weight;
                 if (nodeCount === 0){
                     weight = 0;
@@ -154,19 +154,19 @@ var https = require('https');
                 }
                 return weight;
 
-            } else if (graphConfig[accessor] == 'log'){
+            } else if (graphConfig[accessor] === 'log'){
 
                 var weight;
-                if (nodeCount ==1){
+                if (nodeCount ===1){
                     weight = 0;
-                } else if (nodeCount ==0){
+                } else if (nodeCount ===0){
                     weight = 0
                 } else {
                     weight = 1 / Math.log(nodeCount);
                 }
                 return weight;
 
-            } else if(graphConfig[accessor] == 'adjusted') {
+            } else if(graphConfig[accessor] === 'adjusted') {
                 var weight;
                 var weightSOTag = getSOWeight(TagCountServices[nodeName]);
 
@@ -181,7 +181,7 @@ var https = require('https');
             var uniqueBugTags = bugTags.getUnique();
 
             for (var i = 0; i < uniqueBugTags.length; i++){
-                if (userTagCounts[uniqueBugTags[i]] == undefined) {
+                if (userTagCounts[uniqueBugTags[i]] === undefined) {
                     nominatorSum += bugTagCounts[uniqueBugTags[i]];
                 } else {
                     nominatorSum += d3.min([
@@ -196,7 +196,7 @@ var https = require('https');
                 denominatorSum += getWeightOfNode(bugTagCounts[uniqueBugTags[i]], uniqueBugTags[i], 'userWeight');
             }
             var results;
-            if(denominatorSum == 0){
+            if(denominatorSum === 0){
                 results = 0;
             } else {
                 results = nominatorSum / denominatorSum
@@ -227,7 +227,7 @@ var https = require('https');
             var uniqueBugTags = bugTags.getUnique();
 
             for (var i = 0; i < uniqueBugTags.length; i++){
-                if (userTagCounts[uniqueBugTags[i]] == undefined) {
+                if (userTagCounts[uniqueBugTags[i]] === undefined) {
                     nominatorSum += bugTagCounts[uniqueBugTags[i]];
                 } else {
                     nominatorSum += d3.min([
@@ -242,7 +242,7 @@ var https = require('https');
                 denominatorSum += getWeightOfNode(bugTagCounts[uniqueBugTags[i]], uniqueBugTags[i], 'userWeight');
             }
             var results;
-            if(denominatorSum == 0){
+            if(denominatorSum === 0){
                 results = 0;
             } else {
                 results = nominatorSum / denominatorSum
@@ -252,15 +252,15 @@ var https = require('https');
         function calculateEdgeAndNodeSimilarity(){
             var justNodeSim = calculateJustNodeSimilarity();
         }
-        if(graphConfig['similarityType'] == 'jacard') {
+        if(graphConfig['similarityType'] === 'jacard') {
             return calculateJustNodeSimilarity();
         } else  {
             return calculateCosineSimilarity();
         }
     }
     app.post('/api/baseFrame/getSimilarity', function(req, res, next){
-        var directedGraph = req.body['directed'] == undefined ?
-            false : req.body['directed'] == 'false' ?
+        var directedGraph = req.body['directed'] === undefined ?
+            false : req.body['directed'] === 'false' ?
                 false : true;
 
         var soWeight = req.body['soWeight'];
@@ -275,7 +275,7 @@ var https = require('https');
             'directed': directedGraph,
 
         }
-        if (commparisonType == 'textToText'){
+        if (commparisonType === 'textToText'){
             var textA = req.body['textA'];
             var textB = req.body['textB'];
             var textAWords = textA.split(' ');
@@ -299,7 +299,7 @@ var https = require('https');
             var similarityBetweenBugAndUser = calculateSimilarity(tagsForA,tagsForB, TagCountServices);
             res.send(similarityBetweenBugAndUser.toString());
 
-        } else if (commparisonType == 'textToDev') {
+        } else if (commparisonType === 'textToDev') {
             var textA = req.body['textA'];
             var textAWords = textA.split(' ');
 
@@ -345,9 +345,9 @@ var https = require('https');
                    tagsForDev.sort();
 
                    var similarityBetweenBugAndUser = calculateSimilarity(tagsForA,tagsForDev, TagCountServices);
-                   if(undefined == similarityBetweenBugAndUser ||
-                        similarityBetweenBugAndUser == 0) {
-                        res.send("0");
+                   if(undefined === similarityBetweenBugAndUser ||
+                        similarityBetweenBugAndUser === 0) {
+                        res.send('0');
                    } else {
 
                        res.send(similarityBetweenBugAndUser.toString());
@@ -428,7 +428,7 @@ var https = require('https');
                             // issue matching deep linking
                             var matchingIssue;
                             for (var i = 0; i < issueResponse.length; i++) {
-                                if (req.body['issueNumb'] == issueResponse[i].id) {
+                                if (req.body['issueNumb'] === issueResponse[i].id) {
                                     matchingIssue = issueResponse[i];
                                 }
                             }
@@ -446,9 +446,9 @@ var https = require('https');
                             }
                             tagsForIssue.sort();
                             var similarityBetweenBugAndUser = calculateSimilarity(tagsForIssue,tagsForDev, TagCountServices);
-                            if(undefined == similarityBetweenBugAndUser ||
-                                 similarityBetweenBugAndUser == 0) {
-                                 res.send("0");
+                            if(undefined === similarityBetweenBugAndUser ||
+                                 similarityBetweenBugAndUser === 0) {
+                                 res.send('0');
                             } else {
 
                                 res.send(similarityBetweenBugAndUser.toString());
@@ -464,7 +464,7 @@ var https = require('https');
     })
     app.post('/api/baseFrame/coOccurrence', function (req, res, next) {
         var stringRes = '';
-        if (req.body['getEverything'] == "true"){
+        if (req.body['getEverything'] === 'true'){
 
              tag1Filter.filter(null);
 
@@ -475,7 +475,7 @@ var https = require('https');
 
         } else {
           var tagsToFilter = [];
-          console.log(req.body);
+          // console.log(req.body);
           for(var key in req.body) {
               if(req.body.hasOwnProperty(key))
               {

@@ -15,7 +15,7 @@ angular.module('mean.baseFrame')
       var TagCountServices = {};
       var urlStr = window.location.href.toString();
       var questionMarkIndex = urlStr.indexOf('?');
-      if(questionMarkIndex!=-1){
+      if(questionMarkIndex!==-1){
           urlStr = urlStr.slice(0,questionMarkIndex);
       }
       var apiCallUrlSO  = urlStr+'api/baseFrame/soTags';
@@ -78,7 +78,7 @@ angular.module('mean.baseFrame')
             var cosineChecked = true;
             var adjChecked = false;
 
-            if(optionsState.similarityType == 'jacard') {
+            if(optionsState.similarityType === 'jacard') {
                 cosineChecked = false;
                 adjChecked = true;
             }
@@ -257,7 +257,7 @@ angular.module('mean.baseFrame')
             //                }
             //                numberOfReposQueried++
             //                // HACK: should use promise instead
-            //             //    if (numberOfReposQueried == repoResponse.length) {
+            //             //    if (numberOfReposQueried === repoResponse.length) {
             //                 //    drawData();
             //             //    }
             //            });
@@ -277,15 +277,15 @@ angular.module('mean.baseFrame')
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'}
                 }).success(function (response, soId) {
                     var soId = undefined;
-                    if(response.length == 1){
+                    if(response.length === 1){
                         soId = response[0].SOId;
                     }
 
                     if(soId){
                         getSOTagsFromUser(soId);
                     } else {
-                        console.log("User is not on StackOverflow");
-                        return "User is not on StackOverflow";
+                        console.log('User is not on StackOverflow');
+                        return 'User is not on StackOverflow';
                     }
                 });
             }
@@ -418,8 +418,8 @@ angular.module('mean.baseFrame')
         $scope.closeAndResetOptions = function(){
             if(optionsChanged){
                 updateDeeplink();
-                if (tagsFromIssue == undefined &&
-                    userSOTags == undefined){
+                if (tagsFromIssue === undefined &&
+                    userSOTags === undefined){
                 } else{
                     graphs.draw(tagsFromIssue, userSOTags,TagCountServices,  $http);
                 }
@@ -442,13 +442,13 @@ angular.module('mean.baseFrame')
              $scope.nodeSearchBox = '';
         }
         $scope.setGraphOptionCosine = function() {
-            if(optionsState.similarityType == 'cosine') return
+            if(optionsState.similarityType === 'cosine') return
 
             optionsState.similarityType = 'cosine'
             d3.select('#adjTrue').property('checked', false);
         }
         $scope.setGraphOptionAdjustedWeight = function() {
-            if(optionsState.similarityType == 'jacard') return
+            if(optionsState.similarityType === 'jacard') return
             optionsState.similarityType = 'jacard'
             d3.select('#cosineTrue').property('checked', false);
         }
@@ -465,58 +465,33 @@ angular.module('mean.baseFrame')
  */
 
 function ExpertiseGraph(initConfig) {
-    // var expertSVG = d3.select('#expertiseGraphDiv')
-    //    .append('svg')
-    //    .attr('width', svgWidth + 'px')
-    //    .attr('height', '500px');
 
-    /**
-     * modifies Array to have unique FUNCTION
-     *
-     *
-     */
-    Array.prototype.getUnique = function(){
-        var u = {}, a = [];
-        for(var i = 0, l = this.length; i < l; ++i){
-          if(u.hasOwnProperty(this[i])) {
-             continue;
-          }
-          a.push(this[i]);
-          u[this[i]] = 1;
-        }
-        return a;
-    }
     var graphConfig = initConfig;
     ///////////////////////////////////////////////////////////////////////////
     var expertGraph = this;
-    var width = window.innerWidth - d3.select('#leftSelectionPanel').node().getBoundingClientRect().width - 5;
-    var height = window.innerHeight - d3.select('.page-header').node().getBoundingClientRect().height - 5;
+    //temporary numbers just to see how things work
+    var width = 800; //window.innerWidth - d3.select('#leftSelectionPanel').node().getBoundingClientRect().width - 5;
+    var height = 1024; //window.innerHeight - d3.select('.page-header').node().getBoundingClientRect().height - 5;
 
-
-    // GRAPH DATA
-    var graphLinks = [];
-    var nodes = {};
-
-
-    var svg = d3.select("#expertiseGraphDiv").append("svg")
-        .attr("width", width)
-        .attr("height", height)
+    var svg = d3.select('#expertiseGraphDiv').append('svg')
+        .attr('width', width)
+        .attr('height', height)
         .attr('id','expertiseGraph');
 
 
     // Per-type markers, as they don't inherit styles.
-    svg.append("defs").selectAll("marker")
-        .data(["suit", "licensing", "resolved"])
-      .enter().append("marker")
-        .attr("id", function(d) { return d; })
-        .attr("viewBox", "0 -5 10 10")
-        .attr("refX", 50)
-        .attr("refY", -1.5)
-        .attr("markerWidth", 6)
-        .attr("markerHeight", 6)
-        .attr("orient", "auto")
-      .append("path")
-        .attr("d", "M0,-5L10,0L0,5");
+    svg.append('defs').selectAll('marker')
+        .data(['suit', 'licensing', 'resolved'])
+      .enter().append('marker')
+        .attr('id', function(d) { return d; })
+        .attr('viewBox', '0 -5 10 10')
+        .attr('refX', 50)
+        .attr('refY', -1.5)
+        .attr('markerWidth', 6)
+        .attr('markerHeight', 6)
+        .attr('orient', 'auto')
+      .append('path')
+        .attr('d', 'M0,-5L10,0L0,5');
 
 
     var outerG = svg.append('g').attr('id','outerGrouping');
@@ -529,9 +504,9 @@ function ExpertiseGraph(initConfig) {
 
     var min_score = 0;
     var max_score = 1;
-    var default_node_color = "#ccc";
-    //var default_node_color = "rgb(3,190,100)";
-    var default_link_color = "#888";
+    var default_node_color = '#ccc';
+    //var default_node_color = 'rgb(3,190,100)';
+    var default_link_color = '#888';
     var nominal_base_node_size = 8;
     var nominal_text_size = 10;
     var max_text_size = 24;
@@ -543,7 +518,7 @@ function ExpertiseGraph(initConfig) {
     var zoom = d3.behavior.zoom().scaleExtent([min_zoom,max_zoom]);
     var currentZoom = 1;
 
-    var highlight_color = "blue";
+    var highlight_color = 'blue';
     var highlight_trans = 0.1;
     var nodeLabels;
     var soNode;
@@ -605,7 +580,7 @@ function ExpertiseGraph(initConfig) {
      *
      */
     function isConnected(a, b) {
-        return linkedByIndex[a.index + "," + b.index] || linkedByIndex[b.index + "," + a.index] || a.index == b.index;
+        return linkedByIndex[a.index + ',' + b.index] || linkedByIndex[b.index + ',' + a.index] || a.index === b.index;
     }
 
     /**
@@ -616,8 +591,8 @@ function ExpertiseGraph(initConfig) {
      */
     function hasConnections(a) {
         for (var property in linkedByIndex) {
-            s = property.split(",");
-            if ((s[0] == a.index || s[1] == a.index) && linkedByIndex[property]) {
+            s = property.split(',');
+            if ((s[0] === a.index || s[1] === a.index) && linkedByIndex[property]) {
                 return true;
             }
         }
@@ -632,11 +607,11 @@ function ExpertiseGraph(initConfig) {
      *
      */
     function tick() {
-        linkPath.attr("d", linkArc);
-        soNode.attr("transform", transform);
-        userNode.attr("transform", transform);
-        issueNode.attr("transform", transform);
-        nodeLabels.attr("transform", transform);
+        linkPath.attr('d', linkArc);
+        soNode.attr('transform', transform);
+        userNode.attr('transform', transform);
+        issueNode.attr('transform', transform);
+        nodeLabels.attr('transform', transform);
     }
 
     function linkArc(d) {
@@ -644,16 +619,16 @@ function ExpertiseGraph(initConfig) {
             var dx = d.target.x- d.source.x,
             dy = d.target.y - d.source.y,
             dr = Math.sqrt(dx * dx + dy * dy);
-            return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + (d.target.x) + "," + (d.target.y);
+            return 'M' + d.source.x + ',' + d.source.y + 'A' + dr + ',' + dr + ' 0 0,1 ' + (d.target.x) + ',' + (d.target.y);
         } else {
             var dx = d.target.x- d.source.x,
             dy = d.target.y - d.source.y,
             dr = Math.sqrt(dx * dx + dy * dy);
-            return "M" + d.source.x + "," + d.source.y + "L" + "  " + (d.target.x) + "," + (d.target.y);
+            return 'M' + d.source.x + ',' + d.source.y + 'L' + '  ' + (d.target.x) + ',' + (d.target.y);
         }
     }
     function transform(d) {
-        return "translate(" + d.x + "," + d.y + ")";
+        return 'translate(' + d.x + ',' + d.y + ')';
     }
 
     /**
@@ -662,8 +637,8 @@ function ExpertiseGraph(initConfig) {
      *
      */
     function set_highlight(d,showMany) {
-        var highlightMult = showMany == true ? true : false;
-        if (highlight_color!="white")
+        var highlightMult = showMany === true ? true : false;
+        if (highlight_color!=='white')
         {
             soNode.classed('dimmed', function(o) {
                 return isConnected(d, o) ? false : true;
@@ -677,13 +652,13 @@ function ExpertiseGraph(initConfig) {
                 return isConnected(d, o) ? false : true;
             })
             // .style('opacity',0.6);
-            nodeLabels.style("font-weight", function(o) {
-                return isConnected(d, o) ? "bold" : "normal";});
-            linkPath.style("stroke", function(o) {
-                return o.source.index == d.index || o.target.index == d.index ? highlight_color : ((isNumber(o.score) && o.score>=0)?color(o.score):default_link_color);
+            nodeLabels.style('font-weight', function(o) {
+                return isConnected(d, o) ? 'bold' : 'normal';});
+            linkPath.style('stroke', function(o) {
+                return o.source.index === d.index || o.target.index === d.index ? highlight_color : ((isNumber(o.score) && o.score>=0)?color(o.score):default_link_color);
             });
-            linkPath.style("opacity", function(o) {
-                return o.source.index == d.index || o.target.index == d.index ? .7 : 0
+            linkPath.style('opacity', function(o) {
+                return o.source.index === d.index || o.target.index === d.index ? .7 : 0
             });
         }
     }
@@ -691,11 +666,11 @@ function ExpertiseGraph(initConfig) {
         soNode.classed('dimmed',false);
         userNode.classed('dimmed',false);
         issueNode.classed('dimmed',false);
-        nodeLabels.style("font-weight", "normal");
+        nodeLabels.style('font-weight', 'normal');
         linkPath.classed('hideLine',false);
 
-        linkPath.style("stroke", default_link_color)
-        .style("opacity", function(o) {
+        linkPath.style('stroke', default_link_color)
+        .style('opacity', function(o) {
             return 0.5
         });
     }
@@ -728,12 +703,12 @@ function ExpertiseGraph(initConfig) {
             if(target[0][0] !== null){
                 target.classed('searched',function(d){
                     // set_highlight(d,true);
-                    linkPath.classed("searching", function(o) {
-                        if(o.source.index == d.index || o.target.index == d.index){
+                    linkPath.classed('searching', function(o) {
+                        if(o.source.index === d.index || o.target.index === d.index){
                             unhideLines.push(o);
                         }
                         return false;
-                        // return o.source.index == d.index || o.target.index == d.index ? false
+                        // return o.source.index === d.index || o.target.index === d.index ? false
                     });
                     return true;
                 })
@@ -776,7 +751,7 @@ function ExpertiseGraph(initConfig) {
             }
 
             var denominator= Math.sqrt(developerSum) * Math.sqrt(bugSum);
-            if (denominator == 0 ){
+            if (denominator === 0 ){
                 console.log('div by 0 err')
                 var similarity = 0;
             } else {
@@ -788,10 +763,10 @@ function ExpertiseGraph(initConfig) {
         }
         function getSOWeight(soNodeCount) {
             console.lot(soNodeCount);
-            if (graphConfig['soWeight'] == 'linear') {
+            if (graphConfig['soWeight'] === 'linear') {
                 return 1 / soNodeCount;
-            } else if (graphConfig['soWeight'] == 'log') {
-                if (soNodeCount == 1) return 0;
+            } else if (graphConfig['soWeight'] === 'log') {
+                if (soNodeCount === 1) return 0;
                 return 1/ Math.log(soNodeCount);
             } else {
                 return 1/Math.sqrt(soNodeCount);
@@ -799,7 +774,7 @@ function ExpertiseGraph(initConfig) {
         }
 
         function getWeightOfNode (nodeCount,nodeName,accessor) {
-            if (graphConfig[accessor] == 'sqrt'){
+            if (graphConfig[accessor] === 'sqrt'){
                 var weight;
                 if (nodeCount === 0){
                     weight = 0;
@@ -809,7 +784,7 @@ function ExpertiseGraph(initConfig) {
 
                 return weight;
 
-            } else if (graphConfig[accessor] == 'linear') {
+            } else if (graphConfig[accessor] === 'linear') {
                 var weight;
                 if (nodeCount === 0){
                     weight = 0;
@@ -818,19 +793,19 @@ function ExpertiseGraph(initConfig) {
                 }
                 return weight;
 
-            } else if (graphConfig[accessor] == 'log'){
+            } else if (graphConfig[accessor] === 'log'){
 
                 var weight;
-                if (nodeCount ==1){
+                if (nodeCount ===1){
                     weight = 0;
-                } else if (nodeCount ==0){
+                } else if (nodeCount ===0){
                     weight = 0
                 } else {
                     weight = 1 / Math.log(nodeCount);
                 }
                 return weight;
 
-            } else if(graphConfig[accessor] == 'adjusted') {
+            } else if(graphConfig[accessor] === 'adjusted') {
                 var weight;
                 var weightSOTag = getSOWeight(TagCountServices[nodeName]);
 
@@ -842,10 +817,10 @@ function ExpertiseGraph(initConfig) {
         }
         function calculateJustNodeSimilarity(){
             var nominatorSum = 0;
-            var uniqueBugTags = bugTags.getUnique();
+            var uniqueBugTags = bugTags;
 
             for (var i = 0; i < uniqueBugTags.length; i++){
-                if (userTagCounts[uniqueBugTags[i]] == undefined) {
+                if (userTagCounts[uniqueBugTags[i]] === undefined) {
                     nominatorSum += bugTagCounts[uniqueBugTags[i]];
                 } else {
                     nominatorSum += d3.min([
@@ -860,7 +835,7 @@ function ExpertiseGraph(initConfig) {
                 denominatorSum += getWeightOfNode(bugTagCounts[uniqueBugTags[i]], uniqueBugTags[i], 'userWeight');
             }
             var results;
-            if(denominatorSum == 0){
+            if(denominatorSum === 0){
                 results = 0;
             } else {
                 results = nominatorSum / denominatorSum
@@ -891,7 +866,7 @@ function ExpertiseGraph(initConfig) {
             var uniqueBugTags = bugTags.getUnique();
 
             for (var i = 0; i < uniqueBugTags.length; i++){
-                if (userTagCounts[uniqueBugTags[i]] == undefined) {
+                if (userTagCounts[uniqueBugTags[i]] === undefined) {
                     nominatorSum += bugTagCounts[uniqueBugTags[i]];
                 } else {
                     nominatorSum += d3.min([
@@ -906,7 +881,7 @@ function ExpertiseGraph(initConfig) {
                 denominatorSum += getWeightOfNode(bugTagCounts[uniqueBugTags[i]], uniqueBugTags[i], 'userWeight');
             }
             var results;
-            if(denominatorSum == 0){
+            if(denominatorSum === 0){
                 results = 0;
             } else {
                 results = nominatorSum / denominatorSum
@@ -917,7 +892,7 @@ function ExpertiseGraph(initConfig) {
             var justNodeSim = calculateJustNodeSimilarity();
 
         }
-        if(graphConfig['similarityType'] == 'jacard') {
+        if(graphConfig['similarityType'] === 'jacard') {
 
             return calculateJustNodeSimilarity();
 
@@ -938,8 +913,6 @@ function ExpertiseGraph(initConfig) {
 
         var fullData = formatSOData(tagsFromIssue, userSOTags, TagCountServices);
 
-        console.log(fullData);
-
         var dataString='';
 
         for(var tag of fullData){
@@ -955,8 +928,8 @@ function ExpertiseGraph(initConfig) {
         }).success(function (response) {
           console.log(response);
             fullData = formatSOData(tagsFromIssue, userSOTags, TagCountServices);
-            graphLinks=[];
-            nodes={};
+            var graphLinks = [];
+            var nodes = {};
             hideLoadingScreen();
 
             for(var i = 0; i < response.length; i++) {
@@ -967,14 +940,14 @@ function ExpertiseGraph(initConfig) {
                     'target': response[i].Tag2,
                     'coOccurrence': +response[i].CoOccurrence,
                     'name': response[i].Tag1 + response[i].Tag2,
-                    'type': "resolved"
+                    'type': 'resolved'
                 });
                 graphLinks.push({
                     'source': response[i].Tag2,
                     'target': response[i].Tag1,
                     'coOccurrence': +response[i].CoOccurrence,
                     'name': response[i].Tag2 + response[i].Tag1,
-                    'type': "resolved"
+                    'type': 'resolved'
                 });
             }
             var tempSetupNode = {};
@@ -1006,7 +979,7 @@ function ExpertiseGraph(initConfig) {
             });
             linkedByIndex = [];
             graphLinks.forEach(function(d) {
-                linkedByIndex[d.source + "," + d.target] = true;
+                linkedByIndex[d.source + ',' + d.target] = true;
             });
             force = d3.layout.force()
                 .nodes(d3.values(nodes))
@@ -1018,79 +991,79 @@ function ExpertiseGraph(initConfig) {
                 .alpha(0.001)
                 .friction(0.3)
                 .charge(-3000)
-                .on("tick", tick)
+                .on('tick', tick)
                 .start();
 
 
-            linkPath = outerG.selectAll(".link")
+            linkPath = outerG.selectAll('.link')
                 .data(force.links(),function(d){
                     return d.name;
                 });
 
-            linkPath.enter().append("path")
-                .attr("class", function(d) { return "link " + d.type; })
+            linkPath.enter().append('path')
+                .attr('class', function(d) { return 'link ' + d.type; })
                 .attr('pointer-events','none')
-                .attr("marker-end", function(d) {
+                .attr('marker-end', function(d) {
                     var urlStr = window.location.href.toString();
                     var questionMarkIndex = urlStr.indexOf('?');
-                    if(questionMarkIndex!=-1){
+                    if(questionMarkIndex!==-1){
                         urlStr = urlStr.slice(questionMarkIndex,urlStr.length);
                     } else {
-                        urlStr = "";
+                        urlStr = '';
                     }
                     if(graphConfig.directed){
 
-                        return "url("+urlStr +"#" + "resolved" + ")";
+                        return 'url('+urlStr +'#' + 'resolved' + ')';
                     } else {
-                        return "url(#none)";
+                        return 'url(#none)';
                     }
                 })
                 .attr('id', function(d){
                     return 'link'+d.name;
                 })
-                .style("opacity", function(o) {
+                .style('opacity', function(o) {
                     return 0.5
                 });
             linkPath.exit().remove();
-            soNode = outerG.selectAll(".soNode")
+            soNode = outerG.selectAll('.soNode')
                 .data(force.nodes(), function(d){
                     return d.name;
                 });
 
-            soNode.enter().append("circle")
-                .attr("r", 0)
+            soNode.enter().append('circle')
+                .attr('r', 0)
                 .attr('id', function(d){
                     return 'soNode'+d.name;
                 })
                 .classed('soNode',true);
 
-            userNode = outerG.selectAll(".userNode")
+            userNode = outerG.selectAll('.userNode')
                 .data(force.nodes(), function(d){
                     return d.name;
                 });
-            userNode.enter().append("circle")
-                .attr("r", 0)
+            userNode.enter().append('circle')
+                .attr('r', 0)
                 .classed('userNode',true)
 
 
-            issueNode = outerG.selectAll(".issueNode")
+            issueNode = outerG.selectAll('.issueNode')
                 .data(force.nodes(), function(d){
                     return d.name;
                 });
-            issueNode.enter().append("circle")
-                .attr("r", 0)
+            issueNode.enter().append('circle')
+                .attr('r', 0)
                 .classed('issueNode',true);
                 // .call(drag);
 
 
-            nodeLabels = outerG.selectAll("text")
+            nodeLabels = outerG.selectAll('text')
                 .data(force.nodes(), function(d){
                     return d.name;
                 });
-            nodeLabels.enter().append("text")
-                .attr("x", 8)
+            nodeLabels.enter().append('text')
+                .attr('x', 8)
                 .attr('pointer-events','none')
-                .attr("y", ".31em")
+                .attr('y', '.31em')
                 .text(function(d) { return d.name; });
             // Use elliptical arc path segments to doubly-encode directionality.
 
@@ -1105,275 +1078,265 @@ function ExpertiseGraph(initConfig) {
                     similarityBetweenBugAndUser = 0;
                 }
             }
+
         });
     }
     expertGraph.draw = function(tagsFromIssue, userSOTags,TagCountServices, $http) {
-        // graphConfig = optionsState;
-
-        if(tagsFromIssue !== undefined &&
-            userSOTags !== undefined){
-            if(tagsFromIssue.length !== 0 &&
-                userSOTags.length !== 0){
-
-                similarityBetweenBugAndUser = calculateSimilarity(tagsFromIssue, userSOTags, TagCountServices);
-            } else {
-                similarityBetweenBugAndUser = 0;
-            }
-            d3.select("#similarityValue").text(similarityBetweenBugAndUser);
-            d3.select("#similarText").classed('hidden',false);
-
-        } else {
-            d3.select("#similarText").classed('hidden',true);
-
-        }
-        if(graphConfig.directed){
-            storkeWidthFunction = function(d){
-                var size = strokeScale(
-                    d.source.coOccurrence / d.source.soCount
-                );
-                return size;
-            }
-        } else {
-            storkeWidthFunction = function(d){
-                var size = strokeScale(
-                    2* d.source.coOccurrence / (d.source.soCount + d.target.soCount)
-                );
-                return size;
-            }
-        }
-
-        if (graphConfig.soWeight == 'sqrt'){
-            soScaleFunction = function(d){
-                var weight;
-                if (d.soCount === 0){
-                    weight = 0;
-                } else {
-                    weight = weightScale((1 / Math.sqrt(d.soCount)));
-
-                }
-                return weight;
-            }
-        } else if (graphConfig.soWeight == 'log'){
-            soScaleFunction = function(d){
-                var weight;
-                if (d.soCount  == 1){
-                    weight = weightScale(1);
-                } else if (d.soCount == 0){
-                    weight = 0;
-                } else {
-                    weight = weightScale((1 / Math.log(d.soCount)));
-
-                }
-                return weight
-            }
-        } else if (graphConfig.soWeight == 'linear') {
-            soScaleFunction = function(d){
-                var weight;
-                if (d.soCount === 0){
-                    weight = 0;
-                } else {
-                    weight = weightScale((1 / d.soCount));
-
-                }
-                return weight
-            }
-        }  else {
-            soScaleFunction = function(d){
-                var weight;
-                if (d.soCount === 0){
-                    weight = 0;
-                } else {
-                    weight = weightScale((1 / d.soCount));
-
-                }
-                return weight
-            }
-        }
-        if (graphConfig.gitWeight == 'sqrt'){
-            issueScaleFunction= function(d){
-                var weight;
-                if (d.issueCount === 0){
-                    weight = 0;
-                } else {
-                    weight = weightScale((1 / Math.sqrt(d.issueCount)));
-                }
-
-                return weight;
-            }
-            userScaleFunction = function(d){
-                var weight;
-                if (d.userCount === 0){
-                    weight = 0;
-                } else {
-                    weight = weightScale((1 / Math.sqrt(d.userCount)));
-                }
-
-                return weight;
-            }
-        } else if (graphConfig.gitWeight == 'linear') {
-            issueScaleFunction = function(d){
-                var weight;
-                if (d.issueCount === 0){
-                    weight = 0;
-                } else {
-                    weight = weightScale((1 / d.issueCount));
-                }
-
-                return weight;
-            }
-            userScaleFunction = function(d){
-                var weight;
-                if (d.userCount === 0){
-                    weight = 0;
-                } else {
-                    weight = weightScale((1 / d.userCount));
-                }
-                return weight
-            }
-        } else if (graphConfig.gitWeight == 'log'){
-            issueScaleFunction = function(d){
-                var weight;
-                if (d.issueCount ==1){
-                    weight = weightScale(1);
-                } else if (d.issueCount ==0){
-                    weight = 0
-                }  else {
-                    weight = weightScale((1 / Math.log(d.issueCount)));
-                }
-                return weight
-            }
-            userScaleFunction = function(d){
-                var weight;
-                if (d.userCount ==1){
-                    weight = weightScale(1);
-                } else if (d.userCount ==0){
-                    weight = 0
-                } else {
-                    weight = weightScale((1 / Math.log(d.userCount)));
-                }
-                return weight
-            }
-        } else  {
-            issueScaleFunction = function(d){
-                var weight;
-                if (d.issueCount === 0){
-                    weight = 0;
-                } else if(d.issueCount == 1){
-                    weight = weightScale((1));
-                } else {
-                    weight = weightScale((1 / Math.log(d.issueCount)));
-                }
-                return weight;
-            }
-            userScaleFunction = function(d){
-                var weight;
-                if (d.userCount === 0){
-                    weight = 0;
-                } else if(d.userCount == 1){
-                    weight = weightScale((1));
-                } else {
-                    weight = weightScale((1 / Math.log(d.userCount)));
-                }
-
-                return weight
-            }
-        }
-
-        soNode.transition()
-            .delay(200)
-            .duration(500)
-            .attr('r', function(d){
-                return soScaleFunction(d);
-            });
-        soNode.on("mouseover", function(d) {
-                set_highlight(d);
-            })
-            .on('mouseout',function(d){
-                clear_highlight(d);
-            });
-        soNode.exit().remove();
-        userNode.transition()
-            .delay(200)
-            .duration(500)
-            .attr('r', function(d){
-                    return userScaleFunction(d);
-                });
-        userNode.on("mouseover", function(d) {
-                set_highlight(d);
-            })
-            .on('mouseout',function(d){
-                clear_highlight(d);
-            });
-        userNode.exit().remove();
-
-        issueNode.transition()
-            .delay(200)
-            .duration(500)
-            .attr('r', function(d){
-                return issueScaleFunction(d);
-            });
-        issueNode.on("mouseover", function(d) {
-                set_highlight(d);
-            })
-            .on('mouseout',function(d){
-                clear_highlight(d);
-            });
-        issueNode.exit().remove();
-
-
-        nodeLabels.transition()
-            .text(function(d) { return d.name; });
-        linkPath.style('stroke-width',function(d){
-                return storkeWidthFunction(d);
-            }).attr("marker-end", function(d) {
-                var urlStr = window.location.href.toString();
-                var questionMarkIndex = urlStr.indexOf('?');
-                if(questionMarkIndex!=-1){
-                    urlStr = urlStr.slice(questionMarkIndex,urlStr.length);
-                } else {
-                    urlStr = "";
-                }
-                if(graphConfig.directed){
-
-                    return "url("+urlStr +"#" + "resolved" + ")";
-                } else {
-                    return "url(#none)";
-                }
-            });
-        tick();
-        window.setTimeout(function(){
-
-            force.stop();
-        },10000);
-        nodeLabels.exit().remove();
-        zoom.on("zoom", function() {
-            currentZoom = zoom.scale();
-
-            soNode.attr('r', function(d){
-                return soScaleFunction(d);
-            });
-            userNode.attr('r', function(d){
-                return userScaleFunction(d);
-            });
-            issueNode.attr('r', function(d){
-                return issueScaleFunction(d);
-            });
-            outerG.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-            linkPath.style('stroke-width', function(d){
-                return storkeWidthFunction(d);
-            });
-        });
-        svg.call(zoom);
+        // // graphConfig = optionsState;
+        //
+        // if(tagsFromIssue !== undefined &&
+        //     userSOTags !== undefined){
+        //     if(tagsFromIssue.length !== 0 &&
+        //         userSOTags.length !== 0){
+        //
+        //         similarityBetweenBugAndUser = calculateSimilarity(tagsFromIssue, userSOTags, TagCountServices);
+        //     } else {
+        //         similarityBetweenBugAndUser = 0;
+        //     }
+        //     d3.select('#similarityValue').text(similarityBetweenBugAndUser);
+        //     d3.select('#similarText').classed('hidden',false);
+        //
+        // } else {
+        //     d3.select('#similarText').classed('hidden',true);
+        //
+        // }
+        // if(graphConfig.directed){
+        //     storkeWidthFunction = function(d){
+        //         var size = strokeScale(
+        //             d.source.coOccurrence / d.source.soCount
+        //         );
+        //         return size;
+        //     }
+        // } else {
+        //     storkeWidthFunction = function(d){
+        //         var size = strokeScale(
+        //             2* d.source.coOccurrence / (d.source.soCount + d.target.soCount)
+        //         );
+        //         return size;
+        //     }
+        // }
+        //
+        // if (graphConfig.soWeight === 'sqrt'){
+        //     soScaleFunction = function(d){
+        //         var weight;
+        //         if (d.soCount === 0){
+        //             weight = 0;
+        //         } else {
+        //             weight = weightScale((1 / Math.sqrt(d.soCount)));
+        //
+        //         }
+        //         return weight;
+        //     }
+        // } else if (graphConfig.soWeight === 'log'){
+        //     soScaleFunction = function(d){
+        //         var weight;
+        //         if (d.soCount  === 1){
+        //             weight = weightScale(1);
+        //         } else if (d.soCount === 0){
+        //             weight = 0;
+        //         } else {
+        //             weight = weightScale((1 / Math.log(d.soCount)));
+        //
+        //         }
+        //         return weight
+        //     }
+        // } else if (graphConfig.soWeight === 'linear') {
+        //     soScaleFunction = function(d){
+        //         var weight;
+        //         if (d.soCount === 0){
+        //             weight = 0;
+        //         } else {
+        //             weight = weightScale((1 / d.soCount));
+        //
+        //         }
+        //         return weight
+        //     }
+        // }  else {
+        //     soScaleFunction = function(d){
+        //         var weight;
+        //         if (d.soCount === 0){
+        //             weight = 0;
+        //         } else {
+        //             weight = weightScale((1 / d.soCount));
+        //
+        //         }
+        //         return weight
+        //     }
+        // }
+        // if (graphConfig.gitWeight === 'sqrt'){
+        //     issueScaleFunction= function(d){
+        //         var weight;
+        //         if (d.issueCount === 0){
+        //             weight = 0;
+        //         } else {
+        //             weight = weightScale((1 / Math.sqrt(d.issueCount)));
+        //         }
+        //
+        //         return weight;
+        //     }
+        //     userScaleFunction = function(d){
+        //         var weight;
+        //         if (d.userCount ==== 0){
+        //             weight = 0;
+        //         } else {
+        //             weight = weightScale((1 / Math.sqrt(d.userCount)));
+        //         }
+        //
+        //         return weight;
+        //     }
+        // } else if (graphConfig.gitWeight === 'linear') {
+        //     issueScaleFunction = function(d){
+        //         var weight;
+        //         if (d.issueCount === 0){
+        //             weight = 0;
+        //         } else {
+        //             weight = weightScale((1 / d.issueCount));
+        //         }
+        //
+        //         return weight;
+        //     }
+        //     userScaleFunction = function(d){
+        //         var weight;
+        //         if (d.userCount === 0){
+        //             weight = 0;
+        //         } else {
+        //             weight = weightScale((1 / d.userCount));
+        //         }
+        //         return weight
+        //     }
+        // } else if (graphConfig.gitWeight === 'log'){
+        //     issueScaleFunction = function(d){
+        //         var weight;
+        //         if (d.issueCount ===1){
+        //             weight = weightScale(1);
+        //         } else if (d.issueCount ===0){
+        //             weight = 0
+        //         }  else {
+        //             weight = weightScale((1 / Math.log(d.issueCount)));
+        //         }
+        //         return weight
+        //     }
+        //     userScaleFunction = function(d){
+        //         var weight;
+        //         if (d.userCount ===1){
+        //             weight = weightScale(1);
+        //         } else if (d.userCount ===0){
+        //             weight = 0
+        //         } else {
+        //             weight = weightScale((1 / Math.log(d.userCount)));
+        //         }
+        //         return weight
+        //     }
+        // } else  {
+        //     issueScaleFunction = function(d){
+        //         var weight;
+        //         if (d.issueCount === 0){
+        //             weight = 0;
+        //         } else if(d.issueCount === 1){
+        //             weight = weightScale((1));
+        //         } else {
+        //             weight = weightScale((1 / Math.log(d.issueCount)));
+        //         }
+        //         return weight;
+        //     }
+        //     userScaleFunction = function(d){
+        //         var weight;
+        //         if (d.userCount === 0){
+        //             weight = 0;
+        //         } else if(d.userCount === 1){
+        //             weight = weightScale((1));
+        //         } else {
+        //             weight = weightScale((1 / Math.log(d.userCount)));
+        //         }
+        //
+        //         return weight
+        //     }
+        // }
+        //
+        // soNode.transition()
+        //     .delay(200)
+        //     .duration(500)
+        //     .attr('r', function(d){
+        //         return soScaleFunction(d);
+        //     });
+        // soNode.on('mouseover', function(d) {
+        //         set_highlight(d);
+        //     })
+        //     .on('mouseout',function(d){
+        //         clear_highlight(d);
+        //     });
+        // soNode.exit().remove();
+        // userNode.transition()
+        //     .delay(200)
+        //     .duration(500)
+        //     .attr('r', function(d){
+        //             return userScaleFunction(d);
+        //         });
+        // userNode.on('mouseover', function(d) {
+        //         set_highlight(d);
+        //     })
+        //     .on('mouseout',function(d){
+        //         clear_highlight(d);
+        //     });
+        // userNode.exit().remove();
+        //
+        // issueNode.transition()
+        //     .delay(200)
+        //     .duration(500)
+        //     .attr('r', function(d){
+        //         return issueScaleFunction(d);
+        //     });
+        // issueNode.on('mouseover', function(d) {
+        //         set_highlight(d);
+        //     })
+        //     .on('mouseout',function(d){
+        //         clear_highlight(d);
+        //     });
+        // issueNode.exit().remove();
+        //
+        //
+        // nodeLabels.transition()
+        //     .text(function(d) { return d.name; });
+        // linkPath.style('stroke-width',function(d){
+        //         return storkeWidthFunction(d);
+        //     }).attr('marker-end', function(d) {
+        //         var urlStr = window.location.href.toString();
+        //         var questionMarkIndex = urlStr.indexOf('?');
+        //         if(questionMarkIndex!==-1){
+        //             urlStr = urlStr.slice(questionMarkIndex,urlStr.length);
+        //         } else {
+        //             urlStr = '';
+        //         }
+        //         if(graphConfig.directed){
+        //
+        //             return 'url('+urlStr +'#' + 'resolved' + ')';
+        //         } else {
+        //             return 'url(#none)';
+        //         }
+        //     });
+        // tick();
+        // window.setTimeout(function(){
+        //
+        //     force.stop();
+        // },10000);
+        // nodeLabels.exit().remove();
+        // zoom.on('zoom', function() {
+        //     currentZoom = zoom.scale();
+        //
+        //     soNode.attr('r', function(d){
+        //         return soScaleFunction(d);
+        //     });
+        //     userNode.attr('r', function(d){
+        //         return userScaleFunction(d);
+        //     });
+        //     issueNode.attr('r', function(d){
+        //         return issueScaleFunction(d);
+        //     });
+        //     outerG.attr('transform', 'translate(' + d3.event.translate + ')scale(' + d3.event.scale + ')');
+        //     linkPath.style('stroke-width', function(d){
+        //         return storkeWidthFunction(d);
+        //     });
+        // });
+        // svg.call(zoom);
     }
-    // window.resize = function(){
-    //     var width = window.innerWidth - d3.select('#leftSelectionPanel').node().getBoundingClientRect().width - 5;
-    //     var height = window.innerHeight - d3.select('.page-header').node().getBoundingClientRect().height - 5;
-    //     var svg = d3.select("#expertiseGraphDiv").select('#expertiseGraph')
-    //         .attr("width", width)
-    //         .attr("height", height);
-    //     // force = d3.layout.force()
-    //     //     .size([width, height]);
-    // };
-
-
 }
