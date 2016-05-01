@@ -332,8 +332,8 @@ function ExpertiseGraph(initConfig) {
         var allTags = mergeTags();
 
         var dataString='';
-        for(var tag of allTags){
-            dataString += 'tag=' + tag.name + '&';
+        for(var tag in allTags){
+            dataString += 'tag=' + tag + '&';
         }
 
         $http({
@@ -348,61 +348,34 @@ function ExpertiseGraph(initConfig) {
         function drawGraph(links, allTags){
 
           //temporary numbers just to see how things work
-          var width = 800; //window.innerWidth - d3.select('#leftSelectionPanel').node().getBoundingClientRect().width - 5;
-          var height = 1024; //window.innerHeight - d3.select('.page-header').node().getBoundingClientRect().height - 5;
-
-          var svg = d3.select('#expertiseGraphDiv').append('svg')
-              .attr('width', width)
-              .attr('height', height)
-              .attr('id','expertiseGraph');
-
-
-          // Per-type markers, as they don't inherit styles.
-          svg.append('defs').selectAll('marker')
-              .data(['suit', 'licensing', 'resolved'])
-            .enter().append('marker')
-              .attr('id', function(d) { return d; })
-              .attr('viewBox', '0 -5 10 10')
-              .attr('refX', 50)
-              .attr('refY', -1.5)
-              .attr('markerWidth', 6)
-              .attr('markerHeight', 6)
-              .attr('orient', 'auto')
-            .append('path')
-              .attr('d', 'M0,-5L10,0L0,5').append('g').attr('id','outerGrouping');
-
+          var width = 600; //window.innerWidth - d3.select('#leftSelectionPanel').node().getBoundingClientRect().width - 5;
+          var height = 600; //window.innerHeight - d3.select('.page-header').node().getBoundingClientRect().height - 5;
 
           var color = d3.scale.category20();
 
           var force = d3.layout.force()
               .charge(-120)
-              .linkDistance(30)
+              .linkDistance(100)
               .size([width, height]);
+
+          d3.select('svg').remove(); //Remove old svg before adding a new one.
 
           var svg = d3.select('#expertiseGraphDiv').append("svg")
               .attr("width", width)
               .attr("height", height);
 
           //Move this to a function once it's woking
-          var new_links = []
-          for(var occurrence of links){
-              console.log(occurrence);
-              new_links.push({
-                  source: 0,
-                  target: 1,
-                  weight: occurrence.coOccurrence
-              });
-          }
 
+          var graph = formatDataToGraph(links, allTags);
 
-          var graph = {
-              nodes: allTags,
-              links: new_links
-          }
-
-          console.log(graph);
-          force
-              .nodes(graph.nodes)
+          /* In order to draw the graph, force must receive an ARRAY of nodes.
+          * Each node must have at least a name.
+          *
+          * You must also pass an ARRAY of links.
+          * Each link must have a source and a target, both are INDEXES of a node
+          * (don't use the name, it took me a really long time to figure that out)
+          */
+          force.nodes(graph.nodes)
               .links(graph.links)
               .start();
 
@@ -410,41 +383,89 @@ function ExpertiseGraph(initConfig) {
               .data(graph.links)
             .enter().append("line")
               .attr("class", "link")
-              .style("stroke-width", function(d) { return Math.sqrt(d.value); });
+              .style("stroke-width", function(d) { return Math.sqrt(d.weight); });
 
           var node = svg.selectAll(".node")
               .data(graph.nodes)
             .enter().append("circle")
               .attr("class", "node")
-              .attr("r", 5)
-              .style("fill", function(d) { return color(d.group); })
+              .attr("r", 10)
+              .style("fill", function(d) { return color(d.origin); })
               .call(force.drag);
 
-          node.append("title")
-              .text(function(d) { return d.name; });
+          node.on("click", function(){
+              d3.select(this).attr("r", 20);
+              console.log("Teste");
+          });
+
+          node.append("text")
+            .attr("dx", 12)
+            .attr("dy", ".35em")
+            .text(function(d) { return d.name });
 
           force.on("tick", function() {
-            link.attr("x1", function(d) { return d.source.x; })
-                .attr("y1", function(d) { return d.source.y; })
-                .attr("x2", function(d) { return d.target.x; })
-                .attr("y2", function(d) { return d.target.y; });
+              link.attr("x1", function(d) { return d.source.x; })
+                  .attr("y1", function(d) { return d.source.y; })
+                  .attr("x2", function(d) { return d.target.x; })
+                  .attr("y2", function(d) { return d.target.y; });
 
-            node.attr("cx", function(d) { return d.x; })
-                .attr("cy", function(d) { return d.y; });
-            });
+              node.attr("cx", function(d) { return d.x; })
+                  .attr("cy", function(d) { return d.y; });
+          });
 
         }
 
+        function formatDataToGraph(links, allTags){
+            var graph = {};
+            var new_links = []
+            for(var occurrence of links){
+                new_links.push({
+                    source: allTags[occurrence.Tag1].index,
+                    target: allTags[occurrence.Tag2].index,
+                    value: occurrence.coOccurrence
+                });
+            }
+
+            var nodes = new Array(allTags.length);
+            for(var tag in allTags){
+                nodes[allTags[tag].index] = {
+                    name: tag
+                };
+            }
+
+            var graph = {
+                nodes: nodes,
+                links: new_links
+            }
+            return graph;
+        }
+
         function mergeTags(){
-            var allTags = [];
+            var allTags = {};
+            var index = 0;
             for(var tag in tagsFromIssue){
-                var node = {
+                allTags[tag] = {
                     name: tag,
                     origin: 'issue',
+                    index: index,
                     count: tagsFromIssue[tag]
                 }
+                index++;
+            }
 
-                allTags.push(node);
+            for(var tag in tagsFromUserOnSO){
+                if(allTags[tag] === undefined) {
+                    allTags[tag] = {
+                        name: tag,
+                        origin: 'SO',
+                        index: index,
+                        count: tagsFromUserOnSO[tag]
+                    }
+                    index++;
+                }else{
+                    allTags[tag].origin = 'both';
+                    allTags[tag].count += tagsFromUserOnSO[tag]
+                }
             }
 
             return allTags;
