@@ -2,61 +2,6 @@
 
     <div class="repo" ng-controller="MyHeaderController as hdrctr" ng-show="!hdrctr.hdrvars.authenticated">
         <div ng-controller="RepositoryController">
-            <div class='centeringContainer2' style="top:0px; ">
-                <div id="graphOptionsMenu" class="dialog hidden">
-                    <div class="dlogContent">
-                        <h3>
-                            Graph Options
-                        </h3>
-
-                        <h2 style="margin-bottom:10px;">
-                            For Stackoverflow occurrences and co-occurrences, use: <br>
-                        </h2>
-                        <div id='soOptions' class='graphOptionSection'>
-                            <p class='optionText'>Linear scale:</p><input ng-click='setGraphOptionSO("linear")' id="linearSizeOccurrences" type="checkbox" name="field" value="option" class='optionButton'> </br>
-                            <p class='optionText'>Log Scale</p><input ng-click='setGraphOptionSO("log")' id="logSizeOccurrences" type="checkbox" name="field" value="option" class='optionButton'></br>
-                            <p class='optionText'>Square Root Scale</p><input ng-click='setGraphOptionSO("sqrt")' id="sqrtSizeOccurrences" type="checkbox" name="field" value="option" class='optionButton'></br>
-                        </div>
-
-                        <h2 style="margin-bottom:10px;">
-                            For Developer or text occurrences, use: <br>
-
-                        </h2>
-                        <div id='gitOptions' class='graphOptionSection'>
-                            <p class='optionText'>Linear scale:</p><input ng-click='setGraphOptionGit("linear")' id="linearSizeOccurrences" type="checkbox" name="field" value="option" class='optionButton'> </br>
-                            <p class='optionText'>Log Scale</p><input ng-click='setGraphOptionGit("log")' id="logSizeOccurrences" type="checkbox" name="field" value="option" class='optionButton'></br>
-                            <p class='optionText'>Square Root Scale</p><input ng-click='setGraphOptionGit("sqrt")' id="sqrtSizeOccurrences" type="checkbox" name="field" value="option" class='optionButton'></br>
-                        </div>
-
-                        <h2 style="margin-bottom:10px;">
-                            For Graph Edges, use: <br>
-                        </h2>
-                        <div id='directionOptions' class='graphOptionSection'>
-                            <p class='optionText'>Directed</p><input ng-click='setGraphOptionDirected(true)' id="directedtrue" type="checkbox" name="field" value="option" class='optionButton'></br>
-                            <p class='optionText'>Undirected</p><input ng-click='setGraphOptionDirected(false)' id="directedfalse" type="checkbox" name="field" value="option" class='optionButton'></br>
-                        </div>
-
-                        <h2 style="margin-bottom:10px">
-                            For Similarity use Cosine similarity:
-                        </h2>
-                        <div id='directionOptions' class='graphOptionSection'>
-                            <p class='optionText'>Directed</p><input ng-click='setGraphOptionCosine(true)' id="cosineTrue" type="checkbox" name="field" value="option" class='optionButton'></br>
-                        </div>
-                        <h2 style="margin-bottom:10px">
-                            For Similarity use Jacard similarity:
-                        </h2>
-                        <div id='directionOptions' class='graphOptionSection'>
-                            <p class='optionText'>Adjusted Node Weights</p><input ng-click='setGraphOptionAdjustedWeight(true)' id="adjTrue" type="checkbox" name="field" value="option" class='optionButton'></br>
-                        </div>
-                        <!-- <div id='directionOptions' class='graphOptionSection'>
-                            <p class='optionText'>Adjusted Node and Edge Weight</p><input ng-click='setGraphOptionCosine(true)' id="cosineTrue" type="checkbox" name="field" value="option" class='optionButton'></br>
-                        </div> -->
-
-                    </div>
-                    <div id="butSp">&nbsp;</div><div id="closeNotes" ng-click='closeAndResetOptions()'class="dlogExit">Close</div><div id="waitMsg" style="margin-bottom:15px">&nbsp;</div>
-                </div>
-
-            </div>
             <div id='leftSelectionPanel'>
                 <div id='repositorySearch'>
                     <div class='searchBoxInput'>
@@ -97,7 +42,7 @@
 
                         <div class='searchResults issueResults '>
                             <div ng-repeat="issue in issues ">
-                                <button class='issueInfo repoListItem' ng-click="displayIssueTags(issue)">
+                                <button class='issueInfo repoListItem' ng-click="getIssueTags(issue)">
                                     {{ issue.title }}
                                 </button>
                             </div>
