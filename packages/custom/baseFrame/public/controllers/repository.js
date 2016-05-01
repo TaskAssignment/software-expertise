@@ -387,15 +387,17 @@ function ExpertiseGraph(initConfig) {
 
           var node = svg.selectAll(".node")
               .data(graph.nodes)
-            .enter().append("circle")
-              .attr("class", "node")
-              .attr("r", 10)
-              .style("fill", function(d) { return color(d.origin); })
-              .call(force.drag);
+              .enter().append("g")
+                .attr("class", "node")
+                .call(force.drag);
 
-          node.on("click", function(){
-              d3.select(this).attr("r", 20);
-              console.log("Teste");
+          var circle = node.append("circle")
+              .attr("r", 10)
+              .style("fill", function(d) { return color(d.origin); });
+
+          circle.on("click", function(){
+              var circle = d3.select(this);
+              circle.attr("r", 20);
           });
 
           node.append("text")
@@ -403,14 +405,16 @@ function ExpertiseGraph(initConfig) {
             .attr("dy", ".35em")
             .text(function(d) { return d.name });
 
+
           force.on("tick", function() {
               link.attr("x1", function(d) { return d.source.x; })
                   .attr("y1", function(d) { return d.source.y; })
                   .attr("x2", function(d) { return d.target.x; })
                   .attr("y2", function(d) { return d.target.y; });
 
-              node.attr("cx", function(d) { return d.x; })
-                  .attr("cy", function(d) { return d.y; });
+              node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+              // node.attr("cx", function(d) { return d.x; })
+              //     .attr("cy", function(d) { return d.y; });
           });
 
         }
