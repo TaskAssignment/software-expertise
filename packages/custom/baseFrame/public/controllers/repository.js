@@ -348,21 +348,21 @@ function ExpertiseGraph(initConfig) {
         function drawGraph(links, allTags){
 
           //temporary numbers just to see how things work
-          var width = 600; //window.innerWidth - d3.select('#leftSelectionPanel').node().getBoundingClientRect().width - 5;
-          var height = 600; //window.innerHeight - d3.select('.page-header').node().getBoundingClientRect().height - 5;
+          var width = 800; //window.innerWidth - d3.select('#leftSelectionPanel').node().getBoundingClientRect().width - 5;
+          var height = 800; //window.innerHeight - d3.select('.page-header').node().getBoundingClientRect().height - 5;
 
           var color = d3.scale.category20();
 
           var force = d3.layout.force()
               .charge(-120)
-              .linkDistance(100)
+              .linkDistance(250)
               .size([width, height]);
 
           d3.select('svg').remove(); //Remove old svg before adding a new one.
 
-          var svg = d3.select('#expertiseGraphDiv').append("svg")
-              .attr("width", width)
-              .attr("height", height);
+          var svg = d3.select('#expertiseGraphDiv').append('svg')
+              .attr('width', width)
+              .attr('height', height);
 
           //Move this to a function once it's woking
 
@@ -379,42 +379,48 @@ function ExpertiseGraph(initConfig) {
               .links(graph.links)
               .start();
 
-          var link = svg.selectAll(".link")
+          var link = svg.selectAll('.link')
               .data(graph.links)
-            .enter().append("line")
-              .attr("class", "link")
-              .style("stroke-width", function(d) { return Math.sqrt(d.weight); });
+            .enter().append('line')
+              .attr('class', 'link')
+              .style('stroke-width', function(d) { return Math.sqrt(d.weight); });
 
-          var node = svg.selectAll(".node")
+          var node = svg.selectAll('.node')
               .data(graph.nodes)
-              .enter().append("g")
-                .attr("class", "node")
+              .enter().append('g')
+                .attr('class', 'node')
                 .call(force.drag);
 
-          var circle = node.append("circle")
-              .attr("r", 10)
-              .style("fill", function(d) { return color(d.origin); });
+          var circle = node.append('circle')
+              .attr('r', 10)
+              .style('fill', function(d) { return color(d.origin); });
 
-          circle.on("click", function(){
+          circle.on('click', function(){
               var circle = d3.select(this);
-              circle.attr("r", 20);
+              var ratio = circle.attr('r');
+              if(ratio >= 20){
+                  ratio = 5;
+              } else {
+                  ratio *= 2;
+              }
+              circle.attr('r', ratio);
           });
 
-          node.append("text")
-            .attr("dx", 12)
-            .attr("dy", ".35em")
+          node.append('text')
+            .attr('dx', 12)
+            .attr('dy', '.35em')
             .text(function(d) { return d.name });
 
 
-          force.on("tick", function() {
-              link.attr("x1", function(d) { return d.source.x; })
-                  .attr("y1", function(d) { return d.source.y; })
-                  .attr("x2", function(d) { return d.target.x; })
-                  .attr("y2", function(d) { return d.target.y; });
+          force.on('tick', function() {
+              link.attr('x1', function(d) { return d.source.x; })
+                  .attr('y1', function(d) { return d.source.y; })
+                  .attr('x2', function(d) { return d.target.x; })
+                  .attr('y2', function(d) { return d.target.y; });
 
-              node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-              // node.attr("cx", function(d) { return d.x; })
-              //     .attr("cy", function(d) { return d.y; });
+              node.attr('transform', function(d) {
+                  return 'translate(' + d.x + ',' + d.y + ')';
+              });
           });
 
         }
