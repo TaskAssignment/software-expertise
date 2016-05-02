@@ -20,27 +20,7 @@ angular.module('mean.baseFrame')
   function ($scope, Global, BaseFrame, $http, $location) {
 
       /**
-       * Makes an http post request to get json back with the tags.
-       * uses call to get defaults
-       *
-       * @param response - all SOTAGS on server
-       * @return
-       *
-       */
-      var TagCountServices = {};
-
-      $http({
-          method: 'GET',
-          url: '/api/baseFrame/soTags',
-          data: '',
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-      }).success(function (response){
-          TagCountServices = response;
-      });
-      /**
        * Updates the url based on the current state of the project
-       *
-       *
        */
         function updateDeeplink (){
             try {
@@ -102,27 +82,24 @@ angular.module('mean.baseFrame')
         }
 
         $scope.populateSoTags = function(){
+            populateRequest('/api/baseFrame/populateSoTags');
+        }
+
+        function populateRequest(url){
             showLoadingScreen();
             $http({
                 method: 'POST',
-                url: '/api/baseFrame/populateSoTags',
+                url: url,
+                data: '',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-            }).success(function (){
+            }).success(function (response){
                 console.log("Success");
                 hideLoadingScreen();
             });
         }
 
         $scope.populateCoOccurrences = function(){
-            showLoadingScreen();
-            $http({
-                method: 'POST',
-                url: '/api/baseFrame/populateCoOccurrences',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-            }).success(function (){
-                console.log("Success");
-                hideLoadingScreen();
-            });
+            populateRequest('/api/baseFrame/populateCoOccurrences');
         }
 
 
@@ -209,7 +186,6 @@ angular.module('mean.baseFrame')
                     method: 'GET',
                     url: apiCallUrl,
                     data: 'gitName='+userName,
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
                 }).success(function (response, soId) {
                     var soId = undefined;
                     if(response.length === 1){
@@ -250,39 +226,25 @@ angular.module('mean.baseFrame')
         $scope.getIssueTags = function (issue) {
             optionsState.issueId = issue.id;
             updateDeeplink();
-            var wordsFromTitle = issue.title.toLowerCase().split(' ');
-            var wordsFromBody = issue.body.toLowerCase().split(' ');
 
             //Any word from the issue that is an SO tag will be in this array.
             //This is the array that is sent to '/api/baseFrame/coOccurrence'
-            tagsFromIssue = {}; //Global variable. Ugh
 
-            for(let word of wordsFromBody) {
-                addTagToIssueTags(word);
-            }
+            $http({
+                method: 'POST',
+                url: '/api/baseFrame/getIssueTags',
+                data: 'title=' + issue.title + '&body=' + issue.body,
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+            }).success(function (response) {
+                tagsFromIssue = {}; //Global variable. Ugh
+                // sendToGraph();
+            });
 
-            for(let word of wordsFromTitle) {
-                addTagToIssueTags(word)
-            }
 
-            sendToGraph();
-
-            function addTagToIssueTags(word){
-                //Is this word a SO tag?
-                if (TagCountServices[word] !== undefined) {
-                    //Has this been added to the issue tags?
-                    if(tagsFromIssue[word] === undefined){
-                        tagsFromIssue[word] = 1;
-                    } else {
-                        tagsFromIssue[word] += 1;
-                    }
-                }
-            }
         }
 
         function sendToGraph(){
-            graphs.drawWithNewData(tagsFromIssue, tagsFromUserOnSO,
-              TagCountServices, $http, optionsState);
+            graphs.drawWithNewData(tagsFromIssue, tagsFromUserOnSO, $http);
         }
 
         $scope.package = {
@@ -303,9 +265,8 @@ function ExpertiseGraph(initConfig) {
     var graphConfig = initConfig;
     var expertGraph = this;
 
-    expertGraph.drawWithNewData = function(tagsFromIssue, tagsFromUserOnSO,
-      TagCountServices, $http, optionsState){
-        graphConfig = optionsState;
+    expertGraph.drawWithNewData = function(tagsFromIssue = {},
+      tagsFromUserOnSO = {}, $http){
         var allTags = mergeTags();
 
         var dataString='';
@@ -318,7 +279,6 @@ function ExpertiseGraph(initConfig) {
             method: 'GET',
             url: '/api/baseFrame/coOccurrence',
             data: dataString,
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         }).success(function (links) {
             drawGraph(links, allTags);
             hideLoadingScreen();

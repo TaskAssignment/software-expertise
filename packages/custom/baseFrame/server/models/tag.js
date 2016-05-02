@@ -8,6 +8,7 @@ var TagSchema = new Schema({
     name: {
         type: String,
         required: true,
+        unique: true
     },
     soTotalCount: {
         type: Number,

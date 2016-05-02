@@ -3,6 +3,8 @@
 //Module dependencies (following the Articles model)
 var mongoose = require('mongoose');
 var Tag = mongoose.model('Tag');
+var SoUser = mongoose.model('SoUser');
+var CommonOccurrence = mongoose.model('CommonOccurrence');
 var config = require('meanio').loadConfig();
 var _ = require('lodash');
 
@@ -14,8 +16,6 @@ module.exports = function (Tags){
     console.log('load data files 0/3');
     var commonUserDataCF;
     var commonUserFilter;
-
-    var TagCountServices = {};
 
     var coOccurrencesData;
     var coOccurrences;
@@ -30,11 +30,22 @@ module.exports = function (Tags){
                     var convertResults = d3.tsv.parse(result);
 
                     console.log('Load data file: tags.tsv');
-                    for(var i = 0; i < convertResults.length; i++){
-                        var tag = convertResults[i];
-                        TagCountServices[tag.TagName] = tag.Count
+                    for(var index in convertResults){
+                        var result = convertResults[index];
+
+                        var tag = new Tag();
+                        tag.name = result.TagName;
+                        tag.soTotalCount = result.Count;
+                        tag.save(function(err){
+                            if(err){
+                                console.log(err);
+                            } else {
+                                console.log("Tag created");
+                            }
+                        });
                     }
-                }
+                    res.json("success SoTags");
+                  }
             });
         },
 
@@ -51,10 +62,43 @@ module.exports = function (Tags){
                     coOccurrenceFilter.filter( function(d){ return d >= 10; } );
                 }
             });
+            res.json("success CommonOccurrences");
         },
 
-        soTags: function(req, res){
-            res.send(JSON.stringify(TagCountServices));
+        getIssueTags: function(req, res){
+            var issue = req.body;
+
+            var title = issue.title.toLowerCase().split(' ');
+            var body = issue.body.toLowerCase().split(' ');
+            var tagsFromIssue = {};
+
+            for(var index in title) {
+                var word = title[index];
+                addWordToIssueTags(word);
+            }
+
+            for(var index in body) {
+                var word = body[index];
+                addWordToIssueTags(word);
+            }
+
+            function addWordToIssueTags(word){
+                //Check a better way of doing this!!
+                Tag.find({name: word},function(err, tags){
+                    if(!err){
+                        if(tags.length > 0){
+                            if(tagsFromIssue[word] === undefined){
+                                tagsFromIssue[word] = 1;
+                            } else {
+                                tagsFromIssue[word] += 1;
+                            }
+                        }
+                    }else{
+                        console.log(err);
+                    }
+                });
+            }
+            res.send(JSON.stringify(tagsFromIssue));
         },
 
         soIDFromUser: function(req, res){
