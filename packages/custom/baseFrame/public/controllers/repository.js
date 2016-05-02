@@ -89,7 +89,7 @@ angular.module('mean.baseFrame')
             initializeStates();
         }
 
-        var graphs;
+        var graphs = new ExpertiseGraph(optionsState);
         /**
          * sets menus to match states and inits the expertise graph
          */
@@ -110,7 +110,7 @@ angular.module('mean.baseFrame')
             if(optionsState.repoName !== undefined){
                 $scope.getRepoInformation(optionsState.repoName);
             }
-            graphs = new ExpertiseGraph(optionsState);
+
 
         }
 
@@ -322,9 +322,14 @@ angular.module('mean.baseFrame')
 function ExpertiseGraph(initConfig) {
 
     var graphConfig = initConfig;
-    ///////////////////////////////////////////////////////////////////////////
     var expertGraph = this;
 
+    function showLoadingScreen(){
+        d3.select('#loadingImage').style('display','block');
+    }
+    function hideLoadingScreen(){
+        d3.select('#loadingImage').style('display','none');
+    }
 
     expertGraph.drawWithNewData = function(tagsFromIssue, tagsFromUserOnSO,
       TagCountServices, $http, optionsState){
@@ -335,6 +340,7 @@ function ExpertiseGraph(initConfig) {
         for(var tag in allTags){
             dataString += 'tag=' + tag + '&';
         }
+        showLoadingScreen();
 
         $http({
             method: 'POST',
@@ -343,6 +349,7 @@ function ExpertiseGraph(initConfig) {
             headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         }).success(function (links) {
             drawGraph(links, allTags);
+            hideLoadingScreen();
         });
 
         function drawGraph(links, allTags){
@@ -385,30 +392,43 @@ function ExpertiseGraph(initConfig) {
               .attr('class', 'link')
               .style('stroke-width', function(d) { return Math.sqrt(d.weight); });
 
+          /*
+          * force graphs don't accept a circle with any other data, like a label.
+          * To show any other information, a 'g' tag is necessary (group)
+          */
           var node = svg.selectAll('.node')
               .data(graph.nodes)
               .enter().append('g')
                 .attr('class', 'node')
                 .call(force.drag);
 
-          var circle = node.append('circle')
-              .attr('r', 10)
-              .style('fill', function(d) { return color(d.origin); });
 
-          circle.on('click', function(){
-              var circle = d3.select(this);
-              var ratio = circle.attr('r');
-              if(ratio >= 20){
-                  ratio = 5;
-              } else {
-                  ratio *= 2;
-              }
-              circle.attr('r', ratio);
-          });
+
+          var circle = node.append('circle')
+              .attr('r', function(d) { return calculateCircleRatio(d.issueCount); })
+              .style('fill', function(d) { return 'blue'; });
+
+          var circle = node.append('circle')
+              .attr('r', function(d) { return calculateCircleRatio(d.soCount); })
+              .style('fill', function(d) { return 'yellow'; });
+
+          /*
+          * Add onClick behavior. In this case, simply changes the circle ratio
+          * Soon I'll show information of the node on click
+          */
+          // circle.on('click', function(){
+          //     var circle = d3.select(this);
+          //     var ratio = circle.attr('r');
+          //     if(ratio >= 20){
+          //         ratio = 5;
+          //     } else {
+          //         ratio *= 2;
+          //     }
+          //     circle.attr('r', function(d) { console.log(d); return d.count });
+          // });
 
           node.append('text')
             .attr('dx', 12)
-            .attr('dy', '.35em')
             .text(function(d) { return d.name });
 
 
@@ -425,22 +445,53 @@ function ExpertiseGraph(initConfig) {
 
         }
 
+        function calculateCircleRatio(counter){
+            var MAX_RATIO = 20;
+            var MIN_RATIO = 5;
+            var result = counter/MAX_RATIO + MIN_RATIO;
+            return result > MAX_RATIO ? MAX_RATIO : result;
+        }
+
+        /**
+        * This will format the tags and links to what is expected to render the graph
+        *
+        * @param links - Dict of dicts with Tag1, Tag2 and coOccurrence
+        * @param allTags - Dict where key is tagName
+        *
+        * @return graph - Dict with links and nodes.
+        */
         function formatDataToGraph(links, allTags){
             var graph = {};
             var new_links = []
             for(var occurrence of links){
-                new_links.push({
+                var link = {
                     source: allTags[occurrence.Tag1].index,
                     target: allTags[occurrence.Tag2].index,
-                    value: occurrence.coOccurrence
-                });
+                    value: occurrence.CoOccurrence
+                };
+
+                new_links.push(link);
+
+                // Adds the values of these occurences to the tags counter
+                var coOccurrence = parseInt(link.value);
+                console.log(coOccurrence);
+                allTags[occurrence.Tag1].soCount += (coOccurrence || 0);
+                allTags[occurrence.Tag2].soCount += (coOccurrence || 0);
             }
 
+            /* The graph needs an array and the indexes in links will be this array
+            * indexes. That's why I created this like that, instead of pushing to
+            * the array's last position.
+            */
             var nodes = new Array(allTags.length);
             for(var tag in allTags){
                 nodes[allTags[tag].index] = {
-                    name: tag
+                    name: tag,
+                    origin: allTags[tag].origin,
+                    issueCount: allTags[tag].issueCount,
+                    soCount: allTags[tag].soCount
                 };
+                console.log(allTags[tag].soCount);
             }
 
             var graph = {
@@ -450,15 +501,21 @@ function ExpertiseGraph(initConfig) {
             return graph;
         }
 
+        /**
+        * This function will merge the tagsFromIssue with the tagsFromUserOnSO
+        *
+        * @return Dict of dicts with tag name being the main key
+            and origin, index, issueCount and soCount as subkeys.
+        */
         function mergeTags(){
             var allTags = {};
             var index = 0;
             for(var tag in tagsFromIssue){
                 allTags[tag] = {
-                    name: tag,
                     origin: 'issue',
                     index: index,
-                    count: tagsFromIssue[tag]
+                    issueCount: tagsFromIssue[tag],
+                    soCount: 0,
                 }
                 index++;
             }
@@ -466,15 +523,15 @@ function ExpertiseGraph(initConfig) {
             for(var tag in tagsFromUserOnSO){
                 if(allTags[tag] === undefined) {
                     allTags[tag] = {
-                        name: tag,
                         origin: 'SO',
                         index: index,
-                        count: tagsFromUserOnSO[tag]
+                        soCount: tagsFromUserOnSO[tag],
+                        issueCount: 0
                     }
                     index++;
                 }else{
                     allTags[tag].origin = 'both';
-                    allTags[tag].count += tagsFromUserOnSO[tag]
+                    allTags[tag].soCount += tagsFromUserOnSO[tag];
                 }
             }
 
