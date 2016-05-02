@@ -13,7 +13,7 @@ var SoUserSchema = new Schema({
         required: true
     },
     soId: {
-        type: Int,
+        type: Number,
         required: true
     }
 });

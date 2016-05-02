@@ -10,13 +10,13 @@ var TagSchema = new Schema({
         required: true,
     },
     soTotalCount: {
-        type: Int,
+        type: Number,
     },
     soUserCount: {
-        type: Int,
+        type: Number,
     },
     issueCount: {
-        type: Int,
+        type: Number,
     },
     created: {
         type: Date,

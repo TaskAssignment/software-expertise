@@ -8,18 +8,17 @@ var CommonOccurrenceSchema = new Schema({
         type: Schema.ObjectId,
         ref: 'Tag',
         required: true
-    }
+    },
     target: {
         type: Schema.ObjectId,
         ref: 'Tag',
         required: true
-    }
+    },
     occurrences: {
-        type: Int,
+        type: Number,
         required: true
     }
 });
-
 
 CommonOccurrenceSchema.path('occurrences').validate(function (source){
     return !!occurrences;
