@@ -424,7 +424,7 @@ function ExpertiseGraph(initConfig) {
           //     } else {
           //         ratio *= 2;
           //     }
-          //     circle.attr('r', function(d) { console.log(d); return d.count });
+          //     circle.attr('r', function(d) { return d.count });
           // });
 
           node.append('text')
@@ -474,7 +474,6 @@ function ExpertiseGraph(initConfig) {
 
                 // Adds the values of these occurences to the tags counter
                 var coOccurrence = parseInt(link.value);
-                console.log(coOccurrence);
                 allTags[occurrence.Tag1].soCount += (coOccurrence || 0);
                 allTags[occurrence.Tag2].soCount += (coOccurrence || 0);
             }
@@ -491,7 +490,6 @@ function ExpertiseGraph(initConfig) {
                     issueCount: allTags[tag].issueCount,
                     soCount: allTags[tag].soCount
                 };
-                console.log(allTags[tag].soCount);
             }
 
             var graph = {
