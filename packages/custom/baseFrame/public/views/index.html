@@ -1,11 +1,23 @@
-<div id="baseApplication">
+<!-- TODO: This controller is NOT NEEDED here. However, I currently don't know
+how to link RepositoryController from the client with with the server side.
+As soon as I figure this out, this will be removed!! -->
+<div id="baseApplication" ng-controller="BaseFrameController">
     <div class="repo" ng-controller="MyHeaderController as hdrctr" ng-show="!hdrctr.hdrvars.authenticated">
         <div ng-controller="RepositoryController">
             <div id='leftSelectionPanel'>
+                <div id='populate'>
+                  <form ng-submit=populateSoTags()>
+                      <button class="btn btn-default"> Populate SO Tags </button>
+                  </form>
+                  <form ng-submit=populateCoOccurrences()>
+                      <button class="btn btn-default"> Populate Common Occurrences </button>
+                  </form>
+                </div>
+
                 <div id='repositorySearch'>
                     <div class='searchBoxInput'>
                         <p>Search for a repository:</p>
-                        <form ng-submit="queryRepos()">
+                        <form ng-submit=queryRepos()>
                             <input type='text' ng-model="repoUser" name='repoUser' class='searchTextBox col-md-2' placeholder='User or Organization'>/
                             <input type='text' ng-model="repositoryName" name='repositoryName' class='searchTextBox' placeholder='Repository name'>
                             <input type='text' ng-model="repoDescription" name='repoDescription' class='searchTextBox' placeholder='Any phrase in the repo deescription'>

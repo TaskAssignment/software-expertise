@@ -1,5 +1,12 @@
 'use strict';
 
+function showLoadingScreen(){
+    d3.select('#loadingImage').style('display','block');
+}
+function hideLoadingScreen(){
+    d3.select('#loadingImage').style('display','none');
+}
+
 /**
  * @author dbsigurd - devon Sigurdson
  *  controller to handle all things related to the expertiseGraph
@@ -12,13 +19,6 @@ angular.module('mean.baseFrame')
   ['$scope', 'Global', 'BaseFrame', '$http', '$location',
   function ($scope, Global, BaseFrame, $http, $location) {
 
-      var TagCountServices = {};
-      var urlStr = window.location.href.toString();
-      var questionMarkIndex = urlStr.indexOf('?');
-      if(questionMarkIndex!==-1){
-          urlStr = urlStr.slice(0,questionMarkIndex);
-      }
-      var apiCallUrlSO  = urlStr+'api/baseFrame/soTags';
       /**
        * Makes an http post request to get json back with the tags.
        * uses call to get defaults
@@ -27,15 +27,15 @@ angular.module('mean.baseFrame')
        * @return
        *
        */
+      var TagCountServices = {};
 
       $http({
-          method: 'POST',
-          url: apiCallUrlSO,
+          method: 'GET',
+          url: '/api/baseFrame/soTags',
           data: '',
           headers: {'Content-Type': 'application/x-www-form-urlencoded'}
       }).success(function (response){
           TagCountServices = response;
-          getDefaultOptions();
       });
       /**
        * Updates the url based on the current state of the project
@@ -64,55 +64,8 @@ angular.module('mean.baseFrame')
             'showDirectChildren' : false
         };
 
-        /**
-         *
-         */
-        function getDefaultOptions(){
-            var deepLinkParams = $location.search();
-            for (var key in deepLinkParams) {
-                if(optionsState[key] === undefined)
-                    optionsState[key] = deepLinkParams[key];
-            }
-
-            // Not sure if I'll keep this in this function
-            var cosineChecked = true;
-            var adjChecked = false;
-
-            if(optionsState.similarityType === 'jacard') {
-                cosineChecked = false;
-                adjChecked = true;
-            }
-
-            d3.select('#cosineTrue').property('checked', cosineChecked);
-            d3.select('#adjTrue').property('checked', adjChecked);
-
-            initializeStates();
-        }
 
         var graphs = new ExpertiseGraph(optionsState);
-        /**
-         * sets menus to match states and inits the expertise graph
-         */
-        function initializeStates() {
-
-            d3.select('#soOptions').selectAll('.optionButton')
-                            .property('checked', false);
-            d3.select('#soOptions').select('#' + optionsState.soWeight+'SizeOccurrences').property('checked', true);
-
-            d3.select('#gitOptions').selectAll('.optionButton')
-                            .property('checked', false);
-            d3.select('#gitOptions').select('#' + optionsState.gitWeight+'SizeOccurrences').property('checked', true);
-
-            d3.select('#directionOptions').selectAll('.optionButton')
-                            .property('checked', false);
-            d3.select('#directionOptions').select('#directed' + optionsState.directed).property('checked', true);
-
-            if(optionsState.repoName !== undefined){
-                $scope.getRepoInformation(optionsState.repoName);
-            }
-
-
-        }
 
         var tagsFromIssue;
         var tagsFromUserOnSO;
@@ -125,28 +78,54 @@ angular.module('mean.baseFrame')
          *
          */
         $scope.queryRepos = function () {
-          var URL = 'https://api.github.com/search/repositories?q=';
-          if($scope.repositoryName)
-              URL += $scope.repositoryName + '+in:name';
-          if($scope.repoDescription)
-              URL += '+' + $scope.repoDescription + '+in:description';
-          if($scope.repoReadme)
-              URL += '+' + $scope.repoReadme + '+in:readme';
-          if($scope.repoUser)
-              URL += '+user:' + $scope.repoUser;
-          URL += '&sort=stars&order=desc&per_page=100';
+            var URL = 'https://api.github.com/search/repositories?q=';
+            if($scope.repositoryName)
+                URL += $scope.repositoryName + '+in:name';
+            if($scope.repoDescription)
+                URL += '+' + $scope.repoDescription + '+in:description';
+            if($scope.repoReadme)
+                URL += '+' + $scope.repoReadme + '+in:readme';
+            if($scope.repoUser)
+                URL += '+user:' + $scope.repoUser;
+            URL += '&sort=stars&order=desc&per_page=100';
 
-          $http.get(URL).success(function (response) {
-                var results = response.items;
-                // TODO: Figure out how to get next items
+            $http.get(URL).success(function (response) {
+                  var results = response.items;
+                  // TODO: Figure out how to get next items
 
-                $('#repoSelection').removeClass('hidden')
-                $scope.repos = [];
-                for (var i = 0; i < results.length; i++) {
-                    $scope.repos.push( results[i].full_name );
-                }
-          });
+                  $('#repoSelection').removeClass('hidden')
+                  $scope.repos = [];
+                  for (var i = 0; i < results.length; i++) {
+                      $scope.repos.push( results[i].full_name );
+                  }
+            });
         }
+
+        $scope.populateSoTags = function(){
+            showLoadingScreen();
+            $http({
+                method: 'POST',
+                url: '/api/baseFrame/populateSoTags',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+            }).success(function (){
+                console.log("Success");
+                hideLoadingScreen();
+            });
+        }
+
+        $scope.populateCoOccurrences = function(){
+            showLoadingScreen();
+            $http({
+                method: 'POST',
+                url: '/api/baseFrame/populateCoOccurrences',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+            }).success(function (){
+                console.log("Success");
+                hideLoadingScreen();
+            });
+        }
+
+
         /**
          *
          * Retrieve relevant information from selected repository
@@ -227,7 +206,7 @@ angular.module('mean.baseFrame')
             function getSOIDForUser(userName){
                 var apiCallUrl  = '/api/baseFrame/soIDFromUser'; //Not sure if this will work everytime
                 $http({
-                    method: 'POST',
+                    method: 'GET',
                     url: apiCallUrl,
                     data: 'gitName='+userName,
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'}
@@ -324,13 +303,6 @@ function ExpertiseGraph(initConfig) {
     var graphConfig = initConfig;
     var expertGraph = this;
 
-    function showLoadingScreen(){
-        d3.select('#loadingImage').style('display','block');
-    }
-    function hideLoadingScreen(){
-        d3.select('#loadingImage').style('display','none');
-    }
-
     expertGraph.drawWithNewData = function(tagsFromIssue, tagsFromUserOnSO,
       TagCountServices, $http, optionsState){
         graphConfig = optionsState;
@@ -343,7 +315,7 @@ function ExpertiseGraph(initConfig) {
         showLoadingScreen();
 
         $http({
-            method: 'POST',
+            method: 'GET',
             url: '/api/baseFrame/coOccurrence',
             data: dataString,
             headers: {'Content-Type': 'application/x-www-form-urlencoded'}
