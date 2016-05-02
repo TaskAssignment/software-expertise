@@ -27,23 +27,23 @@
                 </div>
                 <div id='repositoyInfoDisplay' class='hidden'>
                     <h2> {{ repoName }}: </h2>
+                    <div id='issueSelection' class='graphSelection'>
+                      <h3>Issues</h3>
+
+                      <div class='searchResults issueResults '>
+                        <div ng-repeat="issue in issues ">
+                          <button class='issueInfo repoListItem' ng-click="getIssueTags(issue)">
+                            {{ issue.title }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                     <div id='userSelection' class='graphSelection'>
                         <h3>Users</h3>
                         <div class='searchResults userResults '>
                             <div ng-repeat="user in users ">
                                 <button class='userInfo repoListItem' ng-click="displayUserExpertise(user)">
                                     {{ user }}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div id='issueSelection' class='graphSelection'>
-                        <h3>Issues</h3>
-
-                        <div class='searchResults issueResults '>
-                            <div ng-repeat="issue in issues ">
-                                <button class='issueInfo repoListItem' ng-click="getIssueTags(issue)">
-                                    {{ issue.title }}
                                 </button>
                             </div>
                         </div>
