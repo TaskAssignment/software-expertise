@@ -9,9 +9,18 @@ var TagSchema = new Schema({
         type: String,
         required: true,
     },
+    soTotalCount: {
+        type: Int,
+    },
+    soUserCount: {
+        type: Int,
+    },
+    issueCount: {
+        type: Int,
+    },
     created: {
-      type: Date,
-      default: Date.now
+        type: Date,
+        default: Date.now
     },
 });
 
