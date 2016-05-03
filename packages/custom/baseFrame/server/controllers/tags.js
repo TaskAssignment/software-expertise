@@ -161,29 +161,18 @@ module.exports = function (Tags){
 
         coOccurrence: function (req, res) {
             //These tags come from 'displayIssueTags' on repository.js
-            var tagsToFilter = [];
-            // console.log(req.body);
-            // for(var key in req.body) {
-            //   if(req.body.hasOwnProperty(key))
-            //   {
-            //     tagsToFilter = req.body[key];
-            //   }
-            // }
-            //
-            // tag1Filter.filter(function(d,i){
-            //   if(tagsToFilter.indexOf(d.Tag1) !== -1 &&
-            //   tagsToFilter.indexOf(d.Tag2) !== -1){
-            //     return true;
-            //   } else {
-            //     return false;
-            //   }
-            // });
-            //
-            // var f1Data = tag1Filter.top(Infinity);
-            // console.log(f1Data);
+            var tags = req.body.tags.split(',');
+            tags = tags.slice(0, -1); //Remove the last empty string
 
+            var conditions = {
+                $and:
+                  [{source: {$in: tags}} ,
+                  {target: {$in: tags}} ]
+            }
 
-            res.send(JSON.stringify({}));
+            CommonOccurrence.find(conditions, function(err, occurrences){
+                res.send(JSON.stringify(occurrences));
+            });
         }
     }
 }

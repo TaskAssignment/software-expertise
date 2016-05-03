@@ -269,16 +269,17 @@ function ExpertiseGraph(initConfig) {
         graphConfig = optionsState;
         var allTags = mergeTags();
 
-        var dataString='';
+        var dataString = 'tags=';
         for(var tag in allTags){
-            dataString += 'tag=' + tag + '&';
+            dataString += tag + ',';
         }
         showLoadingScreen();
 
         $http({
-            method: 'GET',
+            method: 'POST',
             url: '/api/baseFrame/coOccurrence',
             data: dataString,
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         }).success(function (links) {
             drawGraph(links, allTags);
             hideLoadingScreen();
@@ -387,7 +388,7 @@ function ExpertiseGraph(initConfig) {
         /**
         * This will format the tags and links to what is expected to render the graph
         *
-        * @param links - Dict of dicts with Tag1, Tag2 and coOccurrence
+        * @param links - Array of dicts with source, target and coOccurrence
         * @param allTags - Dict where key is tagName
         *
         * @return graph - Dict with links and nodes.
@@ -398,17 +399,16 @@ function ExpertiseGraph(initConfig) {
             for(var i = 0; i < links.length; i++){
                 var occurrence = links[i];
                 var link = {
-                    source: allTags[occurrence.Tag1].index,
-                    target: allTags[occurrence.Tag2].index,
-                    value: occurrence.CoOccurrence
+                    source: allTags[occurrence.source].index,
+                    target: allTags[occurrence.target].index,
+                    value: occurrence.occurrences
                 };
 
                 new_links.push(link);
 
                 // Adds the values of these occurences to the tags counter
-                // var coOccurrence = parseInt();
-                allTags[occurrence.Tag1].soCount += (link.value || 0);
-                allTags[occurrence.Tag2].soCount += (link.value || 0);
+                allTags[occurrence.source].soCount += (link.value || 0);
+                allTags[occurrence.target].soCount += (link.value || 0);
             }
 
             /* The graph needs an array and the indexes in links will be this array

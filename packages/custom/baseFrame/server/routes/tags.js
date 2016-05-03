@@ -15,5 +15,5 @@ module.exports = function (BaseFrame, app, auth, database) {
     app.post('/api/baseFrame/getIssueTags', tags.getIssueTags);
 
     app.post('/api/baseFrame/soIDFromUser', tags.soIDFromUser);
-    app.get('/api/baseFrame/coOccurrence', tags.coOccurrence);
+    app.post('/api/baseFrame/coOccurrence', tags.coOccurrence);
 };
