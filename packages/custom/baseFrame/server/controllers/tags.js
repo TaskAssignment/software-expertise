@@ -4,9 +4,7 @@
 var mongoose = require('mongoose');
 var Tag = mongoose.model('Tag');
 var SoUser = mongoose.model('SoUser');
-// var CommonOccurrence = mongoose.model('CommonOccurrence');
-var config = require('meanio').loadConfig();
-var _ = require('lodash');
+var CommonOccurrence = mongoose.model('CommonOccurrence');
 
 var fs = require('fs');
 var cf = require('crossfilter');
@@ -14,14 +12,6 @@ var d3 = require('d3');
 
 module.exports = function (Tags){
     console.log('load data files 0/3');
-    var commonUserDataCF;
-    var commonUserFilter;
-
-    var coOccurrencesData;
-    var coOccurrences;
-    var tag1Filter;
-    var coOccurrenceFilter;
-
     return {
         populateSoTags: function (req, res){
             fs.readFile('tags.tsv', 'utf8', function (err, result){
@@ -54,19 +44,34 @@ module.exports = function (Tags){
         },
 
         populateCommonOccurrences: function (req, res){
-            fs.readFile('coOccurrences.tsv', 'utf8', function (err, result){
+            fs.readFile('coOccurrences.tsv', 'utf8', function (err, results){
                 if(err)  console.error(err);
                 else {
-                    result = d3.tsv.parse(result);
+                    results = d3.tsv.parse(results);
                     console.log('Load data file: coOccurrences.tsv');
-                    coOccurrencesData = result;
-                    coOccurrences = cf(result);
-                    tag1Filter = coOccurrences.dimension(function(d) { return d; });
-                    coOccurrenceFilter = coOccurrences.dimension(function(d) { return d.CoOccurrence; });
-                    coOccurrenceFilter.filter( function(d){ return d >= 10; } );
+
+                    var occurrences = [];
+                    for(var index in results){
+                        var result = results[index];
+
+                        var occurrence = {}
+                        occurrence['source'] = result.Tag1 ;
+                        occurrence['target'] = result.Tag2 ;
+                        occurrence['occurrences'] = result.CoOccurrence;
+
+                        occurrences.push(occurrence);
+                    }
+
+                    CommonOccurrence.collection.insert(occurrences, function(err){
+                        if(err){
+                            console.log(err);
+                        } else {
+                            console.log('Common Occurrences saved!');
+                        }
+                    });
+                    res.json('success CommonOccurrences');
                 }
             });
-            res.json('success CommonOccurrences');
         },
 
         populateSoUsers: function (req, res){

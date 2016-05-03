@@ -5,12 +5,12 @@ var Schema = mongoose.Schema;
 
 var CommonOccurrenceSchema = new Schema({
     source: {
-        type: Schema.ObjectId,
+        type: String,
         ref: 'Tag',
         required: true
     },
     target: {
-        type: Schema.ObjectId,
+        type: String,
         ref: 'Tag',
         required: true
     },
@@ -20,7 +20,7 @@ var CommonOccurrenceSchema = new Schema({
     }
 });
 
-CommonOccurrenceSchema.path('occurrences').validate(function (source){
+CommonOccurrenceSchema.path('occurrences').validate(function (occurrences){
     return !!occurrences;
 }, 'Occurrences cannot be blank!');
 
