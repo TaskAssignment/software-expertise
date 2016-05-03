@@ -4,7 +4,7 @@
 var mongoose = require('mongoose');
 var Tag = mongoose.model('Tag');
 var SoUser = mongoose.model('SoUser');
-var CommonOccurrence = mongoose.model('CommonOccurrence');
+// var CommonOccurrence = mongoose.model('CommonOccurrence');
 var config = require('meanio').loadConfig();
 var _ = require('lodash');
 
@@ -27,23 +27,27 @@ module.exports = function (Tags){
             fs.readFile('tags.tsv', 'utf8', function (err, result){
                 if(err) console.error(err);
                 else {
+                    console.log('Load data file: tags.tsv');
                     var convertResults = d3.tsv.parse(result);
 
-                    console.log('Load data file: tags.tsv');
+                    var tags = [];
                     for(var index in convertResults){
                         var result = convertResults[index];
 
-                        var tag = new Tag();
-                        tag.name = result.TagName;
-                        tag.soTotalCount = result.Count;
-                        tag.save(function(err){
-                            if(err){
-                                console.log(err.msgerror);
-                            } else {
-                                console.log('Tag created');
-                            }
-                        });
+                        var tag = {};
+                        tag['name'] = result.TagName;
+                        tag['soTotalCount'] = result.Count;
+
+                        tags.push(tag);
                     }
+
+                    Tag.collection.insert(tags, function(err){
+                        if(err){
+                            console.log(err.message);
+                        }else{
+                            console.log('Tags saved successfully!');
+                        }
+                    })
                     res.json('success SoTags');
                   }
             });
@@ -71,19 +75,26 @@ module.exports = function (Tags){
                 else {
                     var commonUserResult = d3.tsv.parse(result);
                     console.log('Load data file: commonUsers.tsv');
-
+                    var users = []
                     for(var index in commonUserResult){
                         var result = commonUserResult[index];
 
-                        var user = new SoUser();
-                        user.soId = result.SOId;
-                        user.gitUsername = result.login;
-                        user.email = result.email;
+                        var user = {};
+                        user['soId'] = result.SOId;
+                        user['gitUsername'] = result.login;
+                        user['email'] = result.email;
 
-                        user.save();
+                        users.push(user);
                     }
+                    SoUser.collection.insert(users, function(err){
+                        if(err){
+                            console.log(err.message);
+                        }else{
+                            console.log('Users saved successfully!');
+                        }
+                    })
+                    res.json('success CommonOccurrences');
                 }
-                res.json('success CommonOccurrences');
             });
         },
 
