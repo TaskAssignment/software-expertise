@@ -38,7 +38,7 @@ module.exports = function (Tags){
                         tag.soTotalCount = result.Count;
                         tag.save(function(err){
                             if(err){
-                                console.log(err);
+                                console.log(err.msgerror);
                             } else {
                                 console.log("Tag created");
                             }
@@ -66,39 +66,47 @@ module.exports = function (Tags){
         },
 
         getIssueTags: function(req, res){
-            var issue = req.body;
-
-            var title = issue.title.toLowerCase().split(' ');
-            var body = issue.body.toLowerCase().split(' ');
+            var allTags = {};
             var tagsFromIssue = {};
 
-            for(var index in title) {
-                var word = title[index];
-                addWordToIssueTags(word);
-            }
+            Tag.find({}, 'name soTotalCount', function(err, tags){
+                if(err){
+                    console.log(err.msgerror);
+                    return {};
+                }
+                /*I know that this is not much better than reading the file
+                * everytime, but the collection that mongodb returns is an
+                * array, and looking for each word doens't work.
+                */
+                for(var index in tags){
+                    allTags[tags[index].name] = tags[index].soTotalCount
+                }
+                var issue = req.body;
 
-            for(var index in body) {
-                var word = body[index];
-                addWordToIssueTags(word);
-            }
+                var title = issue.title.toLowerCase().split(' ');
+                var body = issue.body.toLowerCase().split(' ');
 
-            function addWordToIssueTags(word){
-                //Check a better way of doing this!!
-                Tag.find({name: word},function(err, tags){
-                    if(!err){
-                        if(tags.length > 0){
-                            if(tagsFromIssue[word] === undefined){
-                                tagsFromIssue[word] = 1;
-                            } else {
-                                tagsFromIssue[word] += 1;
-                            }
-                        }
+                for(var index in title) {
+                    var word = title[index];
+                    checkWord(word);
+                }
+
+                for(var index in body) {
+                    var word = body[index];
+                    checkWord(word);
+                }
+                res.send(JSON.stringify(tagsFromIssue));
+            });
+
+            function checkWord(word){
+                if(allTags[word] !== undefined){
+                    if(tagsFromIssue[word] === undefined){
+                        tagsFromIssue[word] = 1;
                     }else{
-                        console.log(err);
+                        tagsFromIssue[word] += 1;
                     }
-                });
+                }
             }
-            res.send(JSON.stringify(tagsFromIssue));
         },
 
         soIDFromUser: function(req, res){
@@ -122,28 +130,27 @@ module.exports = function (Tags){
             //These tags come from 'displayIssueTags' on repository.js
             var tagsToFilter = [];
             // console.log(req.body);
-            for(var key in req.body) {
-              if(req.body.hasOwnProperty(key))
-              {
-                tagsToFilter = req.body[key];
-              }
-            }
+            // for(var key in req.body) {
+            //   if(req.body.hasOwnProperty(key))
+            //   {
+            //     tagsToFilter = req.body[key];
+            //   }
+            // }
+            //
+            // tag1Filter.filter(function(d,i){
+            //   if(tagsToFilter.indexOf(d.Tag1) !== -1 &&
+            //   tagsToFilter.indexOf(d.Tag2) !== -1){
+            //     return true;
+            //   } else {
+            //     return false;
+            //   }
+            // });
+            //
+            // var f1Data = tag1Filter.top(Infinity);
+            // console.log(f1Data);
 
-            tag1Filter.filter(function(d,i){
-              if(tagsToFilter.indexOf(d.Tag1) !== -1 &&
-              tagsToFilter.indexOf(d.Tag2) !== -1){
-                return true;
-              } else {
-                return false;
-              }
-            });
 
-            var f1Data = tag1Filter.top(Infinity);
-            console.log(f1Data);
-
-
-            res.send(JSON.stringify(f1Data));
-            tag1Filter.filter();
+            res.send(JSON.stringify({}));
         }
     }
 }
