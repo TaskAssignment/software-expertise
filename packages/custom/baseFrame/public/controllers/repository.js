@@ -229,22 +229,21 @@ angular.module('mean.baseFrame')
 
             //Any word from the issue that is an SO tag will be in this array.
             //This is the array that is sent to '/api/baseFrame/coOccurrence'
-
+            showLoadingScreen();
             $http({
                 method: 'POST',
                 url: '/api/baseFrame/getIssueTags',
                 data: 'title=' + issue.title + '&body=' + issue.body,
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'}
             }).success(function (response) {
-                tagsFromIssue = {}; //Global variable. Ugh
-                // sendToGraph();
+                hideLoadingScreen();
+                tagsFromIssue = response;
+                sendToGraph();
             });
-
-
         }
 
         function sendToGraph(){
-            graphs.drawWithNewData(tagsFromIssue, tagsFromUserOnSO, $http);
+            graphs.drawWithNewData(tagsFromIssue, tagsFromUserOnSO, $http, optionsState);
         }
 
         $scope.package = {
@@ -265,8 +264,8 @@ function ExpertiseGraph(initConfig) {
     var graphConfig = initConfig;
     var expertGraph = this;
 
-    expertGraph.drawWithNewData = function(tagsFromIssue = {},
-      tagsFromUserOnSO = {}, $http){
+    expertGraph.drawWithNewData = function(tagsFromIssue = {}, tagsFromUserOnSO = {}, $http, optionsState){
+        graphConfig = optionsState;
         var allTags = mergeTags();
 
         var dataString='';
@@ -395,7 +394,8 @@ function ExpertiseGraph(initConfig) {
         function formatDataToGraph(links, allTags){
             var graph = {};
             var new_links = []
-            for(var occurrence of links){
+            for(var i = 0; i < links.length; i++){
+                var occurrence = links[i];
                 var link = {
                     source: allTags[occurrence.Tag1].index,
                     target: allTags[occurrence.Tag2].index,
@@ -405,9 +405,9 @@ function ExpertiseGraph(initConfig) {
                 new_links.push(link);
 
                 // Adds the values of these occurences to the tags counter
-                var coOccurrence = parseInt(link.value);
-                allTags[occurrence.Tag1].soCount += (coOccurrence || 0);
-                allTags[occurrence.Tag2].soCount += (coOccurrence || 0);
+                // var coOccurrence = parseInt();
+                allTags[occurrence.Tag1].soCount += (link.value || 0);
+                allTags[occurrence.Tag2].soCount += (link.value || 0);
             }
 
             /* The graph needs an array and the indexes in links will be this array
@@ -433,6 +433,7 @@ function ExpertiseGraph(initConfig) {
 
         /**
         * This function will merge the tagsFromIssue with the tagsFromUserOnSO
+        * Both tagsFromIssue and tagsFromUserOnSO have the format: name: count
         *
         * @return Dict of dicts with tag name being the main key
             and origin, index, issueCount and soCount as subkeys.
