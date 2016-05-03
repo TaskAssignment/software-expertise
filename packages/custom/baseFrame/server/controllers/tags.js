@@ -143,7 +143,15 @@ module.exports = function (Tags){
         },
 
         soIDFromUser: function(req, res){
-
+            var gitUsername = req.body.gitName;
+            SoUser.findOne({gitUsername: gitUsername}, 'soId', {lean:true},
+            function(err, user){
+                if(user){
+                    res.json(user.soId);
+                }else {
+                    res.json(undefined);
+                }
+            });
         },
 
         coOccurrence: function (req, res) {

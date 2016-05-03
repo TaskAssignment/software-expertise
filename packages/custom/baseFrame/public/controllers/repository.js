@@ -188,15 +188,11 @@ angular.module('mean.baseFrame')
             function getSOIDForUser(userName){
                 var apiCallUrl  = '/api/baseFrame/soIDFromUser'; //Not sure if this will work everytime
                 $http({
-                    method: 'GET',
+                    method: 'POST',
                     url: apiCallUrl,
-                    data: 'gitName='+userName,
-                }).success(function (response, soId) {
-                    var soId = undefined;
-                    if(response.length === 1){
-                        soId = response[0].SOId;
-                    }
-
+                    data: 'gitName=' + userName,
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+                }).success(function (soId) {
                     if(soId){
                         getSOTagsFromUser(soId);
                     } else {
@@ -342,11 +338,11 @@ function ExpertiseGraph(initConfig) {
 
           var circle = node.append('circle')
               .attr('r', function(d) { return calculateCircleRatio(d.issueCount); })
-              .style('fill', function(d) { return 'blue'; });
+              .style('fill', function(d) { return d.origin; });
 
           var circle = node.append('circle')
               .attr('r', function(d) { return calculateCircleRatio(d.soCount); })
-              .style('fill', function(d) { return 'yellow'; });
+              .style('fill', function(d) { return d.origin; });
 
           /*
           * Add onClick behavior. In this case, simply changes the circle ratio
@@ -446,9 +442,13 @@ function ExpertiseGraph(initConfig) {
         function mergeTags(){
             var allTags = {};
             var index = 0;
+
+            var SO = 'blue';
+            var ISSUE = 'yellow';
+            var BOTH = 'red';
             for(var tag in tagsFromIssue){
                 allTags[tag] = {
-                    origin: 'issue',
+                    origin: ISSUE,
                     index: index,
                     issueCount: tagsFromIssue[tag],
                     soCount: 0,
@@ -459,14 +459,14 @@ function ExpertiseGraph(initConfig) {
             for(var tag in tagsFromUserOnSO){
                 if(allTags[tag] === undefined) {
                     allTags[tag] = {
-                        origin: 'SO',
+                        origin: SO,
                         index: index,
                         soCount: tagsFromUserOnSO[tag],
                         issueCount: 0
                     }
                     index++;
                 }else{
-                    allTags[tag].origin = 'both';
+                    allTags[tag].origin = BOTH;
                     allTags[tag].soCount += tagsFromUserOnSO[tag];
                 }
             }
