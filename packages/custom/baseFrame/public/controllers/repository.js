@@ -85,6 +85,14 @@ angular.module('mean.baseFrame')
             populateRequest('/api/baseFrame/populateSoTags');
         }
 
+        $scope.populateSoUsers = function(){
+            populateRequest('/api/baseFrame/populateSoUsers');
+        }
+
+        $scope.populateCoOccurrences = function(){
+          populateRequest('/api/baseFrame/populateCoOccurrences');
+        }
+
         function populateRequest(url){
             showLoadingScreen();
             $http({
@@ -98,9 +106,6 @@ angular.module('mean.baseFrame')
             });
         }
 
-        $scope.populateCoOccurrences = function(){
-            populateRequest('/api/baseFrame/populateCoOccurrences');
-        }
 
 
         /**

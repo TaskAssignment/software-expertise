@@ -10,6 +10,7 @@ module.exports = function (BaseFrame, app, auth, database) {
 
     app.post('/api/baseFrame/populateSoTags', tags.populateSoTags);
     app.post('/api/baseFrame/populateCoOccurrences', tags.populateCommonOccurrences);
+    app.post('/api/baseFrame/populateSoUsers', tags.populateSoUsers);
 
     app.post('/api/baseFrame/getIssueTags', tags.getIssueTags);
 

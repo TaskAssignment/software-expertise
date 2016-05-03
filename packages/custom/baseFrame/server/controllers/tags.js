@@ -40,11 +40,11 @@ module.exports = function (Tags){
                             if(err){
                                 console.log(err.msgerror);
                             } else {
-                                console.log("Tag created");
+                                console.log('Tag created');
                             }
                         });
                     }
-                    res.json("success SoTags");
+                    res.json('success SoTags');
                   }
             });
         },
@@ -62,7 +62,29 @@ module.exports = function (Tags){
                     coOccurrenceFilter.filter( function(d){ return d >= 10; } );
                 }
             });
-            res.json("success CommonOccurrences");
+            res.json('success CommonOccurrences');
+        },
+
+        populateSoUsers: function (req, res){
+            fs.readFile('commonUsers.tsv', 'utf8', function(err, result){
+                if(err) console.error(err);
+                else {
+                    var commonUserResult = d3.tsv.parse(result);
+                    console.log('Load data file: commonUsers.tsv');
+
+                    for(var index in commonUserResult){
+                        var result = commonUserResult[index];
+
+                        var user = new SoUser();
+                        user.soId = result.SOId;
+                        user.gitUsername = result.login;
+                        user.email = result.email;
+
+                        user.save();
+                    }
+                }
+                res.json('success CommonOccurrences');
+            });
         },
 
         getIssueTags: function(req, res){
@@ -76,7 +98,7 @@ module.exports = function (Tags){
                 }
                 /*I know that this is not much better than reading the file
                 * everytime, but the collection that mongodb returns is an
-                * array, and looking for each word doens't work.
+                * array, and looking for each word would require even more interactions
                 */
                 for(var index in tags){
                     allTags[tags[index].name] = tags[index].soTotalCount
@@ -110,19 +132,6 @@ module.exports = function (Tags){
         },
 
         soIDFromUser: function(req, res){
-            fs.readFile('commonUsers.tsv', 'utf8', function(err, result){
-                if(err) console.error(err);
-                else {
-                    var commonUserResult = d3.tsv.parse(result);
-                    console.log('Load data file: commonUsers.tsv');
-
-                    //Save this to Database!!!
-                    commonUserDataCF = cf(commonUserResult);
-                    commonUserFilter = commonUserDataCF.dimension(function(d) { return d.login; });
-                }
-                commonUserFilter.filter(req.body.gitName);
-                res.send(JSON.stringify(commonUserFilter.top(Infinity)));
-            });
 
         },
 

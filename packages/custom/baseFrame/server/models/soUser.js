@@ -6,15 +6,18 @@ var Schema = mongoose.Schema;
 var SoUserSchema = new Schema({
     email: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     gitUsername: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     soId: {
         type: Number,
-        required: true
+        required: true,
+        unique: true
     }
 });
 
