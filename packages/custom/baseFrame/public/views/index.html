@@ -1,115 +1,108 @@
 <!-- TODO: This controller is NOT NEEDED here. However, I currently don't know
 how to link RepositoryController from the client with with the server side.
 As soon as I figure this out, this will be removed!! -->
-<div id="baseApplication" ng-controller="BaseFrameController">
-    <div class="repo" ng-controller="MyHeaderController as hdrctr" ng-show="!hdrctr.hdrvars.authenticated">
-        <div ng-controller="RepositoryController">
-            <div id='leftSelectionPanel'>
-                <div id='populate'>
-                  <form ng-submit=populateSoTags()>
-                      <button class="btn btn-default"> Populate SO Tags </button>
-                  </form>
-                  <form ng-submit=populateCoOccurrences()>
-                      <button class="btn btn-default"> Populate Common Occurrences </button>
-                  </form>
-                  <form ng-submit=populateSoUsers()>
-                      <button class="btn btn-default"> Populate Stack Overflow Users </button>
-                  </form>
-                </div>
-
-                <div id='repositorySearch'>
-                    <div class='searchBoxInput'>
-                        <p>Search for a repository:</p>
-                        <form ng-submit=queryRepos()>
-                            <input type='text' ng-model="repoUser" name='repoUser' class='searchTextBox col-md-2' placeholder='User or Organization'>/
-                            <input type='text' ng-model="repositoryName" name='repositoryName' class='searchTextBox' placeholder='Repository name'>
-                            <input type='text' ng-model="repoDescription" name='repoDescription' class='searchTextBox' placeholder='Any phrase in the repo deescription'>
-                            <input type='text' ng-model="repoReadme" name='repoReadme' class='searchTextBox' placeholder='Any thing in the repository readme'>
-                            <button ng-submit="queryRepos()"> Search </button>
-                        </form>
-                    </div>
-                    <div id='repoSelection' class='hidden'>
-                        <!-- <h2>Repositories Matching {{ repoSearchBox }}: </h2> -->
-                        <div class='searchResults repoResults'>
-                            <div ng-repeat="repo in repos ">
-                                <button class='repoInfo repoListItem' ng-click="getRepoInformation(repo)">
-                                    {{ repo }}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div id='repositoyInfoDisplay' class='hidden'>
-                    <h2> {{ repoName }}: </h2>
-                    <div id='issueSelection' class='graphSelection'>
-                      <h3>Issues</h3>
-
-                      <div class='searchResults issueResults '>
-                        <div ng-repeat="issue in issues ">
-                          <button class='issueInfo repoListItem' ng-click="getIssueTags(issue)">
-                            {{ issue.title }}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div id='userSelection' class='graphSelection'>
-                        <h3>Users</h3>
-                        <div class='searchResults userResults '>
-                            <div ng-repeat="user in users ">
-                                <button class='userInfo repoListItem' ng-click="displayUserExpertise(user)">
-                                    {{ user }}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+<section ng-controller="BaseFrameController">
+    <div ng-controller="RepositoryController">
+        <div id='leftSelectionPanel'>
+            <div id='populate'>
+                <form ng-submit=populateSoTags()>
+                    <button class="btn btn-default"> Populate SO Tags </button>
+                </form>
+                <form ng-submit=populateCoOccurrences()>
+                    <button class="btn btn-default"> Populate Common Occurrences </button>
+                </form>
+                <form ng-submit=populateSoUsers()>
+                    <button class="btn btn-default"> Populate Stack Overflow Users </button>
+                </form>
             </div>
-            <div id="expertiseGraphDiv">
-                <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
-                <p id='similarText' class='hidden' style="position: absolute;"> The user and bug have a similarity of : <span id = 'similarityValue'></span> </p>
-                <div id='userinputgraph'>
-                    <form ng-submit="findTag()" id="tagSearchForm">
-                        <input type='text' ng-model="nodeSearchBox" name='nodeSearchBox' class='searchTextBox' placeholder='Find A Tag'>
+
+            <div id='repositorySearch'>
+                <div class='searchBoxInput'>
+                    <p>Search for a repository:</p>
+                    <form ng-submit=queryRepos()>
+                        <input type='text' ng-model="repoUser" name='repoUser' class='searchTextBox col-md-2' placeholder='User or Organization'>/
+                        <input type='text' ng-model="repositoryName" name='repositoryName' class='searchTextBox' placeholder='Repository name'>
+                        <input type='text' ng-model="repoDescription" name='repoDescription' class='searchTextBox' placeholder='Any phrase in the repo deescription'>
+                        <input type='text' ng-model="repoReadme" name='repoReadme' class='searchTextBox' placeholder='Any thing in the repository readme'>
+                        <button ng-submit="queryRepos()"> Search </button>
                     </form>
-                    <img id="configImage"  ng-click="displayOptionsMenu(true)" src="/baseFrame/assets/img/settings-grey1.png">
-
                 </div>
 
+                <div id='repoSelection' class='hidden'>
+                    <!-- <h2>Repositories Matching {{ repoSearchBox }}: </h2> -->
+                    <div class='searchResults repoResults'>
+                        <div ng-repeat="repo in repos ">
+                            <button class='repoInfo repoListItem' ng-click="getRepoInformation(repo)">
+                                {{ repo }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-        </div>
+            <div id='repositoyInfoDisplay' class='hidden'>
+                <h2> {{ repoName }}: </h2>
+                <div id='issueSelection' class='graphSelection'>
+                  <h3>Issues</h3>
 
-    </div>
-
-</div>
-
-
-    <div style="background-image: url(/theme/assets/img/bg.png);  height: 1030px; " ng-controller="MyHeaderController as hdrctr" ng-show="hdrctr.hdrvars.authenticated">
-        <br>
-         <div class="form tsv-form login-form__right">
-
-                    <br>
-                    <h3 style="text-align:center"> Welcome Adminstrator {{hdrctr.hdrvars.user.name}} </h3>
-                    <br>
-                    <div class="greyside col-md-12 example-block">
-                    <h4 style="text-align:center">You have the ability to: </h4>
-                    <br>
-                    <ul>
-                        <li >Register an Administator </li>
-                        <li >Download or Upload a new tag.tsv, coOccurrences.tsv, or commonUsers.tsv</li>
-                    </ul>
+                  <div class='searchResults issueResults '>
+                    <div ng-repeat="issue in issues ">
+                      <button class='issueInfo repoListItem' ng-click="getIssueTags(issue)">
+                        {{ issue.title }}
+                      </button>
                     </div>
-                     <div class="col-md-12 separator"><p>_____________________________________________________________________</p></div>
-
-                    <h4 style="text-align:center"> To return to the Software Expertise HomePage
-                        <br> please logout: </br> </h4>
-                        <br>
-                    <div class="button_greenbutton" style="text-align:center">
-                        <button id="adminLogOutPage" ng-click="hdrctr.logout()" class="submit_button">Log Out</button>
+                  </div>
                 </div>
 
+                <div id='userSelection' class='graphSelection'>
+                    <h3>Users</h3>
+                    <div class='searchResults userResults '>
+                        <div ng-repeat="user in users ">
+                            <button class='userInfo repoListItem' ng-click="displayUserExpertise(user)">
+                                {{ user }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="expertiseGraphDiv">
+            <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
+            <p id='similarText' class='hidden' style="position: absolute;"> The user and bug have a similarity of : <span id = 'similarityValue'></span> </p>
+            <div id='userinputgraph'>
+                <form ng-submit="findTag()" id="tagSearchForm">
+                    <input type='text' ng-model="nodeSearchBox" name='nodeSearchBox' class='searchTextBox' placeholder='Find A Tag'>
+                </form>
+                <img id="configImage"  ng-click="displayOptionsMenu(true)" src="/baseFrame/assets/img/settings-grey1.png">
         </div>
     </div>
+</section>
+
+
+<div style="background-image: url(/theme/assets/img/bg.png);  height: 1030px; " ng-controller="MyHeaderController as hdrctr" ng-show="hdrctr.hdrvars.authenticated">
+    <br>
+     <div class="form tsv-form login-form__right">
+          <br>
+          <h3 style="text-align:center"> Welcome Adminstrator {{hdrctr.hdrvars.user.name}} </h3>
+          <br>
+          <div class="greyside col-md-12 example-block">
+          <h4 style="text-align:center">You have the ability to: </h4>
+          <br>
+          <ul>
+              <li >Register an Administator </li>
+              <li >Download or Upload a new tag.tsv, coOccurrences.tsv, or commonUsers.tsv</li>
+          </ul>
+          </div>
+           <div class="col-md-12 separator"><p>_____________________________________________________________________</p></div>
+
+          <h4 style="text-align:center"> To return to the Software Expertise HomePage
+              <br> please logout: </br> </h4>
+              <br>
+          <div class="button_greenbutton" style="text-align:center">
+              <button id="adminLogOutPage" ng-click="hdrctr.logout()" class="submit_button">Log Out</button>
+      </div>
+
+    </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.15/d3.js"></script>
