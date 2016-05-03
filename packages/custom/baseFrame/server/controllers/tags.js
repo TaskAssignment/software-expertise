@@ -107,32 +107,26 @@ module.exports = function (Tags){
             var allTags = {};
             var tagsFromIssue = {};
 
-            Tag.find({}, 'name soTotalCount', function(err, tags){
+            var issue = req.body;
+
+            var title = issue.title.toLowerCase().split(' ');
+            var allWords = issue.body.toLowerCase().split(' ');
+
+            for(var index in title) {
+                var word = title[index];
+                allWords.push(word);
+            }
+            Tag.find({name: {$in: allWords }}, 'name soTotalCount', function(err, tags){
                 if(err){
                     console.log(err.msgerror);
                     return {};
                 }
-                /*I know that this is not much better than reading the file
-                * everytime, but the collection that mongodb returns is an
-                * array, and looking for each word would require even more interactions
-                */
+
                 for(var index in tags){
-                    allTags[tags[index].name] = tags[index].soTotalCount
-                }
-                var issue = req.body;
-
-                var title = issue.title.toLowerCase().split(' ');
-                var body = issue.body.toLowerCase().split(' ');
-
-                for(var index in title) {
-                    var word = title[index];
-                    checkWord(word);
+                    //I don't have the count for the issue right now.
+                    tagsFromIssue[tags[index].name] = 1;
                 }
 
-                for(var index in body) {
-                    var word = body[index];
-                    checkWord(word);
-                }
                 res.send(JSON.stringify(tagsFromIssue));
             });
 
