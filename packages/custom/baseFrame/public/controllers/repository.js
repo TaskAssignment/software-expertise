@@ -415,7 +415,8 @@ function ExpertiseGraph(initConfig) {
             * indexes. That's why I created this like that, instead of pushing to
             * the array's last position.
             */
-            var nodes = new Array(allTags.length);
+            var length = allTags.length || 0;
+            var nodes = new Array(length);
             for(var tag in allTags){
                 nodes[allTags[tag].index] = {
                     name: tag,

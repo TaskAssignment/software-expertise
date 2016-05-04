@@ -13,27 +13,18 @@ var d3 = require('d3');
 module.exports = function (BaseFrame){
     return {
         populateSoTags: function (req, res){
-            fs.readFile('files/tags.tsv', 'utf8', function (err, result){
-                readFilesCallback(err, result, res, Tag);
-            });
+            readFile('files/tags.tsv', res, Tag);
         },
 
         populateCommonOccurrences: function (req, res){
-            fs.readFile('files/coOccurrences.tsv', 'utf8', function (err, result){
-                readFilesCallback(err, result, res, CommonOccurrence);
-            });
+            readFile('files/coOccurrences.tsv', res, CommonOccurrence);
         },
 
         populateSoUsers: function (req, res){
-            fs.readFile('files/commonUsers.tsv', 'utf8', function(err, result){
-                readFilesCallback(err, result, res, SoUser);
-            });
+            readFile('files/commonUsers.tsv', res, SoUser);
         },
 
         getIssueTags: function(req, res){
-            var allTags = {};
-            var tagsFromIssue = {};
-
             var issue = req.body;
 
             var title = issue.title.toLowerCase().split(' ');
@@ -43,12 +34,16 @@ module.exports = function (BaseFrame){
                 var word = title[index];
                 allWords.push(word);
             }
+
+            // Any tag that has any of the words in the given array
+            // The lean option is to avoid Mongoose wrapers. It returns just a json
             Tag.find({name: {$in: allWords }}, 'name soTotalCount', function(err, tags){
                 if(err){
-                    console.log(err.msgerror);
-                    return {};
+                    console.log(err.message);
+                    res.sendStatus(500);
                 }
 
+                var tagsFromIssue = {};
                 for(var index in tags){
                     //I don't have the count for the issue right now.
                     tagsFromIssue[tags[index].name] = 1;
@@ -56,16 +51,6 @@ module.exports = function (BaseFrame){
 
                 res.json(tagsFromIssue);
             });
-
-            function checkWord(word){
-                if(allTags[word] !== undefined){
-                    if(tagsFromIssue[word] === undefined){
-                        tagsFromIssue[word] = 1;
-                    }else{
-                        tagsFromIssue[word] += 1;
-                    }
-                }
-            }
         },
 
         soIDFromUser: function(req, res){
@@ -96,6 +81,20 @@ module.exports = function (BaseFrame){
             });
         }
     }
+}
+
+/** Helper function to read the files
+*
+* @param file - The file address/name. The path given should be from the root
+  folder instead of from the baseFrame package!
+* @param res - The response to be sent.
+* @param MongooseModel - The MongooseModel to be used to save to the database.
+*/
+
+function readFile(file, res, MongooseModel){
+    fs.readFile(file, 'utf8', function (err, result){
+        readFilesCallback(err, result, res, MongooseModel);
+    });
 }
 
 /** The callback called once each file is read. It creates the models and
