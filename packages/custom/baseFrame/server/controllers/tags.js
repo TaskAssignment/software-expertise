@@ -1,6 +1,6 @@
 'use strict';
 
-//Module dependencies (following the Articles model)
+// Database connections
 var mongoose = require('mongoose');
 var Tag = mongoose.model('Tag');
 var SoUser = mongoose.model('SoUser');
@@ -10,82 +10,7 @@ var fs = require('fs');
 var cf = require('crossfilter');
 var d3 = require('d3');
 
-/** The callback called once each file is read. It creates the models and
-* save all of them to the database (as one big collection).
-*
-* @param err - The error (if any) generated from opening/reading the file.
-* @param result - The read file as a variable
-* @param res - The response for the route
-* @param MongooseModel - The model that is responsible for the database connection.
-*/
-function readFilesCallback(err, result, res, MongooseModel){
-    if(err) console.error(err);
-    else {
-        var convertResults = d3.tsv.parse(result);
-        console.log('Data file loaded');
-
-        /*I am still not sure if this is the best approach of if I should
-        * copy each result. Probably, it will have the same results in the end.
-        */
-        var models = createModel(convertResults, MongooseModel.modelName);
-
-        console.log('Models created. Saving to the database.');
-        /*Find a way of telling the user that the common occurrences will take a
-        *long time. Maybe send the response before saving.
-        */
-        MongooseModel.collection.insert(models, function(err){
-            if(err){
-                console.log(err.message);
-            }else{
-                console.log('Models saved successfully!');
-            }
-        });
-        res.sendStatus(200);
-    }
-}
-/** This receives the converted results from reading a file
-* and returns an array with models based on these results.
-*
-* @param convertResults - an array of dicts with the first row as keys
-* @param modelName - The name of model that will be created.
-* @return array of models to be saved on the database.
-*/
-function createModel(convertResults, modelName){
-    var models = [];
-
-    for(var index in convertResults){
-        var result = convertResults[index];
-        var model = {};
-
-        /*The keys here (result.key) are the keys in the file (first row).
-        * If the file pattern changes, The results will be undefined
-        * and, probably, one erraneous occurence will
-        * be saved in the database.
-        */
-
-        switch (modelName) {
-            case 'Tag':
-                model['name'] = result.TagName;
-                model['soTotalCount'] = result.Count;
-                break;
-            case 'SoUser':
-                model['soId'] = result.SOId;
-                model['gitUsername'] = result.login;
-                model['email'] = result.email;
-            case 'CommonOccurrence':
-                model['source'] = result.Tag1 ;
-                model['target'] = result.Tag2 ;
-                model['occurrences'] = result.CoOccurrence;
-        }
-
-        models.push(model);
-    }
-
-    return models;
-}
-
-module.exports = function (Tags){
-    console.log('load data files 0/3');
+module.exports = function (BaseFrame){
     return {
         populateSoTags: function (req, res){
             fs.readFile('tags.tsv', 'utf8', function (err, result){
@@ -171,4 +96,78 @@ module.exports = function (Tags){
             });
         }
     }
+}
+
+/** The callback called once each file is read. It creates the models and
+* save all of them to the database (as one big collection).
+*
+* @param err - The error (if any) generated from opening/reading the file.
+* @param result - The read file as a variable
+* @param res - The response for the route
+* @param MongooseModel - The model that is responsible for the database connection.
+*/
+function readFilesCallback(err, result, res, MongooseModel){
+  if(err) console.error(err);
+  else {
+    var convertResults = d3.tsv.parse(result);
+    console.log('Data file loaded');
+
+    /*I am still not sure if this is the best approach of if I should
+    * copy each result. Probably, it will have the same results in the end.
+    */
+    var models = createModel(convertResults, MongooseModel.modelName);
+
+    console.log('Models created. Saving to the database.');
+    /*Find a way of telling the user that the common occurrences will take a
+    *long time. Maybe send the response before saving.
+    */
+    MongooseModel.collection.insert(models, function(err){
+      if(err){
+        console.log(err.message);
+      }else{
+        console.log('Models saved successfully!');
+      }
+    });
+    res.sendStatus(200);
+  }
+}
+/** This receives the converted results from reading a file
+* and returns an array with models based on these results.
+*
+* @param convertResults - an array of dicts with the first row as keys
+* @param modelName - The name of model that will be created.
+* @return array of models to be saved on the database.
+*/
+function createModel(convertResults, modelName){
+  var models = [];
+
+  for(var index in convertResults){
+    var result = convertResults[index];
+    var model = {};
+
+    /*The keys here (result.key) are the keys in the file (first row).
+    * If the file pattern changes, The results will be undefined
+    * and, probably, one erraneous occurence will
+    * be saved in the database.
+    */
+
+    switch (modelName) {
+      case 'Tag':
+      model['name'] = result.TagName;
+      model['soTotalCount'] = result.Count;
+      break;
+      case 'SoUser':
+      model['soId'] = result.SOId;
+      model['gitUsername'] = result.login;
+      model['email'] = result.email;
+      case 'CommonOccurrence':
+      model['source'] = result.Tag1 ;
+      model['target'] = result.Tag2 ;
+      model['occurrences'] = result.CoOccurrence;
+    }
+
+    models.push(model);
+  }
+
+  return models;
 }
