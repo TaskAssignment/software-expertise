@@ -14,3 +14,9 @@ circle {
   stroke: #333;
   stroke-width: 1.5px;
 }
+
+.scrollable {
+  height: 200px; // Set this height to the appropriate size
+  position: fixed;
+  overflow-y: scroll;
+}

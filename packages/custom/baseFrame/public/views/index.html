@@ -22,29 +22,25 @@ As soon as I figure this out, this will be removed!! -->
                     </form>
                 </div>
 
-                <div id='repoSelection' class='hidden'>
-                    <div class='searchResults repoResults'>
-                        <div ng-repeat="repo in repos ">
-                            <button class="list-group-item" ng-click="getRepoInformation(repo)">
-                                {{ repo }}
-                            </button>
-                        </div>
-                    </div>
+                <div id='repoSelection' class='scrollable hidden'>
+                    <button ng-repeat="repo in repos" class="list-group-item" ng-click="getRepoInformation(repo)">
+                        {{ repo }}
+                    </button>
                 </div>
             </div>
 
             <div id='repositoyInfoDisplay' class='hidden'>
                 <h2> {{ repoName }}: </h2>
-                <div id='issueSelection' class='list-group'>
-                    <h3>Issues</h3>
 
+                <h3>Issues</h3>
+                <div id='issueSelection' class='scrollable list-group'>
                     <button ng-repeat="issue in issues" class='list-group-item' ng-click="getIssueTags(issue)">
                         {{ issue.title }}
                     </button>
                 </div>
 
-                <div id='userSelection' class='graphSelection'>
-                    <h3>Users</h3>
+                <h3>Users</h3>
+                <div id='userSelection' class=' scrollable graphSelection'>
                     <button ng-repeat="user in users" class='list-group-item' ng-click="displayUserExpertise(user)">
                         {{ user }}
                     </button>
@@ -52,10 +48,10 @@ As soon as I figure this out, this will be removed!! -->
             </div>
         </div>
         <div id="expertiseGraphDiv" class="col-md-9">
-            <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
             <p id='similarText' class='hidden' style="position: absolute;"> The user and bug have a similarity of : <span id = 'similarityValue'></span> </p>
         </div>
     </div>
 </section>
 
+<img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.15/d3.js"></script>
