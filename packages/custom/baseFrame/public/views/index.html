@@ -35,33 +35,25 @@ As soon as I figure this out, this will be removed!! -->
 
             <div id='repositoyInfoDisplay' class='hidden'>
                 <h2> {{ repoName }}: </h2>
-                <div id='issueSelection' class='graphSelection'>
+                <div id='issueSelection' class='list-group'>
                     <h3>Issues</h3>
 
-                    <div ng-repeat="issue in issues ">
-                        <button class='list-group-item' ng-click="getIssueTags(issue)">
-                            {{ issue.title }}
-                        </button>
-                    </div>
+                    <button ng-repeat="issue in issues" class='list-group-item' ng-click="getIssueTags(issue)">
+                        {{ issue.title }}
+                    </button>
                 </div>
 
                 <div id='userSelection' class='graphSelection'>
                     <h3>Users</h3>
-                    <div ng-repeat="user in users ">
-                        <button class='list-group-item' ng-click="displayUserExpertise(user)">
-                            {{ user }}
-                        </button>
-                    </div>
+                    <button ng-repeat="user in users" class='list-group-item' ng-click="displayUserExpertise(user)">
+                        {{ user }}
+                    </button>
                 </div>
             </div>
         </div>
         <div id="expertiseGraphDiv" class="col-md-9">
             <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
             <p id='similarText' class='hidden' style="position: absolute;"> The user and bug have a similarity of : <span id = 'similarityValue'></span> </p>
-            <div id='userinputgraph'>
-            <form ng-submit="findTag()" id="tagSearchForm">
-                <input type='text' ng-model="nodeSearchBox" name='nodeSearchBox' class='searchTextBox' placeholder='Find A Tag'>
-            </form>
         </div>
     </div>
 </section>
