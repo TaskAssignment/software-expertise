@@ -3,16 +3,16 @@ how to link RepositoryController from the client with with the server side.
 As soon as I figure this out, this will be removed!! -->
 <section ng-controller="BaseFrameController" class="row">
     <div ng-controller="RepositoryController">
-        <div id='leftSelectionPanel'>
-            <div id='populate'>
-                <a class="btn btn-default" ng-click=populateSoTags()> Populate SO Tags </a>
-                <a class="btn btn-default" ng-click=populateCoOccurrences()> Populate Common Occurrences </a>
-                <a class="btn btn-default" ng-submit=populateSoUsers()> Populate Stack Overflow Users </a>
-            </div>
-<br>
+        <div id='populate'>
+            <a class="btn btn-default" ng-click=populateSoTags()> Populate SO Tags </a>
+            <a class="btn btn-default" ng-click=populateCoOccurrences()> Populate Common Occurrences </a>
+            <a class="btn btn-default" ng-submit=populateSoUsers()> Populate Stack Overflow Users </a>
+        </div>
+        <div id='leftSelectionPanel' class='col-md-3'>
+            <br>
             <div id='repositorySearch'>
                 <div class='searchBoxInput'>
-                    <form class='form-group form-horizontal col-md-3' ng-submit=queryRepos()>
+                    <form class='form-group form-horizontal' ng-submit=queryRepos()>
                       <p>Search for a repository:</p>
                         <input type='text' ng-model="repoUser" name='repoUser' class='form-control col-md-3' placeholder='User or Organization'>
                         <input type='text' ng-model="repositoryName" name='repositoryName' class='form-control col-md-3' placeholder='Repository name'>
@@ -25,7 +25,7 @@ As soon as I figure this out, this will be removed!! -->
                 <div id='repoSelection' class='hidden'>
                     <div class='searchResults repoResults'>
                         <div ng-repeat="repo in repos ">
-                            <button class='repoInfo repoListItem' ng-click="getRepoInformation(repo)">
+                            <button class="list-group-item" ng-click="getRepoInformation(repo)">
                                 {{ repo }}
                             </button>
                         </div>
@@ -36,30 +36,26 @@ As soon as I figure this out, this will be removed!! -->
             <div id='repositoyInfoDisplay' class='hidden'>
                 <h2> {{ repoName }}: </h2>
                 <div id='issueSelection' class='graphSelection'>
-                  <h3>Issues</h3>
+                    <h3>Issues</h3>
 
-                  <div class='searchResults issueResults '>
                     <div ng-repeat="issue in issues ">
-                      <button class='issueInfo repoListItem' ng-click="getIssueTags(issue)">
-                        {{ issue.title }}
-                      </button>
+                        <button class='list-group-item' ng-click="getIssueTags(issue)">
+                            {{ issue.title }}
+                        </button>
                     </div>
-                  </div>
                 </div>
 
                 <div id='userSelection' class='graphSelection'>
                     <h3>Users</h3>
-                    <div class='searchResults userResults '>
-                        <div ng-repeat="user in users ">
-                            <button class='userInfo repoListItem' ng-click="displayUserExpertise(user)">
-                                {{ user }}
-                            </button>
-                        </div>
+                    <div ng-repeat="user in users ">
+                        <button class='list-group-item' ng-click="displayUserExpertise(user)">
+                            {{ user }}
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
-        <div id="expertiseGraphDiv">
+        <div id="expertiseGraphDiv" class="col-md-9">
             <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
             <p id='similarText' class='hidden' style="position: absolute;"> The user and bug have a similarity of : <span id = 'similarityValue'></span> </p>
             <div id='userinputgraph'>
