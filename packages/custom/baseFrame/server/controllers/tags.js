@@ -29,14 +29,18 @@ function readFilesCallback(err, result, res, MongooseModel){
         */
         var models = createModel(convertResults, MongooseModel.modelName);
 
+        console.log('Models created. Saving to the database.');
+        /*Find a way of telling the user that the common occurrences will take a
+        *long time. Maybe send the response before saving.
+        */
         MongooseModel.collection.insert(models, function(err){
             if(err){
                 console.log(err.message);
             }else{
                 console.log('Models saved successfully!');
             }
-        })
-        res.json('success');
+        });
+        res.sendStatus(200);
     }
 }
 /** This receives the converted results from reading a file
@@ -125,7 +129,7 @@ module.exports = function (Tags){
                     tagsFromIssue[tags[index].name] = 1;
                 }
 
-                res.send(JSON.stringify(tagsFromIssue));
+                res.json(tagsFromIssue);
             });
 
             function checkWord(word){
@@ -163,7 +167,7 @@ module.exports = function (Tags){
             }
 
             CommonOccurrence.find(conditions, function(err, occurrences){
-                res.send(JSON.stringify(occurrences));
+                res.json(occurrences);
             });
         }
     }
