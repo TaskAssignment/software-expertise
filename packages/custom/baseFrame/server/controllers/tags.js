@@ -62,6 +62,7 @@ module.exports = function (Tags){
                         occurrences.push(occurrence);
                     }
 
+                    res.json('success CommonOccurrences');
                     CommonOccurrence.collection.insert(occurrences, function(err){
                         if(err){
                             console.log(err);
@@ -69,7 +70,6 @@ module.exports = function (Tags){
                             console.log('Common Occurrences saved!');
                         }
                     });
-                    res.json('success CommonOccurrences');
                 }
             });
         },

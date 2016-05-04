@@ -20,6 +20,8 @@ var CommonOccurrenceSchema = new Schema({
     }
 });
 
+CommonOccurrenceSchema.index({source: 1, target: 1});
+
 CommonOccurrenceSchema.path('occurrences').validate(function (occurrences){
     return !!occurrences;
 }, 'Occurrences cannot be blank!');
