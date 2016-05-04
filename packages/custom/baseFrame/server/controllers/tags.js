@@ -10,96 +10,94 @@ var fs = require('fs');
 var cf = require('crossfilter');
 var d3 = require('d3');
 
+/** The callback called once each file is read. It creates the models and
+* save all of them to the database (as one big collection).
+*
+* @param err - The error (if any) generated from opening/reading the file.
+* @param result - The read file as a variable
+* @param res - The response for the route
+* @param MongooseModel - The model that is responsible for the database connection.
+*/
+function readFilesCallback(err, result, res, MongooseModel){
+    if(err) console.error(err);
+    else {
+        var convertResults = d3.tsv.parse(result);
+        console.log('Data file loaded');
+
+        /*I am still not sure if this is the best approach of if I should
+        * copy each result. Probably, it will have the same results in the end.
+        */
+        var models = createModel(convertResults, MongooseModel.modelName);
+
+        MongooseModel.collection.insert(models, function(err){
+            if(err){
+                console.log(err.message);
+            }else{
+                console.log('Models saved successfully!');
+            }
+        })
+        res.json('success');
+    }
+}
+/** This receives the converted results from reading a file
+* and returns an array with models based on these results.
+*
+* @param convertResults - an array of dicts with the first row as keys
+* @param modelName - The name of model that will be created.
+* @return array of models to be saved on the database.
+*/
+function createModel(convertResults, modelName){
+    var models = [];
+
+    for(var index in convertResults){
+        var result = convertResults[index];
+        var model = {};
+
+        /*The keys here (result.key) are the keys in the file (first row).
+        * If the file pattern changes, The results will be undefined
+        * and, probably, one erraneous occurence will
+        * be saved in the database.
+        */
+
+        switch (modelName) {
+            case 'Tag':
+                model['name'] = result.TagName;
+                model['soTotalCount'] = result.Count;
+                break;
+            case 'SoUser':
+                model['soId'] = result.SOId;
+                model['gitUsername'] = result.login;
+                model['email'] = result.email;
+            case 'CommonOccurrence':
+                model['source'] = result.Tag1 ;
+                model['target'] = result.Tag2 ;
+                model['occurrences'] = result.CoOccurrence;
+        }
+
+        models.push(model);
+    }
+
+    return models;
+}
+
 module.exports = function (Tags){
     console.log('load data files 0/3');
     return {
         populateSoTags: function (req, res){
             fs.readFile('tags.tsv', 'utf8', function (err, result){
-                if(err) console.error(err);
-                else {
-                    console.log('Load data file: tags.tsv');
-                    var convertResults = d3.tsv.parse(result);
-
-                    var tags = [];
-                    for(var index in convertResults){
-                        var result = convertResults[index];
-
-                        var tag = {};
-                        tag['name'] = result.TagName;
-                        tag['soTotalCount'] = result.Count;
-
-                        tags.push(tag);
-                    }
-
-                    Tag.collection.insert(tags, function(err){
-                        if(err){
-                            console.log(err.message);
-                        }else{
-                            console.log('Tags saved successfully!');
-                        }
-                    })
-                    res.json('success SoTags');
-                  }
+                readFilesCallback(err, result, res, Tag);
             });
         },
 
         populateCommonOccurrences: function (req, res){
-            fs.readFile('coOccurrences.tsv', 'utf8', function (err, results){
-                if(err)  console.error(err);
-                else {
-                    results = d3.tsv.parse(results);
-                    console.log('Load data file: coOccurrences.tsv');
-
-                    var occurrences = [];
-                    for(var index in results){
-                        var result = results[index];
-
-                        var occurrence = {}
-                        occurrence['source'] = result.Tag1 ;
-                        occurrence['target'] = result.Tag2 ;
-                        occurrence['occurrences'] = result.CoOccurrence;
-
-                        occurrences.push(occurrence);
-                    }
-
-                    res.json('success CommonOccurrences');
-                    CommonOccurrence.collection.insert(occurrences, function(err){
-                        if(err){
-                            console.log(err);
-                        } else {
-                            console.log('Common Occurrences saved!');
-                        }
-                    });
-                }
+            fs.readFile('coOccurrences.tsv', 'utf8', function (err, result){
+                readFilesCallback(err, result, res, CommonOccurrence);
             });
         },
 
         populateSoUsers: function (req, res){
             fs.readFile('commonUsers.tsv', 'utf8', function(err, result){
-                if(err) console.error(err);
-                else {
-                    var commonUserResult = d3.tsv.parse(result);
-                    console.log('Load data file: commonUsers.tsv');
-                    var users = []
-                    for(var index in commonUserResult){
-                        var result = commonUserResult[index];
-
-                        var user = {};
-                        user['soId'] = result.SOId;
-                        user['gitUsername'] = result.login;
-                        user['email'] = result.email;
-
-                        users.push(user);
-                    }
-                    SoUser.collection.insert(users, function(err){
-                        if(err){
-                            console.log(err.message);
-                        }else{
-                            console.log('Users saved successfully!');
-                        }
-                    })
-                    res.json('success CommonOccurrences');
-                }
+                readFilesCallback(err, result, res, SoUser);
             });
         },
 
