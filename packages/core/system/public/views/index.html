@@ -1,3 +1,10 @@
+<!-- The index for the application is on packages/core/system/public/view/
+The default page rendered by the system, at least, in the version this was first
+developed.
+I couldn't rewrite the home route, and that's why I decided to change this page
+to where it should have been before. -->
+
+
 <!-- TODO: This controller is NOT NEEDED here. However, I currently don't know
 how to link RepositoryController from the client with with the server side.
 As soon as I figure this out, this will be removed!! -->
@@ -32,7 +39,7 @@ As soon as I figure this out, this will be removed!! -->
                     </form>
                 </div>
 
-                <div id='repoSelection' class='scrollable hidden'>
+                <div id='repoSelection' class='scrollable' ng-if='repos'>
                     <button ng-repeat="repo in repos" class="list-group-item"
                       ng-click="getRepoInformation(repo)">
                         {{ repo }}
@@ -40,10 +47,10 @@ As soon as I figure this out, this will be removed!! -->
                 </div>
             </div>
 
-            <div id='repositoyInfoDisplay' class='hidden'>
+            <div id='repositoyInfoDisplay' ng-if="repoName">
                 <h2> {{ repoName }}: </h2>
 
-                <h3>Issues</h3>
+                <h3>Issues: </h3>
                 <div id='issueSelection' class='scrollable list-group'>
                     <button ng-repeat="issue in issues" class='list-group-item'
                       ng-click="getIssueTags(issue)">
@@ -51,8 +58,8 @@ As soon as I figure this out, this will be removed!! -->
                     </button>
                 </div>
 
-                <h3>Users</h3>
-                <div id='userSelection' class=' scrollable graphSelection'>
+                <h3>Users: </h3>
+                <div id='userSelection' class='scrollable list-group'>
                     <button ng-repeat="user in users" class='list-group-item'
                       ng-click="displayUserExpertise(user)">
                         {{ user }}

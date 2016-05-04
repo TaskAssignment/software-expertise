@@ -49,7 +49,6 @@ baseFrame.controller('RepositoryController', ['$scope', '$http', '$location',
             var results = response.items;
             // TODO: Figure out how to get next items
 
-            $('#repoSelection').removeClass('hidden')
             $scope.repos = [];
             for (var i = 0; i < results.length; i++) {
                 $scope.repos.push( results[i].full_name );
@@ -170,21 +169,17 @@ baseFrame.controller('RepositoryController', ['$scope', '$http', '$location',
     */
     function getRepoContributors(repo){
         $location.search('repoName', repo);
+        $scope.repoName = repo;
 
         var contributorsURL = 'https://api.github.com/repos/' +
           repo +
           '/contributors';
 
-        $http.get(contributorsURL).success(function (response) {
-            var results = response;
-            $('#repositoyInfoDisplay').removeClass('hidden')
-            $('#repoSelection').addClass('hidden')
-
+        $http.get(contributorsURL).success(function (results) {
             $scope.users = [];
-            for (var i = 0; i < results.length; i++) {
-                $scope.users.push( results[i].login );
+            for (var result of results) {
+                $scope.users.push( result.login );
             }
-            $scope.repoName = repo;
         });
     }
 
@@ -197,16 +192,13 @@ baseFrame.controller('RepositoryController', ['$scope', '$http', '$location',
         var issuesURL = 'https://api.github.com/repos/' +
           repo +
           '/issues';
-        $http.get(issuesURL).success(function (response) {
-            var results = response;
-            $('#userSelection').removeClass('hidden')
-
+        $http.get(issuesURL).success(function (results) {
             $scope.issues = [];
-            for (var i = 0; i < results.length; i++) {
+            for (var result of results) {
                 var issue = {
-                    id: results[i].id,
-                    body: results[i].body,
-                    title: results[i].title
+                    id: result.id,
+                    body: result.body,
+                    title: result.title
                 }
 
                 $scope.issues.push(issue);
