@@ -1,8 +1,4 @@
 'use strict';
 
-angular.module('mean.baseFrame').config(['$viewPathProvider', '$stateProvider',
-  function($viewPathProvider, $stateProvider) {
-    $viewPathProvider.
-      override('system/views/index.html', 'baseFrame/views/index.html');
-  }
-]);
+//I still don't know how to connect this with the server routes. 
+angular.module('mean.baseFrame');

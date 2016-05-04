@@ -1,3 +1,70 @@
-<section class="welcome container-fluid" data-ng-controller="IndexController">
-    Default page to be rendered if not overriden
+<!-- TODO: This controller is NOT NEEDED here. However, I currently don't know
+how to link RepositoryController from the client with with the server side.
+As soon as I figure this out, this will be removed!! -->
+<!-- Css is in theme package!! -->
+<section ng-controller="BaseFrameController" class="row">
+    <div ng-controller="RepositoryController">
+        <div id='populate'>
+            <a class="btn btn-default" ng-click=populateSoTags()> Populate SO Tags </a>
+            <a class="btn btn-default" ng-click=populateCoOccurrences()> Populate Common Occurrences </a>
+            <a class="btn btn-default" ng-click=populateSoUsers()> Populate Stack Overflow Users </a>
+        </div>
+        <div id='leftSelectionPanel' class='col-md-3'>
+            <br>
+            <div id='repositorySearch'>
+                <div class='searchBoxInput'>
+                    <form class='form-group form-horizontal' ng-submit=queryRepos()>
+                      <p>Search for a repository:</p>
+                        <input type='text' ng-model="repoUser" name='repoUser'
+                          class='form-control col-md-3'
+                          placeholder='User or Organization'>
+                        <input type='text' ng-model="repositoryName"
+                          name='repositoryName' class='form-control col-md-3'
+                          placeholder='Repository name'>
+                        <input type='text' ng-model="repoDescription"
+                          name='repoDescription' class='form-control'
+                          placeholder='Any phrase in the repo deescription'>
+                        <input type='text' ng-model="repoReadme"
+                          name='repoReadme' class='form-control'
+                          placeholder='Any thing in the repository readme'>
+                        <button class="btn btn-default"
+                          ng-submit="queryRepos()"> Search </button>
+                    </form>
+                </div>
+
+                <div id='repoSelection' class='scrollable hidden'>
+                    <button ng-repeat="repo in repos" class="list-group-item"
+                      ng-click="getRepoInformation(repo)">
+                        {{ repo }}
+                    </button>
+                </div>
+            </div>
+
+            <div id='repositoyInfoDisplay' class='hidden'>
+                <h2> {{ repoName }}: </h2>
+
+                <h3>Issues</h3>
+                <div id='issueSelection' class='scrollable list-group'>
+                    <button ng-repeat="issue in issues" class='list-group-item'
+                      ng-click="getIssueTags(issue)">
+                        {{ issue.title }}
+                    </button>
+                </div>
+
+                <h3>Users</h3>
+                <div id='userSelection' class=' scrollable graphSelection'>
+                    <button ng-repeat="user in users" class='list-group-item'
+                      ng-click="displayUserExpertise(user)">
+                        {{ user }}
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="expertiseGraphDiv" class="col-md-9">
+
+        </div>
+    </div>
 </section>
+
+<img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.15/d3.js"></script>

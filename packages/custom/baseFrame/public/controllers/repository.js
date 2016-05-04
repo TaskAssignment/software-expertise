@@ -18,7 +18,6 @@ angular.module('mean.baseFrame')
   .controller('RepositoryController',
   ['$scope', 'Global', 'BaseFrame', '$http', '$location',
   function ($scope, Global, BaseFrame, $http, $location) {
-
       /**
        * Updates the url based on the current state of the project
        */
@@ -295,7 +294,7 @@ function ExpertiseGraph(initConfig) {
 
           var force = d3.layout.force()
               .charge(-120)
-              .linkDistance(250)
+              .linkDistance(300)
               .size([width, height]);
 
           d3.select('svg').remove(); //Remove old svg before adding a new one.
