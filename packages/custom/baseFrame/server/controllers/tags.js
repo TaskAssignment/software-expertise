@@ -13,19 +13,19 @@ var d3 = require('d3');
 module.exports = function (BaseFrame){
     return {
         populateSoTags: function (req, res){
-            fs.readFile('tags.tsv', 'utf8', function (err, result){
+            fs.readFile('files/tags.tsv', 'utf8', function (err, result){
                 readFilesCallback(err, result, res, Tag);
             });
         },
 
         populateCommonOccurrences: function (req, res){
-            fs.readFile('coOccurrences.tsv', 'utf8', function (err, result){
+            fs.readFile('files/coOccurrences.tsv', 'utf8', function (err, result){
                 readFilesCallback(err, result, res, CommonOccurrence);
             });
         },
 
         populateSoUsers: function (req, res){
-            fs.readFile('commonUsers.tsv', 'utf8', function(err, result){
+            fs.readFile('files/commonUsers.tsv', 'utf8', function(err, result){
                 readFilesCallback(err, result, res, SoUser);
             });
         },
