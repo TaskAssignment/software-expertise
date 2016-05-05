@@ -82,7 +82,7 @@ module.exports = function (BaseFrame){
         }
     }
 }
-
+//TODO: Add this to a module or something like that, so I can reuse it.
 /** Helper function to read the files
 *
 * @param file - The file address/name. The path given should be from the root
@@ -106,29 +106,29 @@ function readFile(file, res, MongooseModel){
 * @param MongooseModel - The model that is responsible for the database connection.
 */
 function readFilesCallback(err, result, res, MongooseModel){
-  if(err) console.error(err);
-  else {
-    var convertResults = d3.tsv.parse(result);
-    console.log('Data file loaded');
+    if(err) console.error(err);
+    else {
+        var convertResults = d3.tsv.parse(result);
+        console.log('Data file loaded');
 
-    /*I am still not sure if this is the best approach of if I should
-    * copy each result. Probably, it will have the same results in the end.
-    */
-    var models = createModel(convertResults, MongooseModel.modelName);
+        /*I am still not sure if this is the best approach of if I should
+        * copy each result. Probably, it will have the same results in the end.
+        */
+        var models = createModel(convertResults, MongooseModel.modelName);
 
-    console.log('Models created. Saving to the database.');
-    /*Find a way of telling the user that the common occurrences will take a
-    *long time. Maybe send the response before saving.
-    */
-    MongooseModel.collection.insert(models, function(err){
-      if(err){
-        console.log(err.message);
-      }else{
-        console.log('Models saved successfully!');
-      }
-    });
-    res.sendStatus(200);
-  }
+        console.log('Models created. Saving to the database.');
+        /*Find a way of telling the user that the common occurrences will take a
+        *long time. Maybe send the response before saving.
+        */
+        MongooseModel.collection.insert(models, function(err){
+            if(err){
+                console.log(err.message);
+            }else{
+                console.log('Models saved successfully!');
+            }
+        });
+        res.sendStatus(200);
+    }
 }
 /** This receives the converted results from reading a file
 * and returns an array with models based on these results.
@@ -138,35 +138,36 @@ function readFilesCallback(err, result, res, MongooseModel){
 * @return array of models to be saved on the database.
 */
 function createModel(convertResults, modelName){
-  var models = [];
+    var models = [];
 
-  for(var index in convertResults){
-    var result = convertResults[index];
-    var model = {};
+    for(var index in convertResults){
+        var result = convertResults[index];
+        var model = {};
 
-    /*The keys here (result.key) are the keys in the file (first row).
-    * If the file pattern changes, The results will be undefined
-    * and, probably, one erraneous occurence will
-    * be saved in the database.
-    */
+        /*The keys here (result.key) are the keys in the file (first row).
+        * If the file pattern changes, The results will be undefined
+        * and, probably, one erraneous occurence will
+        * be saved in the database.
+        */
 
-    switch (modelName) {
-      case 'Tag':
-      model['name'] = result.TagName;
-      model['soTotalCount'] = result.Count;
-      break;
-      case 'SoUser':
-      model['soId'] = result.SOId;
-      model['gitUsername'] = result.login;
-      model['email'] = result.email;
-      case 'CommonOccurrence':
-      model['source'] = result.Tag1 ;
-      model['target'] = result.Tag2 ;
-      model['occurrences'] = result.CoOccurrence;
+        switch (modelName) {
+            case 'Tag':
+                model['name'] = result.TagName;
+                model['soTotalCount'] = result.Count;
+                break;
+            case 'SoUser':
+                model['soId'] = result.SOId;
+                model['gitUsername'] = result.login;
+                model['email'] = result.email;
+                break;
+            case 'CommonOccurrence':
+                model['source'] = result.Tag1 ;
+                model['target'] = result.Tag2 ;
+                model['occurrences'] = result.CoOccurrence;
+                break;
+        }
+        models.push(model);
     }
 
-    models.push(model);
-  }
-
-  return models;
+    return models;
 }

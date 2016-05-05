@@ -30,6 +30,10 @@ baseFrame.controller('RepositoryController', ['$scope', '$http', '$location',
     $scope.populateCoOccurrences = function(){
         populateRequest('/api/baseFrame/populateCoOccurrences');
     }
+
+    $scope.populateStopWords = function(){
+        populateRequest('/api/baseFrame/populateStopWords');
+    }
     /**
      * Looks for repositories with the given filters
      */
