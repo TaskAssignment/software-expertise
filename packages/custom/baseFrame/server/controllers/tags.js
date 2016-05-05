@@ -5,10 +5,12 @@ var mongoose = require('mongoose');
 var Tag = mongoose.model('Tag');
 var SoUser = mongoose.model('SoUser');
 var CommonOccurrence = mongoose.model('CommonOccurrence');
+var StopWord = mongoose.model('StopWord');
 
 var fs = require('fs');
 var cf = require('crossfilter');
 var d3 = require('d3');
+var pullAll = require('lodash.pullall');
 
 module.exports = function (BaseFrame){
     return {
@@ -35,21 +37,33 @@ module.exports = function (BaseFrame){
                 allWords.push(word);
             }
 
-            // Any tag that has any of the words in the given array
-            // The lean option is to avoid Mongoose wrapers. It returns just a json
-            Tag.find({name: {$in: allWords }}, 'name soTotalCount', function(err, tags){
-                if(err){
+            StopWord.find({}, '-_id', {lean: true}, function (err, words){
+                if(err) {
                     console.log(err.message);
-                    res.sendStatus(500);
-                }
+                } else {
+                    var stopWords = []
+                    for(var index in words){
+                        stopWords.push(words[index].word);
+                    }
+                    pullAll(allWords, stopWords);
 
-                var tagsFromIssue = {};
-                for(var index in tags){
-                    //I don't have the count for the issue right now.
-                    tagsFromIssue[tags[index].name] = 1;
                 }
+                // Any tag that has any of the words in the given array
+                // The lean option is to avoid Mongoose wrapers. It returns just a json
+                Tag.find({name: {$in: allWords }}, 'name soTotalCount', {lean: true}, function(err, tags){
+                    if(err){
+                        console.log(err.message);
+                        res.sendStatus(500);
+                    }
 
-                res.json(tagsFromIssue);
+                    var tagsFromIssue = {};
+                    for(var index in tags){
+                        //I don't have the count for the issue right now.
+                        tagsFromIssue[tags[index].name] = 1;
+                    }
+
+                    res.json(tagsFromIssue);
+                });
             });
         },
 
@@ -170,4 +184,8 @@ function createModel(convertResults, modelName){
     }
 
     return models;
+}
+
+function removeStopWords(allWords){
+
 }

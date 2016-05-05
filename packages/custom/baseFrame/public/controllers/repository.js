@@ -38,6 +38,7 @@ baseFrame.controller('RepositoryController', ['$scope', '$http', '$location',
      * Looks for repositories with the given filters
      */
     $scope.queryRepos = function () {
+        showLoadingScreen();
         var URL = 'https://api.github.com/search/repositories?q=';
         if($scope.repositoryName)
             URL += $scope.repositoryName + '+in:name';
@@ -57,6 +58,7 @@ baseFrame.controller('RepositoryController', ['$scope', '$http', '$location',
             for (var i = 0; i < results.length; i++) {
                 $scope.repos.push( results[i].full_name );
             }
+            hideLoadingScreen();
         });
     }
     /**
@@ -65,8 +67,11 @@ baseFrame.controller('RepositoryController', ['$scope', '$http', '$location',
     * @param nameSelected - name (user/name) of the selected repo.
     */
     $scope.getRepoInformation = function (nameSelected) {
+        $scope.repos = null;
+        showLoadingScreen();
         getRepoContributors(nameSelected);
         getRepoIssues(nameSelected);
+        hideLoadingScreen();
     }
 
     /**
