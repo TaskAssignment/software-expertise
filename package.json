@@ -39,7 +39,7 @@
     "http": "0.0.0",
     "jsonwebtoken": "latest",
     "lodash": "latest",
-    "lodash.pullAll": "latest",
+    "lodash.pullall": "^4.1.1",
     "meanio": "latest",
     "mongoose": "latest",
     "morgan": "latest",
