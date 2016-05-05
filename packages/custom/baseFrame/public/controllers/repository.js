@@ -10,8 +10,9 @@ function hideLoadingScreen(){
 
 var baseFrame = angular.module('mean.baseFrame');
 
-baseFrame.controller('RepositoryController', ['$scope', '$http', '$location',
-  function ($scope,  $http, $location) {
+baseFrame.controller('RepositoryController',
+['$scope', '$http', '$location', '$resource',
+function ($scope,  $http, $location, $resource) {
 
     var tagsFromIssue;
     var tagsFromUserOnSO;
@@ -52,25 +53,31 @@ baseFrame.controller('RepositoryController', ['$scope', '$http', '$location',
 
         $http.get(URL).success(function (response) {
             var results = response.items;
+            console.log(results[0]);
             // TODO: Figure out how to get next items
 
-            $scope.repos = [];
+            var repos = [];
             for (var i = 0; i < results.length; i++) {
-                $scope.repos.push( results[i].full_name );
+                var repo = {
+                    name: results[i].full_name,
+                    id: results[i].id,
+                };
+                repos.push(repo);
             }
+            $scope.repos = repos;
             hideLoadingScreen();
         });
     }
     /**
     * Gets the users and issues from the selected repository
     *
-    * @param nameSelected - name (user/name) of the selected repo.
+    * @param repos - Select repository (name, id)
     */
-    $scope.getRepoInformation = function (nameSelected) {
-        $scope.repos = null;
+    $scope.getRepoInformation = function (repo) {
+        $scope.repos = undefined;
         showLoadingScreen();
-        getRepoContributors(nameSelected);
-        getRepoIssues(nameSelected);
+        getRepoContributors(repo.name);
+        getRepoIssues(repo.name);
         hideLoadingScreen();
     }
 

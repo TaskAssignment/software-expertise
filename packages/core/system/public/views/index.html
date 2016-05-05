@@ -43,7 +43,7 @@ As soon as I figure this out, this will be removed!! -->
                 <div id='repoSelection' class='scrollable' ng-if='repos'>
                     <button ng-repeat="repo in repos" class="list-group-item"
                       ng-click="getRepoInformation(repo)">
-                        {{ repo }}
+                        {{ repo.name }}
                     </button>
                 </div>
             </div>
