@@ -14,9 +14,15 @@ var SoUserSchema = new Schema({
         required: true,
         unique: true
     },
+    gitId:{ //GitHub Id
+        type: String,
+        unique: true
+    },
+    emailHash:{
+        type: String,
+    },
     soId: {
-        type: Number,
-        required: true,
+        type: String,
         unique: true
     }
 });
