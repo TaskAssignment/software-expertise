@@ -657,5 +657,3 @@ yourselves
 you've
 z
 zero
-
-source: http://www.link-assistant.com/seo-stop-words.html

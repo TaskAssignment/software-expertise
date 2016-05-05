@@ -171,5 +171,3 @@ your
 yours
 yourself
 yourselves
-
-source: http://www.ranks.nl/stopwords

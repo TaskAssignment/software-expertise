@@ -427,6 +427,3 @@ youngest
 your
 yours
 z
-
-
-source: http://www.lextek.com/manuals/onix/stopwords1.html

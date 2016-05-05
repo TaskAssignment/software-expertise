@@ -317,5 +317,3 @@ your
 yours
 yourself
 yourselves
-
-source: http://xpo6.com/download-stop-word-list/
