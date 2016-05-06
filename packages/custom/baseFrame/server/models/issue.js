@@ -23,3 +23,5 @@ var IssueSchema = new Schema({
 });
 
 IssueSchema.set('timestamps', true);
+
+mongoose.model('Issue', IssueSchema);
