@@ -81,9 +81,9 @@ function ($scope,  $http, $location, $resource) {
 
     $scope.saveProject = function(){
         console.log("entrou");
-        var Project = $resource('/api/baseFrame/project/:name');
+        var Project = $resource('/api/baseFrame/project/:id/:name');
 
-        var project = Project.get({name:$scope.selectedRepo});
+        var project = Project.get({id: 123, name:$scope.selectedRepo});
         console.log(project);
 
     }

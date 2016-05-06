@@ -8,8 +8,21 @@ module.exports = function (BaseFrame){
         save: function(req, res){
             console.log(req.params);
             console.log(req.query);
-            var project = {};
-            res.json("OK");
+            var projName = req.params.name;
+            var projId = req.params.id;
+            Project.findOne({name: projName, _id: projId},
+            function (err, result){
+                if(result){
+                    res.send(result);
+                }else{
+                    var project = new Project();
+                    project.name = projName;
+                    project._id = projId;
+
+                    project.save();
+                    res.send(project);
+                }
+            });
         }
     }
 }

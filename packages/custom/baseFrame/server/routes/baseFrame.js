@@ -30,7 +30,7 @@ module.exports = function (BaseFrame, app, auth, database) {
 
     var projects = require(controllers + 'projects')(BaseFrame);
 
-    app.route('/api/baseFrame/project/:name')
+    app.route('/api/baseFrame/project/:id/:name')
         .get(projects.save);
 
 };
