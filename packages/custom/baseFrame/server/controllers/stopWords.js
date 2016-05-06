@@ -25,8 +25,6 @@ module.exports = function (BaseFrame) {
                         stopwords.push(stopword);
                     }
                 }
-                console.log(stopwords);
-                console.log(stopwords.length);
 
                 StopWord.collection.insert(stopwords, function(err){
                     if(err){
