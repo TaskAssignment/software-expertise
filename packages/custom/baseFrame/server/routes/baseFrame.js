@@ -27,4 +27,10 @@ module.exports = function (BaseFrame, app, auth, database) {
     app.route('/api/baseFrame/populateStopWords')
         .post(stopwords.populateStopWords);
 
+
+    var projects = require(controllers + 'projects')(BaseFrame);
+
+    app.route('/api/baseFrame/project/:name')
+        .get(projects.save);
+
 };

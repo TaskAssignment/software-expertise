@@ -51,17 +51,14 @@ function ($scope,  $http, $location, $resource) {
             URL += '+user:' + $scope.repoUser;
         URL += '&sort=stars&order=desc&per_page=100';
 
-        $http.get(URL).success(function (response) {
-            var results = response.items;
-            console.log(results[0]);
+        $http.get(URL).then(function (response) {
+            var results = response.data.items;
+            // console.log(response.headers());
             // TODO: Figure out how to get next items
 
             var repos = [];
-            for (var i = 0; i < results.length; i++) {
-                var repo = {
-                    name: results[i].full_name,
-                    id: results[i].id,
-                };
+            for (var i in results) {
+                var repo = results[i].full_name;
                 repos.push(repo);
             }
             $scope.repos = repos;
@@ -71,14 +68,24 @@ function ($scope,  $http, $location, $resource) {
     /**
     * Gets the users and issues from the selected repository
     *
-    * @param repos - Select repository (name, id)
+    * @param repo - Select repository name
     */
     $scope.getRepoInformation = function (repo) {
         $scope.repos = undefined;
+        $scope.selectedRepo = repo;
         showLoadingScreen();
-        getRepoContributors(repo.name);
-        getRepoIssues(repo.name);
+        getRepoContributors(repo);
+        getRepoIssues(repo);
         hideLoadingScreen();
+    }
+
+    $scope.saveProject = function(){
+        console.log("entrou");
+        var Project = $resource('/api/baseFrame/project/:name');
+
+        var project = Project.get({name:$scope.selectedRepo});
+        console.log(project);
+
     }
 
     /**
