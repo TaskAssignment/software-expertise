@@ -21,6 +21,19 @@ module.exports = function (BaseFrame){
                     });
                 }
             });
+        },
+        find: function(req, res){
+            console.log("*********** TESTE NEW PLACE");
+            res.sendStatus(200);
+            var name = req.query.repoName;
+            if(name){
+                Project.findOne({name: name}, {lean: true}, function(err, project){
+                    if(project._id){
+                        res.render('index',{ '$scope.selectedRepo': project });
+                    }
+                    res.render('index');
+                });
+            }
         }
     }
 }

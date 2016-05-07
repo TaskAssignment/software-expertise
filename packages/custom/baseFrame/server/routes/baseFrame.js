@@ -1,12 +1,15 @@
 'use strict';
 
 module.exports = function (BaseFrame, app, auth, database) {
-    app.route('/expertise').get(function(res, req){
-        console.log(req.query);
-        console.log(req);
-        res.json("OK");
-    });
     var controllers = '../controllers/';
+
+    var projects = require(controllers + 'projects')(BaseFrame);
+
+    app.route('/expertise')
+        .get(projects.find);
+    app.route('/api/baseFrame/project/:_id/:language/:name')
+        .get(projects.save);
+
     var tags = require(controllers + 'tags')(BaseFrame);
 
     app.route('/api/baseFrame/populateSoTags')
@@ -28,9 +31,5 @@ module.exports = function (BaseFrame, app, auth, database) {
         .post(stopwords.populateStopWords);
 
 
-    var projects = require(controllers + 'projects')(BaseFrame);
-
-    app.route('/api/baseFrame/project/:_id/:language/:name')
-        .get(projects.save);
 
 };

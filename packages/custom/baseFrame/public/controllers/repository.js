@@ -13,7 +13,6 @@ var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('RepositoryController',
 ['$scope', '$http', '$location', '$resource',
 function ($scope,  $http, $location, $resource) {
-
     var tagsFromIssue;
     var tagsFromUserOnSO;
 
@@ -84,12 +83,10 @@ function ($scope,  $http, $location, $resource) {
     }
 
     $scope.saveProject = function(){
-        console.log("entrou");
         var Project = $resource('/api/baseFrame/project/:_id/:language/:name');
 
         var project = Project.get($scope.selectedRepo);
         console.log(project);
-
     }
 
     /**
