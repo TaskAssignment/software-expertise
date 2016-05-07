@@ -6,21 +6,19 @@ var Project  = mongoose.model('Project');
 module.exports = function (BaseFrame){
     return {
         save: function(req, res){
-            console.log(req.params);
-            console.log(req.query);
-            var projName = req.params.name;
-            var projId = req.params.id;
-            Project.findOne({name: projName, _id: projId},
+            Project.findOne(req.params,
             function (err, result){
                 if(result){
                     res.send(result);
                 }else{
-                    var project = new Project();
-                    project.name = projName;
-                    project._id = projId;
+                    var project = req.params;
 
-                    project.save();
-                    res.send(project);
+                    Project.create(project, function(err, project){
+                        if(err){
+                            res.send(err);
+                        }
+                        res.send(project);
+                    });
                 }
             });
         }

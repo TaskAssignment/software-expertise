@@ -57,10 +57,11 @@ function ($scope,  $http, $location, $resource) {
             // TODO: Figure out how to get next items
 
             var repos = [];
-            for (var i in results) {
+            for (var result of results) {
                 var repo = {
-                    name: results[i].full_name,
-                    id: results[i].id
+                    name: result.full_name,
+                    _id: result.id,
+                    language: result.language
                 };
                 repos.push(repo);
             }
@@ -77,16 +78,16 @@ function ($scope,  $http, $location, $resource) {
         $scope.repos = undefined;
         $scope.selectedRepo = repo;
         showLoadingScreen();
-        getRepoContributors(repo.name);
-        getRepoIssues(repo.name);
+        // getRepoContributors(repo.name);
+        // getRepoIssues(repo.name);
         hideLoadingScreen();
     }
 
     $scope.saveProject = function(){
         console.log("entrou");
-        var Project = $resource('/api/baseFrame/project/:id/:name');
+        var Project = $resource('/api/baseFrame/project/:_id/:language/:name');
 
-        var project = Project.get({id: $scope.selectedRepo.id, name:$scope.selectedRepo.name});
+        var project = Project.get($scope.selectedRepo);
         console.log(project);
 
     }
