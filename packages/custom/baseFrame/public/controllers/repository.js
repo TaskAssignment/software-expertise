@@ -58,7 +58,10 @@ function ($scope,  $http, $location, $resource) {
 
             var repos = [];
             for (var i in results) {
-                var repo = results[i].full_name;
+                var repo = {
+                    name: results[i].full_name,
+                    id: results[i].id
+                };
                 repos.push(repo);
             }
             $scope.repos = repos;
@@ -74,8 +77,8 @@ function ($scope,  $http, $location, $resource) {
         $scope.repos = undefined;
         $scope.selectedRepo = repo;
         showLoadingScreen();
-        getRepoContributors(repo);
-        getRepoIssues(repo);
+        getRepoContributors(repo.name);
+        getRepoIssues(repo.name);
         hideLoadingScreen();
     }
 
@@ -83,7 +86,7 @@ function ($scope,  $http, $location, $resource) {
         console.log("entrou");
         var Project = $resource('/api/baseFrame/project/:id/:name');
 
-        var project = Project.get({id: 123, name:$scope.selectedRepo});
+        var project = Project.get({id: $scope.selectedRepo.id, name:$scope.selectedRepo.name});
         console.log(project);
 
     }

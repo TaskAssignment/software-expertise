@@ -36,13 +36,13 @@ As soon as I figure this out, this will be removed!! -->
                 <div id='repoSelection' class='scrollable' ng-if='repos'>
                     <button ng-repeat="repo in repos" class="list-group-item"
                       ng-click="getRepoInformation(repo)">
-                        {{ repo }}
+                        {{ repo.name }}
                     </button>
                 </div>
             </div>
 
             <div id='repositoyInfoDisplay' ng-if="selectedRepo">
-                <h2> {{ selectedRepo}}: </h2>
+                <h2> {{ selectedRepo.name }}: </h2>
 
                 <a class="btn btn-default" ng-click=saveProject()> Save this project</a>
 
