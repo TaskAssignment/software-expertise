@@ -4,6 +4,10 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var SoUserSchema = new Schema({
+    _id:{ //GitHub Id
+        type: String,
+        unique: true
+    },
     email: {
         type: String,
         required: true,
@@ -14,10 +18,6 @@ var SoUserSchema = new Schema({
         required: true,
         unique: true
     },
-    gitId:{ //GitHub Id
-        type: String,
-        unique: true
-    },
     emailHash:{
         type: String,
     },
@@ -25,6 +25,8 @@ var SoUserSchema = new Schema({
         type: String,
         unique: true
     }
+}, {
+    timestamps: true
 });
 
 //Validations

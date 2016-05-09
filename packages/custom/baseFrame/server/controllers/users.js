@@ -1,26 +1,16 @@
 'use strict';
 
 var mongoose = require('mongoose');
-var Issue = mongoose.model('Issue');
+var SoUser = mongoose.model('SoUser');
 
 var request = require('request');
 
+
+//TODO: Refactor this class to have a common class with issue or anything that
+// depends on the git api.
 module.exports = function (BaseFrame){
     return {
-        /** Looks for the given (req.params) repository in the database.
-        *
-        * @param req - Express request
-        * @param res - Express response
-        */
-        find: function (req, res){
-            var repo = req.params;
-
-            Issue.find(repo, 'body title', function(err, issues){
-                res.send(issues);
-            });
-        },
-
-        /** Stores in the database all the issues from the given repository.
+        /** Stores in the database all the users from the given repository.
         *
         * @param req - Express request
         * @param res - Express response
@@ -33,11 +23,12 @@ module.exports = function (BaseFrame){
                     'User-Agent': 'software-expertise',
                     Accept: 'application/vnd.github.v3+json'
                 },
-                url:'https://api.github.com/repositories/' + repo.projectId +  '/issues?per_page=100'
+                url: 'https://api.github.com/repos/' +
+                  repo.projectId + '/contributors?per_page=100'
             };
             request(options, callback);
 
-            /** Callback to the request. This will create the issues and save
+            /** Callback to the request. This will create the users and save
             * them in the database.
             *
             * @param error - Any errors ocurred during the http request
@@ -48,25 +39,23 @@ module.exports = function (BaseFrame){
                 //Pagination!
 
                 if (!error && response.statusCode == 200) {
-                    var issues = [];
+                    var users = [];
                     var results = JSON.parse(body);
 
                     for (var i in results) {
                         var result = results[i];
-                        var issue = {
+                        var user = {
                             _id: result.id,
-                            body: result.body,
-                            title: result.title,
-                            projectId: repo.projectId
-                        }
+                            gitUsername: result.login,
+                        };
 
-                        issues.push(issue);
+                        users.push(user);
                     }
-                    Issue.collection.insert(issues, function(err){
+                    SoUser.collection.insert(users, function(err){
                         if(err){
                             console.log(err.message);
                         }else{
-                            console.log('Issues saved successfully!');
+                            console.log('SoUsers saved successfully!');
                         }
                     });
                 } else {

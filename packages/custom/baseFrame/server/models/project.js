@@ -17,6 +17,8 @@ var ProjectSchema = new Schema({
     language: { //I'll get just the main language for now.
         type: String,
     }
+}, {
+    timestamps: true
 });
 
 mongoose.model('Project', ProjectSchema);

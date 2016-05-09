@@ -17,6 +17,10 @@ module.exports = function (BaseFrame, app, auth, database) {
     app.route('/api/baseFrame/issues/populate/:projectId')
         .get(issues.populate);
 
+    var users = require(controllers + 'users')(BaseFrame);
+    app.route('/api/baseFrame/users/populate/:projectId')
+        .get(users.populate);
+
     var tags = require(controllers + 'tags')(BaseFrame);
     app.route('/api/baseFrame/populateSoTags')
         .post(tags.populateSoTags);

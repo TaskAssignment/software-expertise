@@ -85,7 +85,16 @@ function ($scope,  $http, $location, $resource) {
         }
         Issue.get(filter).$promise.then(function (response){
             $scope.selectedRepo.empty = false;
-            getRepoIssues();
+        });
+    }
+
+    $scope.populateUsers = function (){
+        var Issue = $resource('/api/baseFrame/users/populate/:projectId');
+        var filter = {
+            projectId: $scope.selectedRepo._id
+        }
+        Issue.get(filter).$promise.then(function (response){
+            $scope.selectedRepo.emptyUsers = false;
         });
     }
 
@@ -235,12 +244,9 @@ function ($scope,  $http, $location, $resource) {
     *
     * @param repo - Name (user/repoName) of the selected repo
     */
-    function getRepoContributors(repo){
-        $scope.repoName = repo;
-
+    function getRepoContributors(repoName){
         var contributorsURL = 'https://api.github.com/repos/' +
-          repo +
-          '/contributors';
+        repoName + '/contributors';
 
         $http.get(contributorsURL).then(function (results) {
             $scope.users = [];
