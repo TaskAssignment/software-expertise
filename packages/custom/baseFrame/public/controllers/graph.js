@@ -1,3 +1,4 @@
+'use strict';
 /**
  * Class that handles drawing of the expertise graph
  */
