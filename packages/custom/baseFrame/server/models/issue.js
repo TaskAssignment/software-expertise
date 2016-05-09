@@ -10,7 +10,7 @@ var IssueSchema = new Schema({
         unique: true
     },
     projectId: {
-        type: Schema.ObjectId,
+        type: String,
         ref: 'Project',
     },
     //These are both GitHub ids, not soUser._id

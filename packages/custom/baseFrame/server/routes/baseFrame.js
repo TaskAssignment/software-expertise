@@ -12,7 +12,7 @@ module.exports = function (BaseFrame, app, auth, database) {
         .get(projects.save);
 
     var issues = require(controllers + 'issues')(BaseFrame);
-    app.route('/api/baseFrame/issues/:projectId/:name')
+    app.route('/api/baseFrame/issues/:projectId/')
         .get(issues.find);
 
     var tags = require(controllers + 'tags')(BaseFrame);

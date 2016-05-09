@@ -52,7 +52,7 @@ function ($scope,  $http, $location, $resource) {
 
         $http.get(URL).then(function (response) {
             var results = response.data.items;
-            // console.log(response.headers());
+            console.log(response.headers);
             // TODO: Figure out how to get next items
 
             var repos = [];
@@ -89,16 +89,19 @@ function ($scope,  $http, $location, $resource) {
     * @param repo - Name (user/name) of the selected repo
     */
     $scope.getRepoIssues = function (repo){
-        var Issue = $resource('/api/baseFrame/issues/:projectId/:name',
-        {'get': {isArray: true}});
-        Issue.get({name: repo.name, projectId: repo._id})
+        var Issue = $resource('/api/baseFrame/issues/:projectId/');
+        Issue.query({projectId: repo._id})
           .$promise.then(function(issues){
             console.log(issues);
+            $scope.issues = issues;
         });
     }
 
     $scope.saveProject = function(){
         var Project = $resource('/api/baseFrame/project/:_id/:language/:name');
+        Project.get($scope.selectedRepo).$promise.then(function(project){
+            console.log(project);
+        });
     }
 
     /**

@@ -14,6 +14,7 @@ module.exports = function (BaseFrame){
                     var project = req.params;
 
                     Project.create(project, function(err, project){
+                        console.log(err, project);
                         if(err){
                             res.send(err);
                         }
@@ -23,7 +24,6 @@ module.exports = function (BaseFrame){
             });
         },
         find: function(req, res){
-            console.log("FIND");
             Project.findOne(req.params, 'name', {lean: true}, function(err, project){
                 res.send(project);
             });
