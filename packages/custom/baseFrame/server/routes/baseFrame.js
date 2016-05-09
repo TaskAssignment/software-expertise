@@ -8,12 +8,14 @@ module.exports = function (BaseFrame, app, auth, database) {
     //     .get(projects.find);
     app.route('/api/baseFrame/project/find/:name')
         .get(projects.find);
-    app.route('/api/baseFrame/project/:_id/:language/:name')
+    app.route('/api/baseFrame/project/new/')
         .get(projects.save);
 
     var issues = require(controllers + 'issues')(BaseFrame);
     app.route('/api/baseFrame/issues/:projectId/')
         .get(issues.find);
+    app.route('/api/baseFrame/issues/populate/:projectId')
+        .get(issues.populate);
 
     var tags = require(controllers + 'tags')(BaseFrame);
     app.route('/api/baseFrame/populateSoTags')

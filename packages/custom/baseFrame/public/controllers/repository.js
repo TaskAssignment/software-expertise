@@ -1,11 +1,11 @@
 'use strict';
 
 function showLoadingScreen(){
-    d3.select('#loadingImage').style('display','block');
+    angular.element('#loadingImage').css('display','block');
 }
 
 function hideLoadingScreen(){
-    d3.select('#loadingImage').style('display','none');
+    angular.element('#loadingImage').css('display','none');
 }
 
 var baseFrame = angular.module('mean.baseFrame');
@@ -60,7 +60,8 @@ function ($scope,  $http, $location, $resource) {
                 var repo = {
                     name: result.full_name,
                     _id: result.id,
-                    language: result.language
+                    language: result.language,
+                    description: result.description
                 };
                 repos.push(repo);
             }
@@ -68,39 +69,23 @@ function ($scope,  $http, $location, $resource) {
             hideLoadingScreen();
         });
     }
-    /**
-    * Gets the users and issues from the selected repository
-    *
-    * @param repo - The selected repository (id,name[,language])
-    */
-    $scope.getRepoInformation = function (repo) {
-        $scope.repos = undefined;
-        $scope.selectedRepo = repo;
-        $location.search('repoName', repo.name);
-        // showLoadingScreen();
-        getRepoContributors(repo.name);
-        $scope.getRepoIssues(repo);
-        // hideLoadingScreen();
-    }
 
-    /**
-    * Gets the github issues of the selected repository
-    *
-    * @param repo - Name (user/name) of the selected repo
-    */
-    $scope.getRepoIssues = function (repo){
-        var Issue = $resource('/api/baseFrame/issues/:projectId/');
-        Issue.query({projectId: repo._id})
-          .$promise.then(function(issues){
-            console.log(issues);
-            $scope.issues = issues;
+    $scope.saveProject = function(repo){
+        console.log(repo);
+        var Project = $resource('/api/baseFrame/project/new/');
+        Project.get(repo).$promise.then(function(project){
+            getRepoInformation(repo);
         });
     }
 
-    $scope.saveProject = function(){
-        var Project = $resource('/api/baseFrame/project/:_id/:language/:name');
-        Project.get($scope.selectedRepo).$promise.then(function(project){
-            console.log(project);
+    $scope.populateIssues = function (){
+        var Issue = $resource('/api/baseFrame/issues/populate/:projectId');
+        var filter = {
+            projectId: $scope.selectedRepo._id
+        }
+        Issue.get(filter).$promise.then(function (response){
+            $scope.selectedRepo.empty = false;
+            getRepoIssues();
         });
     }
 
@@ -182,13 +167,46 @@ function ($scope,  $http, $location, $resource) {
 
     // *************** HELPER FUNCTIONS **************//
 
+    /**
+    * Gets the users and issues from the selected repository
+    *
+    * @param repo - The selected repository (id,name,language,description)
+    */
+    function getRepoInformation(repo) {
+        $scope.repos = undefined;
+        $scope.selectedRepo = repo;
+        $location.search('repoName', repo.name);
+
+        showLoadingScreen();
+        getRepoIssues(repo._id);
+        getRepoContributors(repo.name);
+        hideLoadingScreen();
+    }
+
+    /**
+    * Gets the github issues of the selected repository stored on the database
+    *
+    * @param id - The id (GH id and database id) of the selected repository
+    */
+    function getRepoIssues(id = $scope.selectedRepo._id){
+        var Issue = $resource('/api/baseFrame/issues/:projectId/');
+        Issue.query({projectId: id})
+          .$promise.then(function(issues){
+            console.log(issues);
+            if(issues.length == 0){
+                $scope.selectedRepo['empty'] = true;
+            }
+            $scope.issues = issues;
+        });
+    }
+
     function findProject(){
         var Project = $resource('/api/baseFrame/project/find/:name');
         var repoName = $location.search().repoName;
         if(repoName){
             Project.get({name: repoName}).$promise.then(function(project){
                 console.log(project);
-                $scope.getRepoInformation(project);
+                getRepoInformation(project);
             });
         }
     }

@@ -25,9 +25,13 @@ var IssueSchema = new Schema({
     },
     title: {
         type: String
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
     }
+}, {
+    timestamps: true
 });
-
-IssueSchema.set('timestamps', true);
 
 mongoose.model('Issue', IssueSchema);

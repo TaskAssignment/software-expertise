@@ -6,15 +6,14 @@ var Project  = mongoose.model('Project');
 module.exports = function (BaseFrame){
     return {
         save: function(req, res){
-            Project.findOne(req.params,
+            Project.findOne(req.query,
             function (err, result){
                 if(result){
                     res.send(result);
                 }else{
-                    var project = req.params;
+                    var project = req.query;
 
                     Project.create(project, function(err, project){
-                        console.log(err, project);
                         if(err){
                             res.send(err);
                         }
