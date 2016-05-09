@@ -4,18 +4,18 @@ module.exports = function (BaseFrame, app, auth, database) {
     var controllers = '../controllers/';
 
     var projects = require(controllers + 'projects')(BaseFrame);
-
     // app.route('/expertise')
     //     .get(projects.find);
     app.route('/api/baseFrame/project/find/:name')
         .get(projects.find);
     app.route('/api/baseFrame/project/:_id/:language/:name')
         .get(projects.save);
-    app.route('/api/baseFrame/project/:projectId/:name/issues')
-        .get(projects.issues);
+
+    var issues = require(controllers + 'issues')(BaseFrame);
+    app.route('/api/baseFrame/issues/:projectId/:name')
+        .get(issues.find);
 
     var tags = require(controllers + 'tags')(BaseFrame);
-
     app.route('/api/baseFrame/populateSoTags')
         .post(tags.populateSoTags);
     app.route('/api/baseFrame/populateCoOccurrences')

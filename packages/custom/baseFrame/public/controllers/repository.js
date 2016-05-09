@@ -15,14 +15,7 @@ baseFrame.controller('RepositoryController',
 function ($scope,  $http, $location, $resource) {
     var tagsFromIssue;
     var tagsFromUserOnSO;
-
-    var Project = $resource('/api/baseFrame/project/find/:name');
-    var repoName = $location.search().repoName;
-    if(repoName){
-        Project.get({name: repoName}, function(project){
-            $scope.getRepoInformation(project);
-        });
-    }
+    findProject();
 
     // *************** SCOPE FUNCTIONS **************//
 
@@ -96,12 +89,12 @@ function ($scope,  $http, $location, $resource) {
     * @param repo - Name (user/name) of the selected repo
     */
     $scope.getRepoIssues = function (repo){
-        console.log("getRepoIssues");
-        var Issue = $resource('/api/baseFrame/project/:projectId/:name/issues');
-        // Issue.get({name: repo.name, projectId: repo._id})
-        //   .$promise.then(function(issues){
-        //     console.log(issues);
-        // });
+        var Issue = $resource('/api/baseFrame/issues/:projectId/:name',
+        {'get': {isArray: true}});
+        Issue.get({name: repo.name, projectId: repo._id})
+          .$promise.then(function(issues){
+            console.log(issues);
+        });
     }
 
     $scope.saveProject = function(){
@@ -185,6 +178,17 @@ function ($scope,  $http, $location, $resource) {
 
 
     // *************** HELPER FUNCTIONS **************//
+
+    function findProject(){
+        var Project = $resource('/api/baseFrame/project/find/:name');
+        var repoName = $location.search().repoName;
+        if(repoName){
+            Project.get({name: repoName}).$promise.then(function(project){
+                console.log(project);
+                $scope.getRepoInformation(project);
+            });
+        }
+    }
 
     /**
     * Executes a populate request on the server
