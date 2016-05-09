@@ -16,6 +16,13 @@ function ($scope,  $http, $location, $resource) {
     var tagsFromIssue;
     var tagsFromUserOnSO;
 
+    var Project = $resource('/api/baseFrame/project/find/:name');
+    var repoName = $location.search().repoName;
+    if(repoName){
+        Project.get({name: repoName}, function(project){
+            $scope.getRepoInformation(project);
+        });
+    }
 
     // *************** SCOPE FUNCTIONS **************//
 
@@ -71,22 +78,34 @@ function ($scope,  $http, $location, $resource) {
     /**
     * Gets the users and issues from the selected repository
     *
-    * @param repo - Select repository name
+    * @param repo - The selected repository (id,name[,language])
     */
     $scope.getRepoInformation = function (repo) {
         $scope.repos = undefined;
         $scope.selectedRepo = repo;
-        showLoadingScreen();
-        // getRepoContributors(repo.name);
-        // getRepoIssues(repo.name);
-        hideLoadingScreen();
+        $location.search('repoName', repo.name);
+        // showLoadingScreen();
+        getRepoContributors(repo.name);
+        $scope.getRepoIssues(repo);
+        // hideLoadingScreen();
+    }
+
+    /**
+    * Gets the github issues of the selected repository
+    *
+    * @param repo - Name (user/name) of the selected repo
+    */
+    $scope.getRepoIssues = function (repo){
+        console.log("getRepoIssues");
+        var Issue = $resource('/api/baseFrame/project/:projectId/:name/issues');
+        // Issue.get({name: repo.name, projectId: repo._id})
+        //   .$promise.then(function(issues){
+        //     console.log(issues);
+        // });
     }
 
     $scope.saveProject = function(){
         var Project = $resource('/api/baseFrame/project/:_id/:language/:name');
-
-        var project = Project.get($scope.selectedRepo);
-        console.log(project);
     }
 
     /**
@@ -189,43 +208,19 @@ function ($scope,  $http, $location, $resource) {
     /**
     * Gets the contributors of the selected repository
     *
-    * @param repo - Name (user/name) of the selected repo
+    * @param repo - Name (user/repoName) of the selected repo
     */
     function getRepoContributors(repo){
-        $location.search('repoName', repo);
         $scope.repoName = repo;
 
         var contributorsURL = 'https://api.github.com/repos/' +
           repo +
           '/contributors';
 
-        $http.get(contributorsURL).success(function (results) {
+        $http.get(contributorsURL).then(function (results) {
             $scope.users = [];
-            for (var result of results) {
+            for (var result of results.data) {
                 $scope.users.push( result.login );
-            }
-        });
-    }
-
-    /**
-    * Gets the github issues of the selected repository
-    *
-    * @param repo - Name (user/name) of the selected repo
-    */
-    function getRepoIssues(repo){
-        var issuesURL = 'https://api.github.com/repos/' +
-          repo +
-          '/issues';
-        $http.get(issuesURL).success(function (results) {
-            $scope.issues = [];
-            for (var result of results) {
-                var issue = {
-                    id: result.id,
-                    body: result.body,
-                    title: result.title
-                }
-
-                $scope.issues.push(issue);
             }
         });
     }

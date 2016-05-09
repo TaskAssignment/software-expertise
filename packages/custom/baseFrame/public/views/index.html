@@ -47,6 +47,8 @@ As soon as I figure this out, this will be removed!! -->
                 <a class="btn btn-default" ng-click=saveProject()> Save this project</a>
 
                 <h3>Issues: </h3>
+                <a class="btn btn-default" ng-click=getRepoIssues(selectedRepo)> Get Repo Issues</a>
+                <a class="btn btn-default disabled"> Get New Issues</a>
                 <div id='issueSelection' class='scrollable list-group'>
                     <button ng-repeat="issue in issues" class='list-group-item'
                       ng-click="getIssueTags(issue)">

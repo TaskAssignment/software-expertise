@@ -20,6 +20,12 @@ var IssueSchema = new Schema({
     assigneeId: {
         type: String,
     },
+    body: {
+        type: String
+    },
+    title: {
+        type: String
+    }
 });
 
 IssueSchema.set('timestamps', true);
