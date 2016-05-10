@@ -45,7 +45,7 @@ As soon as I figure this out, this will be removed!! -->
                 <h2> {{ selectedRepo.name }}: </h2>
 
                 <h3>Issues: </h3>
-                <a class="btn btn-default" ng-if="selectedRepo.empty" ng-click=populateIssues()> Get All Issues</a>
+                <a class="btn btn-default" ng-if="selectedRepo.emptyissues" ng-click=populateRepoResources('issues')> Get All Issues</a>
                 <a class="btn btn-default disabled"> Get New Issues</a>
                 <div id='issueSelection' class='scrollable list-group'>
                     <button ng-repeat="issue in issues" class='list-group-item'
@@ -55,7 +55,7 @@ As soon as I figure this out, this will be removed!! -->
                 </div>
 
                 <h3>Users: </h3>
-                <a class="btn btn-default" ng-if="selectedRepo.emptyUsers" ng-click=populateUsers()> Get All Contributors</a>
+                <a class="btn btn-default" ng-if="selectedRepo.emptyusers" ng-click=populateRepoResources('users')> Get All Contributors</a>
                 <a class="btn btn-default disabled"> Get New Contributors</a>
                 <div id='userSelection' class='scrollable list-group'>
                     <button ng-repeat="user in users"

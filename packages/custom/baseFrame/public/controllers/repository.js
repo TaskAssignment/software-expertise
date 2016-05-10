@@ -78,26 +78,17 @@ function ($scope,  $http, $location, $resource) {
         });
     }
 
-    $scope.populateIssues = function (){
-        var Issue = $resource('/api/baseFrame/:projectId/issues/populate');
+
+    $scope.populateRepoResources = function (resource){
+        var Resource = $resource('/api/baseFrame/:projectId/' +
+            resource + '/populate');
         var filter = {
             projectId: $scope.selectedRepo._id
         }
-        Issue.get(filter).$promise.then(function (response){
-            $scope.selectedRepo.empty = false;
+        Resource.get(filter).$promise.then(function (response){
+            $scope.selectedRepo['empty' + resource] = false;
         });
     }
-
-    $scope.populateUsers = function (){
-        var SoUser = $resource('/api/baseFrame/:projectId/users/populate');
-        var filter = {
-            projectId: $scope.selectedRepo._id
-        }
-        SoUser.get(filter).$promise.then(function (response){
-            $scope.selectedRepo.emptyUsers = false;
-        });
-    }
-
     /**
     * Displays the user portion of the expertise graph, based on StackOverflow
     * user tags.
@@ -118,7 +109,7 @@ function ($scope,  $http, $location, $resource) {
                 sendToGraph();
             });
         }else{
-            alert("User is not in StackOverflow. Choose a Stack Overflow user")
+            alert("User is not in StackOverflow. Please, choose a Stack Overflow user")
         }
     }
 
@@ -159,24 +150,25 @@ function ($scope,  $http, $location, $resource) {
         $location.search('repoName', repo.name);
 
         showLoadingScreen();
-        getRepoIssues(repo._id);
-        getRepoContributors(repo._id);
+        getRepoResources('issues');
+        getRepoResources('users');
         hideLoadingScreen();
     }
 
     /**
-    * Gets the github issues of the selected repository stored on the database
+    * Gets the github resources of the selected repository stored on the
+    * database.
     *
-    * @param id - The id (GH id and database id) of the selected repository
+    * @param resource - The desired resource for this repository (issues, users)
     */
-    function getRepoIssues(id = $scope.selectedRepo._id){
-        var Issue = $resource('/api/baseFrame/:projectId/issues');
-        Issue.query({projectId: id})
-          .$promise.then(function(issues){
-            if(issues.length == 0){
-                $scope.selectedRepo['empty'] = true;
+    function getRepoResources(resource){
+        var Resource = $resource('/api/baseFrame/:projectId/' + resource);
+        Resource.query({projectId: $scope.selectedRepo._id})
+          .$promise.then(function(resources){
+            if(resources.length == 0){
+                $scope.selectedRepo['empty' + resource] = true;
             }
-            $scope.issues = issues;
+            $scope[resource] = resources;
         });
     }
 
@@ -204,23 +196,6 @@ function ($scope,  $http, $location, $resource) {
             headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         }).success(function (response){
             hideLoadingScreen();
-        });
-    }
-
-
-    /**
-    * Gets the contributors of the selected repository
-    *
-    * @param repo - Name (user/repoName) of the selected repo
-    */
-    function getRepoContributors(id){
-        var SoUser = $resource('/api/baseFrame/:projectId/users');
-        SoUser.query({projectId: id})
-          .$promise.then(function(users){
-            if(users.length == 0){
-                $scope.selectedRepo['emptyUsers'] = true;
-            }
-            $scope.users = users;
         });
     }
 
