@@ -2,6 +2,7 @@
 
 var mongoose = require('mongoose');
 var SoUser = mongoose.model('SoUser');
+var Answer = mongoose.model('Answer');
 
 var request = require('request');
 
@@ -149,6 +150,23 @@ module.exports = function (BaseFrame){
                     res.sendStatus(500);
                 }
             });
+        },
+
+        populateUserAnswers: function(req, res){
+            var soId = req.params.soId;
+            /* To know more about this check
+            * https://api.stackexchange.com/docs/answers-on-users#pagesize=100&order=desc&sort=activity&ids=696885&filter=!t)IWIB_jIM*PQgVlKVx*bpK7iv9Avm9&site=stackoverflow
+            */
+            var url = 'https://api.stackexchange.com/2.2/users/' + soId +
+                '/answers?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!t)IWIB_jIM*PQgVlKVx*bpK7iv9Avm9&page=';
+
+            var options = {
+                headers: {
+                    'Accept-Encoding': 'gzip'
+                },
+                gzip: true,
+                url: url
+            };
         },
 
         tags: function (req, res) {
