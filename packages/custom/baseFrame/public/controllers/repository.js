@@ -34,8 +34,7 @@ function ($scope,  $http, $location, $resource) {
     $scope.populateStopWords = function(){
         populateRequest('/api/baseFrame/populateStopWords');
     }
-    /**
-     * Looks for repositories with the given filters
+    /** Looks for repositories with the given filters
      */
     $scope.queryRepos = function () {
         showLoadingScreen();
@@ -97,6 +96,8 @@ function ($scope,  $http, $location, $resource) {
     */
     $scope.displayUserExpertise = function(user){
         $location.search('username', user._id);
+        $scope.selectedUser = user;
+
 
         if(user.soId){
             var soURLStr = 'http://api.stackexchange.com/2.2/users/' +
@@ -120,6 +121,7 @@ function ($scope,  $http, $location, $resource) {
     */
     $scope.getIssueTags = function (issue) {
         $location.search('issueId', issue.id);
+        $scope.selectedIssue = issue;
 
         //Any word from the issue that is an SO tag will be in this array.
         //This is the array that is sent to '/api/baseFrame/coOccurrence'

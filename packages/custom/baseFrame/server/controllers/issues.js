@@ -15,7 +15,7 @@ module.exports = function (BaseFrame){
         find: function (req, res){
             var repo = req.params;
 
-            Issue.find(repo, 'body title', function(err, issues){
+            Issue.find(repo, function(err, issues){
                 res.send(issues);
             });
         },
@@ -57,7 +57,12 @@ module.exports = function (BaseFrame){
                             _id: result.id,
                             body: result.body,
                             title: result.title,
-                            projectId: repo.projectId
+                            projectId: repo.projectId,
+                            reporterId: result.user.login
+                        }
+
+                        if(result.assignee){
+                            issue['assigneeId'] = result.assignee.login;
                         }
 
                         issues.push(issue);

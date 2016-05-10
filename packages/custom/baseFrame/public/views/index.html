@@ -45,26 +45,39 @@ As soon as I figure this out, this will be removed!! -->
                 <h2> {{ selectedRepo.name }}: </h2>
 
                 <h3>Issues: </h3>
-                <a class="btn btn-default" ng-if="selectedRepo.emptyissues" ng-click=populateRepoResources('issues')> Get All Issues</a>
-                <a class="btn btn-default disabled"> Get New Issues</a>
+                <div id="selectedIssue" class="list-group-item active"
+                    ng-if="selectedIssue">
+                    {{ selectedIssue.title }}
+                </div>
                 <div id='issueSelection' class='scrollable list-group'>
-                    <button ng-repeat="issue in issues" class='list-group-item'
+                    <button ng-repeat="issue in issues" class="list-group-item"
                       ng-click="getIssueTags(issue)">
                         {{ issue.title }}
                     </button>
                 </div>
+                <a class="btn btn-default" ng-if="selectedRepo.emptyissues" ng-click=populateRepoResources('issues')> Get All Issues</a>
+                <a class="btn btn-default disabled"> Get New Issues</a>
 
                 <h3>Users: </h3>
-                <a class="btn btn-default" ng-if="selectedRepo.emptyusers" ng-click=populateRepoResources('users')> Get All Contributors</a>
-                <a class="btn btn-default disabled"> Get New Contributors</a>
+                <div id="selectedUser" class="list-group-item active"
+                    ng-if="selectedUser">
+                    {{ selectedUser._id }}
+                    <span ng-if="selectedUser.soId" class="badge">SO User</span>
+                    <span ng-if="selectedIssue.reporterId == selectedUser._id" class="badge">Reporter</span>
+                    <span ng-if="selectedIssue.assigneeId == selectedUser._id" class="badge">Assignee</span>
+                </div>
                 <div id='userSelection' class='scrollable list-group'>
                     <button ng-repeat="user in users"
                      class='list-group-item'
                       ng-click="displayUserExpertise(user)">
                         {{ user._id }}
                         <span ng-if="user.soId" class="badge">SO User</span>
+                        <span ng-if="selectedIssue.reporterId == user._id" class="badge">Reporter</span>
+                        <span ng-if="selectedIssue.assigneeId == user._id" class="badge">Assignee</span>
                     </button>
                 </div>
+                <a class="btn btn-default" ng-if="selectedRepo.emptyusers" ng-click=populateRepoResources('users')> Get All Contributors</a>
+                <a class="btn btn-default disabled"> Get New Contributors</a>
             </div>
         </div>
         <div id="expertiseGraphDiv" class="col-md-9">

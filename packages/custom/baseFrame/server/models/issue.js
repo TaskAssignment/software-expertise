@@ -13,7 +13,7 @@ var IssueSchema = new Schema({
         type: String,
         ref: 'Project',
     },
-    //These are both GitHub ids, not soUser._id
+    //These are both GitHub logins that are SoUser._id
     reporterId: {
         type: String,
     },
