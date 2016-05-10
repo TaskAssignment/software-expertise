@@ -58,9 +58,11 @@ As soon as I figure this out, this will be removed!! -->
                 <a class="btn btn-default" ng-if="selectedRepo.emptyUsers" ng-click=populateUsers()> Get All Contributors</a>
                 <a class="btn btn-default disabled"> Get New Contributors</a>
                 <div id='userSelection' class='scrollable list-group'>
-                    <button ng-repeat="user in users" class='list-group-item'
+                    <button ng-repeat="user in users"
+                     class='list-group-item'
                       ng-click="displayUserExpertise(user)">
-                        {{ user }}
+                        {{ user._id }}
+                        <span ng-if="user.soId" class="badge">SO User</span>
                     </button>
                 </div>
             </div>

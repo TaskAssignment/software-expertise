@@ -10,6 +10,19 @@ var request = require('request');
 // depends on the git api.
 module.exports = function (BaseFrame){
     return {
+        /** Looks for the given (req.params) repository in the database.
+        *
+        * @param req - Express request
+        * @param res - Express response
+        */
+        find: function (req, res){
+            var repo = {repositories: req.params.projectId};
+
+            SoUser.find(repo, 'soId _id', {sort: '-soId -updatedAt'}, function(err, users){
+                res.send(users);
+            });
+        },
+
         /** Stores in the database all the users from the given repository.
         *
         * @param req - Express request
@@ -23,7 +36,7 @@ module.exports = function (BaseFrame){
                     'User-Agent': 'software-expertise',
                     Accept: 'application/vnd.github.v3+json'
                 },
-                url: 'https://api.github.com/repos/' +
+                url: 'https://api.github.com/repositories/' +
                   repo.projectId + '/contributors?per_page=100'
             };
             request(options, callback);
@@ -45,19 +58,19 @@ module.exports = function (BaseFrame){
                     for (var i in results) {
                         var result = results[i];
                         var user = {
-                            _id: result.id,
-                            gitUsername: result.login,
+                            gitHubId: result.id,
+                            _id: result.login,
+                            $addToSet: {repositories: repo.projectId}
                         };
 
-                        users.push(user);
+                        SoUser.update({_id: result.login}, user, {upsert: true}, function(err){
+                            if(err){
+                                console.log(err.message);
+                            }else{
+                                console.log('User saved successfully!');
+                            }
+                        });
                     }
-                    SoUser.collection.insert(users, function(err){
-                        if(err){
-                            console.log(err.message);
-                        }else{
-                            console.log('SoUsers saved successfully!');
-                        }
-                    });
                 } else {
                     console.log(error);
                     console.log(body);

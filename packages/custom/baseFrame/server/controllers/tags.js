@@ -171,7 +171,7 @@ function createModel(convertResults, modelName){
                 break;
             case 'SoUser':
                 model['soId'] = result.SOId;
-                model['gitUsername'] = result.login;
+                model['_id'] = result.login;
                 model['email'] = result.email;
                 break;
             case 'CommonOccurrence':

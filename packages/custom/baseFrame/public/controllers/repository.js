@@ -79,7 +79,7 @@ function ($scope,  $http, $location, $resource) {
     }
 
     $scope.populateIssues = function (){
-        var Issue = $resource('/api/baseFrame/issues/populate/:projectId');
+        var Issue = $resource('/api/baseFrame/:projectId/issues/populate');
         var filter = {
             projectId: $scope.selectedRepo._id
         }
@@ -89,57 +89,27 @@ function ($scope,  $http, $location, $resource) {
     }
 
     $scope.populateUsers = function (){
-        var Issue = $resource('/api/baseFrame/users/populate/:projectId');
+        var SoUser = $resource('/api/baseFrame/:projectId/users/populate');
         var filter = {
             projectId: $scope.selectedRepo._id
         }
-        Issue.get(filter).$promise.then(function (response){
+        SoUser.get(filter).$promise.then(function (response){
             $scope.selectedRepo.emptyUsers = false;
         });
     }
 
     /**
-    * Displays the user portion of the expertise graph
-    * I think this should be in a different file.
+    * Displays the user portion of the expertise graph, based on StackOverflow
+    * user tags.
     *
     * @param username - github username
     */
-    $scope.displayUserExpertise = function(username){
-        $location.search('username', username);
+    $scope.displayUserExpertise = function(user){
+        $location.search('username', user._id);
 
-        getSOIDForUser(username);
-
-        /**
-        * Makes an http post request to get the users matching SO information
-        *
-        * @param userName - GitHub username
-        * @return soId - Stack Overflow id for the given username
-        */
-        function getSOIDForUser(userName){
-            var apiCallUrl  = '/api/baseFrame/soIDFromUser'; //Not sure if this will work everytime
-            $http({
-                method: 'POST',
-                url: apiCallUrl,
-                data: 'gitName=' + userName,
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-            }).success(function (soId) {
-                if(soId){
-                    getSOTagsFromUser(soId);
-                } else {
-                    console.log('User is not on StackOverflow');
-                    return 'User is not on StackOverflow';
-                }
-            });
-        }
-
-        /**
-        * Gets the Stack Overflow tags related to the given user.
-        *
-        * @param soId - StackOverflow Id
-        */
-        function getSOTagsFromUser(soId){
+        if(user.soId){
             var soURLStr = 'http://api.stackexchange.com/2.2/users/' +
-            soId + '/tags?pagesize=100&order=desc&sort=popular&site=stackoverflow&filter=!-.G.68phH_FJ'
+            user.soId + '/tags?pagesize=100&order=desc&sort=popular&site=stackoverflow&filter=!-.G.68phH_FJ'
             $http.get(soURLStr).success(function(soTags) {
                 tagsFromUserOnSO = {}
                 for(let tag of soTags.items){
@@ -147,6 +117,8 @@ function ($scope,  $http, $location, $resource) {
                 }
                 sendToGraph();
             });
+        }else{
+            alert("User is not in StackOverflow. Choose a Stack Overflow user")
         }
     }
 
@@ -188,7 +160,7 @@ function ($scope,  $http, $location, $resource) {
 
         showLoadingScreen();
         getRepoIssues(repo._id);
-        getRepoContributors(repo.name);
+        getRepoContributors(repo._id);
         hideLoadingScreen();
     }
 
@@ -198,10 +170,9 @@ function ($scope,  $http, $location, $resource) {
     * @param id - The id (GH id and database id) of the selected repository
     */
     function getRepoIssues(id = $scope.selectedRepo._id){
-        var Issue = $resource('/api/baseFrame/issues/:projectId/');
+        var Issue = $resource('/api/baseFrame/:projectId/issues');
         Issue.query({projectId: id})
           .$promise.then(function(issues){
-            console.log(issues);
             if(issues.length == 0){
                 $scope.selectedRepo['empty'] = true;
             }
@@ -214,7 +185,6 @@ function ($scope,  $http, $location, $resource) {
         var repoName = $location.search().repoName;
         if(repoName){
             Project.get({name: repoName}).$promise.then(function(project){
-                console.log(project);
                 getRepoInformation(project);
             });
         }
@@ -233,7 +203,6 @@ function ($scope,  $http, $location, $resource) {
             data: '',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         }).success(function (response){
-            console.log("Success");
             hideLoadingScreen();
         });
     }
@@ -244,15 +213,14 @@ function ($scope,  $http, $location, $resource) {
     *
     * @param repo - Name (user/repoName) of the selected repo
     */
-    function getRepoContributors(repoName){
-        var contributorsURL = 'https://api.github.com/repos/' +
-        repoName + '/contributors';
-
-        $http.get(contributorsURL).then(function (results) {
-            $scope.users = [];
-            for (var result of results.data) {
-                $scope.users.push( result.login );
+    function getRepoContributors(id){
+        var SoUser = $resource('/api/baseFrame/:projectId/users');
+        SoUser.query({projectId: id})
+          .$promise.then(function(users){
+            if(users.length == 0){
+                $scope.selectedRepo['emptyUsers'] = true;
             }
+            $scope.users = users;
         });
     }
 

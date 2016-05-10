@@ -12,13 +12,15 @@ module.exports = function (BaseFrame, app, auth, database) {
         .get(projects.save);
 
     var issues = require(controllers + 'issues')(BaseFrame);
-    app.route('/api/baseFrame/issues/:projectId/')
+    app.route('/api/baseFrame/:projectId/issues/')
         .get(issues.find);
-    app.route('/api/baseFrame/issues/populate/:projectId')
+    app.route('/api/baseFrame/:projectId/issues/populate')
         .get(issues.populate);
 
     var users = require(controllers + 'users')(BaseFrame);
-    app.route('/api/baseFrame/users/populate/:projectId')
+    app.route('/api/baseFrame/:projectId/users')
+        .get(users.find);
+    app.route('/api/baseFrame/:projectId/users/populate')
         .get(users.populate);
 
     var tags = require(controllers + 'tags')(BaseFrame);
