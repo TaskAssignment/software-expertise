@@ -120,7 +120,7 @@ function ($scope,  $http, $location, $resource) {
     * @param issue - Dictionary with id, title and body from github issue
     */
     $scope.getIssueTags = function (issue) {
-        $location.search('issueId', issue.id);
+        $location.search('issueId', issue._id);
         $scope.selectedIssue = issue;
 
         //Any word from the issue that is an SO tag will be in this array.

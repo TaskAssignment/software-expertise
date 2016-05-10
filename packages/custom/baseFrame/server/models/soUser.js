@@ -25,6 +25,12 @@ var SoUserSchema = new Schema({
     },
     repositories: {
         type: [String],
+    },
+    tags:{
+        type:[
+            name: String,
+            count: String
+        ]
     }
 }, {
     timestamps: true
