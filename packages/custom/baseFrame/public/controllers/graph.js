@@ -27,101 +27,88 @@ function ExpertiseGraph() {
         });
 
         function drawGraph(links, allTags){
+            //temporary numbers just to see how things work
+            var width = 900,
+                height = 900;
 
-          //temporary numbers just to see how things work
-          var width = 800; //window.innerWidth - d3.select('#leftSelectionPanel').node().getBoundingClientRect().width - 5;
-          var height = 800; //window.innerHeight - d3.select('.page-header').node().getBoundingClientRect().height - 5;
+            var force = d3.layout.force()
+                .size([width, height])
+                .charge(-400)
+                .linkDistance(300)
+                .on("tick", tick);
 
-          var color = d3.scale.category20();
+            var drag = force.drag()
+                .on("dragstart", dragstart);
 
-          var force = d3.layout.force()
-              .charge(-120)
-              .linkDistance(300)
-              .size([width, height]);
+            d3.select('svg').remove(); //Remove old svg before adding a new one.
 
-          d3.select('svg').remove(); //Remove old svg before adding a new one.
+            var svg = d3.select('#expertiseGraphDiv').append('svg')
+                .attr('width', width)
+                .attr('height', height);
 
-          var svg = d3.select('#expertiseGraphDiv').append('svg')
-              .attr('width', width)
-              .attr('height', height);
+            var link = svg.selectAll(".link");
+            var node = svg.selectAll(".node");
 
-          //Move this to a function once it's woking
+            /* In order to draw the graph, force must receive an ARRAY of nodes.
+            * Each node must have at least a name.
+            *
+            * You must also pass an ARRAY of links.
+            * Each link must have a source and a target, both are INDEXES of a node
+            */
+            var graph = formatDataToGraph(links, allTags);
 
-          var graph = formatDataToGraph(links, allTags);
+            force
+                .nodes(graph.nodes)
+                .links(graph.links)
+                .start();
 
-          /* In order to draw the graph, force must receive an ARRAY of nodes.
-          * Each node must have at least a name.
-          *
-          * You must also pass an ARRAY of links.
-          * Each link must have a source and a target, both are INDEXES of a node
-          * (don't use the name, it took me a really long time to figure that out)
-          */
-          force.nodes(graph.nodes)
-              .links(graph.links)
-              .start();
+            link = link.data(graph.links)
+                .enter().append("line")
+                .attr("class", "link");
 
-          var link = svg.selectAll('.link')
-              .data(graph.links)
-            .enter().append('line')
-              .attr('class', 'link')
-              .style('stroke-width', function(d) { return Math.sqrt(d.weight); });
-
-          /*
-          * force graphs don't accept a circle with any other data, like a label.
-          * To show any other information, a 'g' tag is necessary (group)
-          */
-          var node = svg.selectAll('.node')
-              .data(graph.nodes)
-              .enter().append('g')
+            /* Force graphs don't accept a circle with any other data, like a label.
+            * To show any other information, a 'g' tag is necessary (group)
+            */
+            node = svg.selectAll('.node')
+                .data(graph.nodes)
+                .enter().append('g')
                 .attr('class', 'node')
-                .call(force.drag);
+                .on("dblclick", dblclick)
+                .call(drag);
 
+            node.append("circle")
+                .attr('r', function(d) {
+                    return calculateCircleRatio(d.soCount);
+                })
+                .style('fill', function(d) { return d.origin; });
 
+            node.append('text')
+               .attr('dx', 12)
+               .text(function(d) { return d.name });
 
-          var circle = node.append('circle')
-              .attr('r', function(d) { return calculateCircleRatio(d.issueCount); })
-              .style('fill', function(d) { return d.origin; });
+            function tick() {
+                link.attr("x1", function(d) { return d.source.x; })
+                    .attr("y1", function(d) { return d.source.y; })
+                    .attr("x2", function(d) { return d.target.x; })
+                    .attr("y2", function(d) { return d.target.y; });
 
-          var circle = node.append('circle')
-              .attr('r', function(d) { return calculateCircleRatio(d.soCount); })
-              .style('fill', function(d) { return d.origin; });
+                node.attr('transform', function(d) {
+                    return 'translate(' + d.x + ',' + d.y + ')';
+                });
+            }
 
-          /*
-          * Add onClick behavior. In this case, simply changes the circle ratio
-          * Soon I'll show information of the node on click
-          */
-          // circle.on('click', function(){
-          //     var circle = d3.select(this);
-          //     var ratio = circle.attr('r');
-          //     if(ratio >= 20){
-          //         ratio = 5;
-          //     } else {
-          //         ratio *= 2;
-          //     }
-          //     circle.attr('r', function(d) { return d.count });
-          // });
+            function dblclick(d) {
+                d3.select(this).classed("fixed", d.fixed = false);
+            }
 
-          node.append('text')
-            .attr('dx', 12)
-            .text(function(d) { return d.name });
-
-
-          force.on('tick', function() {
-              link.attr('x1', function(d) { return d.source.x; })
-                  .attr('y1', function(d) { return d.source.y; })
-                  .attr('x2', function(d) { return d.target.x; })
-                  .attr('y2', function(d) { return d.target.y; });
-
-              node.attr('transform', function(d) {
-                  return 'translate(' + d.x + ',' + d.y + ')';
-              });
-          });
-
+            function dragstart(d) {
+                d3.select(this).classed("fixed", d.fixed = true);
+            }
         }
 
         function calculateCircleRatio(counter){
-            var MAX_RATIO = 20;
-            var MIN_RATIO = 5;
+            var MAX_RATIO = 10;
+            var MIN_RATIO = 2;
             var result = counter/MAX_RATIO + MIN_RATIO;
             return result > MAX_RATIO ? MAX_RATIO : result;
         }
@@ -179,7 +166,7 @@ function ExpertiseGraph() {
         * Both tagsFromIssue and tagsFromUserOnSO have the format: name: count
         *
         * @return Dict of dicts with tag name being the main key
-            and origin, index, issueCount and soCount as subkeys.
+        and origin, index, issueCount and soCount as subkeys.
         */
         function mergeTags(){
             var allTags = {};

@@ -1,17 +1,12 @@
 .link {
   fill: none;
-  stroke: #666;
+  stroke: #ccc;
   stroke-width: 1.5px;
-
-}
-
-.link.resolved {
-  stroke-dasharray: 0,2 1;
 }
 
 circle {
-  fill: #ccc;
-  stroke: #333;
+  fill: blue;
+  stroke: #000;
   stroke-width: 1.5px;
 }
 
@@ -19,4 +14,8 @@ circle {
   height: 200px; // Set this height to the appropriate size
   position: fixed;
   overflow-y: scroll;
+}
+
+.node {
+  cursor: move;
 }
