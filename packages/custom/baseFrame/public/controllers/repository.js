@@ -98,16 +98,13 @@ function ($scope,  $http, $location, $resource) {
         $location.search('username', user._id);
         $scope.selectedUser = user;
 
-
         if(user.soId){
-            var soURLStr = 'http://api.stackexchange.com/2.2/users/' +
-            user.soId + '/tags?pagesize=100&order=desc&sort=popular&site=stackoverflow&filter=!-.G.68phH_FJ'
-            $http.get(soURLStr).success(function(soTags) {
-                tagsFromUserOnSO = {}
-                for(let tag of soTags.items){
-                    tagsFromUserOnSO[tag.name] = tag.count;
-                }
-                sendToGraph();
+            var Resource = $resource('/api/baseFrame/user/:soId/tags/populate');
+            var filter = {
+                soId: user.soId
+            }
+            Resource.get(filter).$promise.then(function (response){
+                console.log(response);
             });
         }else{
             alert("User is not in StackOverflow. Please, choose a Stack Overflow user")

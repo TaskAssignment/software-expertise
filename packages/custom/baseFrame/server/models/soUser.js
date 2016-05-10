@@ -27,10 +27,10 @@ var SoUserSchema = new Schema({
         type: [String],
     },
     tags:{
-        type:[
+        type:[{
             name: String,
             count: String
-        ]
+        }]
     }
 }, {
     timestamps: true
