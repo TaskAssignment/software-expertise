@@ -9,6 +9,8 @@ var StopWordSchema = new Schema({
         required: true,
         unique: true
     }
+}, {
+    timestamps: true
 });
 
 mongoose.model('StopWord', StopWordSchema);

@@ -18,6 +18,8 @@ var CommonOccurrenceSchema = new Schema({
         type: Number,
         required: true
     }
+}, {
+    timestamps: true
 });
 
 CommonOccurrenceSchema.index({source: 1, target: 1});

@@ -23,6 +23,8 @@ var TagSchema = new Schema({
         type: Date,
         default: Date.now
     },
+}, {
+    timestamps: true
 });
 
 TagSchema.path('name').validate(function (name){
