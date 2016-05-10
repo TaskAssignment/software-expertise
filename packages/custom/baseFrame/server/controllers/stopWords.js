@@ -26,7 +26,7 @@ module.exports = function (BaseFrame) {
                     }
                 }
 
-                StopWord.collection.insert(stopwords, function(err){
+                StopWord.create(stopwords, function(err){
                     if(err){
                         console.log(err.message);
                     }else{

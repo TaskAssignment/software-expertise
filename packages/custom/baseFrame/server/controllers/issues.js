@@ -67,7 +67,7 @@ module.exports = function (BaseFrame){
 
                         issues.push(issue);
                     }
-                    Issue.collection.insert(issues, function(err){
+                    Issue.create(issues, function(err){
                         if(err){
                             console.log(err.message);
                         }else{

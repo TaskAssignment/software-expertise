@@ -79,6 +79,7 @@ function ($scope,  $http, $location, $resource) {
 
 
     $scope.populateRepoResources = function (resource){
+        showLoadingScreen();
         var Resource = $resource('/api/baseFrame/:projectId/' +
             resource + '/populate');
         var filter = {
@@ -86,6 +87,7 @@ function ($scope,  $http, $location, $resource) {
         }
         Resource.get(filter).$promise.then(function (response){
             $scope.selectedRepo['empty' + resource] = false;
+            hideLoadingScreen();
         });
     }
     /**
@@ -99,15 +101,20 @@ function ($scope,  $http, $location, $resource) {
         $scope.selectedUser = user;
 
         if(user.soId){
-            var Resource = $resource('/api/baseFrame/user/:soId/tags/populate');
-            var filter = {
-                soId: user.soId
-            }
-            Resource.get(filter).$promise.then(function (response){
-                console.log(response);
+            showLoadingScreen();
+            var Resource = $resource('/api/baseFrame/user/:_id/tags');
+            Resource.query({_id: user._id}).$promise.then(function(tags){
+                hideLoadingScreen();
+                if(tags.length == 0){
+                    $scope.selectedUser.emptyTags = true;
+                    populateUserTags();
+                }
+                convertTags(tags);
             });
+
         }else{
-            alert("User is not in StackOverflow. Please, choose a Stack Overflow user")
+            alert("User is not in StackOverflow. Please, choose a Stack Overflow user");
+            convertTags([]);
         }
     }
 
@@ -154,6 +161,27 @@ function ($scope,  $http, $location, $resource) {
         hideLoadingScreen();
     }
 
+    function populateUserTags() {
+        showLoadingScreen();
+        var Resource = $resource('/api/baseFrame/user/:soId/tags/populate');
+        var filter = {
+            soId: $scope.selectedUser.soId
+        }
+        Resource.query(filter).$promise.then(function (response){
+            hideLoadingScreen();
+            convertTags(response);
+        });
+    }
+
+    function convertTags(tags){
+        tagsFromUserOnSO = {};
+        $scope.selectedUser.emptyTags = false;
+        for(var tag of tags){
+            tagsFromUserOnSO[tag._id] = tag.count;
+        }
+        sendToGraph();
+    }
+
     /**
     * Gets the github resources of the selected repository stored on the
     * database.
@@ -161,6 +189,7 @@ function ($scope,  $http, $location, $resource) {
     * @param resource - The desired resource for this repository (issues, users)
     */
     function getRepoResources(resource){
+        showLoadingScreen();
         var Resource = $resource('/api/baseFrame/:projectId/' + resource);
         Resource.query({projectId: $scope.selectedRepo._id})
           .$promise.then(function(resources){
@@ -168,6 +197,7 @@ function ($scope,  $http, $location, $resource) {
                 $scope.selectedRepo['empty' + resource] = true;
             }
             $scope[resource] = resources;
+            hideLoadingScreen();
         });
     }
 

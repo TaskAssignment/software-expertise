@@ -57,7 +57,6 @@ module.exports = function (BaseFrame){
                         var result = results[i];
                         var user = {
                             gitHubId: result.id,
-                            _id: result.login,
                             $addToSet: {repositories: repo.projectId}
                         };
 
@@ -112,8 +111,8 @@ module.exports = function (BaseFrame){
             * To understand better how this works, check
             *https://api.stackexchange.com/docs/tags-on-users#pagesize=100&order=desc&sort=popular&ids=696885&filter=!)sCN9OzMlifJVZJ50hGQ&site=stackoverflow
             */
-            var url = 'https://api.stackexchange.com/2.2/users/' +
-                req.params.soId +
+            var soId = req.params.soId;
+            var url = 'https://api.stackexchange.com/2.2/users/' + soId +
                 '/tags?pagesize=100&order=desc&sort=popular&site=stackoverflow&filter=!)sCN9OzMlifJVZJ50hGQ&page=';
 
             var options = {
@@ -127,14 +126,40 @@ module.exports = function (BaseFrame){
             request(options, function (error, response, body){
                 if (!error && response.statusCode == 200) {
                     var results = JSON.parse(body);
-                    console.log(results);
-                    res.sendStatus(200);
+                    var tags = [];
+                    for(var i in results.items){
+                        var result = results.items[i];
+                        var teste = {
+                            _id: result.name,
+                            count: result.count
+                        };
+                        tags.push(teste);
+                    }
+                    res.send(tags);
+                    SoUser.update({soId: soId}, {$addToSet: {tags: {$each: tags}}}, {upsert: true}, function(err){
+                        if(err){
+                            console.log(err.message);
+                        }else{
+                            console.log('User saved successfully!');
+                        }
+                    });
                 } else {
                     console.log("Error");
                     console.log(error, body);
+                    res.sendStatus(500);
                 }
-            })
+            });
+        },
 
+        tags: function (req, res) {
+            SoUser.findOne(req.params, function(err, user){
+                if(err){
+                    console.log(err);
+                    res.send(err);
+                }else{
+                    res.send(user.tags)
+                }
+            });
         }
     }
 }

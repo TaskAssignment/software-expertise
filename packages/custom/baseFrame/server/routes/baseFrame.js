@@ -23,6 +23,8 @@ module.exports = function (BaseFrame, app, auth, database) {
         .get(users.find);
     app.route('/api/baseFrame/:projectId/users/populate')
         .get(users.populate);
+    app.route('/api/baseFrame/user/:_id/tags')
+        .get(users.tags);
     app.route('/api/baseFrame/user/:soId/tags/populate')
         .get(users.populateUserTags);
 

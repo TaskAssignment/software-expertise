@@ -11,7 +11,6 @@ var SoUserSchema = new Schema({
     },
     gitHubId:{
         type: String,
-        unique: true
     },
     email: {
         type: String,
@@ -21,14 +20,13 @@ var SoUserSchema = new Schema({
     },
     soId: {
         type: String,
-        unique: true
     },
     repositories: {
         type: [String],
     },
     tags:{
-        type:[{
-            name: String,
+        type: [{
+            _id: String,
             count: String
         }]
     }

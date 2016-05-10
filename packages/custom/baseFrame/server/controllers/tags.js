@@ -46,11 +46,11 @@ module.exports = function (BaseFrame){
                         stopWords.push(words[index].word);
                     }
                     pullAll(allWords, stopWords);
-
                 }
+
                 // Any tag that has any of the words in the given array
                 // The lean option is to avoid Mongoose wrapers. It returns just a json
-                Tag.find({name: {$in: allWords }}, 'name soTotalCount', {lean: true}, function(err, tags){
+                Tag.find({_id: {$in: allWords }}, '_id soTotalCount', {lean: true}, function(err, tags){
                     if(err){
                         console.log(err.message);
                         res.sendStatus(500);
@@ -59,7 +59,7 @@ module.exports = function (BaseFrame){
                     var tagsFromIssue = {};
                     for(var index in tags){
                         //I don't have the count for the issue right now.
-                        tagsFromIssue[tags[index].name] = 1;
+                        tagsFromIssue[tags[index]._id] = 1;
                     }
 
                     res.json(tagsFromIssue);
@@ -166,7 +166,7 @@ function createModel(convertResults, modelName){
 
         switch (modelName) {
             case 'Tag':
-                model['name'] = result.TagName;
+                model['_id'] = result.TagName;
                 model['soTotalCount'] = result.Count;
                 break;
             case 'SoUser':

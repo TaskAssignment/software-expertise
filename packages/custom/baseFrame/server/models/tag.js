@@ -5,7 +5,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var TagSchema = new Schema({
-    name: {
+    _id: {
         type: String,
         required: true,
         unique: true
@@ -13,23 +13,9 @@ var TagSchema = new Schema({
     soTotalCount: {
         type: Number,
     },
-    soUserCount: {
-        type: Number,
-    },
-    issueCount: {
-        type: Number,
-    },
-    created: {
-        type: Date,
-        default: Date.now
-    },
 }, {
     timestamps: true
 });
-
-TagSchema.path('name').validate(function (name){
-    return !!name;
-}, 'Name cannot be blank!');
 
 if (!TagSchema.options.toObject){
     TagSchema.options.toObject = {};
