@@ -11,7 +11,7 @@ module.exports = function (BaseFrame, app, auth, database) {
     app.route('/api/baseFrame/project/new/')
         .get(projects.save);
 
-    //TODO: Refactor this to use resource. Issues and users do exactly the same thing!!!
+    //TODO: Refactor this to use a 'general class'. Issues and users do exactly the same thing!!!
     var issues = require(controllers + 'issues')(BaseFrame);
     app.route('/api/baseFrame/:projectId/issues/')
         .get(issues.find);
@@ -27,6 +27,8 @@ module.exports = function (BaseFrame, app, auth, database) {
         .get(users.tags);
     app.route('/api/baseFrame/user/:soId/tags/populate')
         .get(users.populateUserTags);
+    app.route('/api/baseFrame/user/:_id/:soId/answers/populate')
+        .get(users.populateUserAnswers);
 
     var tags = require(controllers + 'tags')(BaseFrame);
     app.route('/api/baseFrame/populateSoTags')

@@ -49,7 +49,7 @@ module.exports = function (BaseFrame){
             * @param response - The response from the other server
             * @param body - The response body (string). Final html or JSON.
             */
-            function callback(error, response, body){
+            var callback = function (error, response, body){
                 if (!error && response.statusCode == 200) {
                     var users = [];
                     var results = JSON.parse(body);
@@ -79,7 +79,7 @@ module.exports = function (BaseFrame){
 
             /** This reads and parses the link header in GitHub API to get the
             * next url and avoid infinite loop (next of the last page
-            * is the first one)
+            * is the first one). This is specific for the GitHub API!
             *
             * @param link - Value of headers['link'] from the response
             */
@@ -124,39 +124,45 @@ module.exports = function (BaseFrame){
                 url: url
             };
 
-            request(options, function (error, response, body){
+            var callback = function (error, response, body){
                 if (!error && response.statusCode == 200) {
                     var results = JSON.parse(body);
+                    console.log('This is page ' + results.page);
                     var tags = [];
                     for(var i in results.items){
                         var result = results.items[i];
-                        var teste = {
+                        var tag = {
                             _id: result.name,
                             count: result.count
                         };
-                        tags.push(teste);
+                        tags.push(tag);
                     }
                     res.send(tags);
                     SoUser.update({soId: soId}, {$addToSet: {tags: {$each: tags}}}, {upsert: true}, function(err){
                         if(err){
                             console.log(err.message);
                         }else{
-                            console.log('User saved successfully!');
+                            console.log('User updated successfully!');
                         }
                     });
+                    if(results.has_more){
+                        var new_url = url + (parseInt(results.page) + 1);
+                        options.url = new_url;
+                        request(options, callback);
+                    }
                 } else {
                     console.log("Error");
                     console.log(error, body);
                     res.sendStatus(500);
                 }
-            });
+            }
+
+            request(options, callback);
         },
 
-        populateUserAnswers: function(req, res){
+        populateUserAnswers: function (req, res){
             var soId = req.params.soId;
-            /* To know more about this check
-            * https://api.stackexchange.com/docs/answers-on-users#pagesize=100&order=desc&sort=activity&ids=696885&filter=!t)IWIB_jIM*PQgVlKVx*bpK7iv9Avm9&site=stackoverflow
-            */
+            var userId = req.params._id;
             var url = 'https://api.stackexchange.com/2.2/users/' + soId +
                 '/answers?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!t)IWIB_jIM*PQgVlKVx*bpK7iv9Avm9&page=';
 
@@ -167,6 +173,44 @@ module.exports = function (BaseFrame){
                 gzip: true,
                 url: url
             };
+
+            var callback = function (error, response, body){
+                if (!error && response.statusCode == 200) {
+                    var results = JSON.parse(body);
+                    console.log('This is page ' + results.page);
+                    var answers = [];
+                    for(var i in results.items){
+                        var result = results.items[i];
+                        var answer = {
+                            _id: result.answer_id,
+                            questionId: result.question_id,
+                            body: result.body,
+                            tags: result.tags,
+                            ownerId: userId
+                        };
+                        answers.push(answer);
+                    }
+                    res.send(answers);
+                    Answer.create(answers, function(err){
+                        if(err){
+                            console.log(err.message);
+                        }else{
+                            console.log('Answers saved successfully!');
+                        }
+                    });
+                    if(results.has_more){
+                        var new_url = url + (parseInt(results.page) + 1);
+                        options.url = new_url;
+                        request(options, callback);
+                    }
+                } else {
+                    console.log("Error");
+                    console.log(error, body);
+                    res.sendStatus(500);
+                }
+            }
+
+            request(options, callback);
         },
 
         tags: function (req, res) {

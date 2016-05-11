@@ -1,6 +1,6 @@
 .link {
   fill: none;
-  stroke: #ccc;
+  stroke: #ddd;
   stroke-width: 1.5px;
 }
 
@@ -18,4 +18,8 @@ circle {
 
 .node {
   cursor: move;
+}
+
+svg {
+  border: .5px solid #ddd;
 }

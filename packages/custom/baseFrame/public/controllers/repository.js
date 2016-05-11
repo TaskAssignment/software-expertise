@@ -171,6 +171,10 @@ function ($scope,  $http, $location, $resource) {
             hideLoadingScreen();
             convertTags(response);
         });
+
+        Resource = $resource('/api/baseFrame/user/:_id/:soId/answers/populate');
+        filter['_id'] = $scope.selectedUser._id;
+        Resource.query(filter);
     }
 
     function convertTags(tags){
