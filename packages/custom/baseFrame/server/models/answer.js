@@ -8,10 +8,7 @@ var AnswerSchema = new Schema({
     body: String,
     questionId: String,
     tags: [String],
-    ownerId: {
-        type: String,
-        ref: 'SoUser'
-    }
+    ownerId: String
 }, {
     timestamps: true
 });

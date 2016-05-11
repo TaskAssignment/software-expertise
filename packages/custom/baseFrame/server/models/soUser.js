@@ -3,40 +3,47 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
+var QuestionSchema = new Schema({
+    _id: String,
+    title: String,
+    body: String,
+    tags: [String],
+},{
+    timestamps: true
+});
+
+var AnswerSchema = new Schema({
+    _id: String,
+    body: String,
+    questionId: String,
+    tags: [String],
+}, {
+    timestamps: true
+});
+
+var TagSchema = new Schema({
+    _id: String,
+    count: String
+}, {
+    timestamps: true
+});
+
 var SoUserSchema = new Schema({
     _id: { //GitHub username
         type: String,
         required: true,
         unique: true
     },
-    gitHubId:{
-        type: String,
-    },
-    email: {
-        type: String,
-    },
-    emailHash:{
-        type: String,
-    },
-    soId: {
-        type: String,
-    },
-    repositories: {
-        type: [String],
-    },
-    tags:{
-        type: [{
-            _id: String,
-            count: String
-        }]
-    }
+    gitHubId: String,
+    email: String,
+    emailHash: String,
+    soId: String,
+    repositories: [String],
+    tags: [TagSchema],
+    questions: [QuestionSchema],
+    answers: [AnswerSchema]
 }, {
     timestamps: true
 });
-
-//Validations
-SoUserSchema.path('soId').validate(function (email) {
-    return !!soId;
-}, 'soId cannot be blank!');
 
 mongoose.model('SoUser', SoUserSchema);

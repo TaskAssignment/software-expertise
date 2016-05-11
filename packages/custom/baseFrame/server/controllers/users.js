@@ -2,7 +2,6 @@
 
 var mongoose = require('mongoose');
 var SoUser = mongoose.model('SoUser');
-var Answer = mongoose.model('Answer');
 
 var request = require('request');
 
@@ -11,7 +10,7 @@ var request = require('request');
 // depends on the git api.
 module.exports = function (BaseFrame){
     return {
-        /** Looks for the given (req.params) repository in the database.
+        /** Looks for the given user (req.params) in the database.
         *
         * @param req - Express request
         * @param res - Express response
@@ -19,7 +18,7 @@ module.exports = function (BaseFrame){
         find: function (req, res){
             var repo = {repositories: req.params.projectId};
 
-            SoUser.find(repo, 'soId _id', {sort: '-soId -updatedAt'}, function(err, users){
+            SoUser.find(repo, 'soId _id tags', {sort: '-soId -updatedAt'}, function(err, users){
                 res.send(users);
             });
         },
@@ -125,63 +124,75 @@ module.exports = function (BaseFrame){
                     };
                     tags.push(tag);
                 }
-                res.send(tags);
-                SoUser.update({soId: ids.soId}, {$addToSet: {tags: {$each: tags}}}, {upsert: true}, function(err){
-                    if(err){
-                        console.log(err.message);
-                    }else{
-                        console.log('User updated successfully!');
-                    }
-                });
+
+                return {
+                    dataSet: "tags",
+                    models: tags
+                }
             }
 
             stackOverflowRequest(url, req.params, res, buildModels);
         },
 
         populateUserAnswers: function (req, res){
-            var ids = {
-                soId: req.params.soId,
-                userId: req.params._id
-            };
+            var ids = req.params;
+            console.log(ids);
 
             var url = 'https://api.stackexchange.com/2.2/users/' + ids.soId +
                 '/answers?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!t)IWIB_jIM*PQgVlKVx*bpK7iv9Avm9';
 
             var buildModels = function(items, res, ids){
+                console.log(items);
                 var answers = [];
                 for(var i in items){
                     var result = items[i];
-                    var answer = {
+                    var question = {
                         _id: result.answer_id,
                         questionId: result.question_id,
                         body: result.body,
                         tags: result.tags,
                         ownerId: ids.userId
                     };
-                    answers.push(answer);
+                    answers.push(question);
                 }
 
-                Answer.create(answers, function(err){
-                    if(err){
-                        console.log(err.message);
-                    }else{
-                        console.log('Answers saved successfully!');
-                    }
-                });
+                return {
+                    dataSet: "answers",
+                    models: answers
+                }
             }
 
             stackOverflowRequest(url, ids, res, buildModels);
         },
 
-        tags: function (req, res) {
-            SoUser.findOne(req.params, function(err, user){
-                if(err){
-                    console.log(err);
-                    res.send(err);
-                }else{
-                    res.send(user.tags)
+        populateUserQuestions: function (req, res){
+            var ids = req.params;
+            console.log(ids);
+
+            var url = 'https://api.stackexchange.com/2.2/users/' + ids.soId +
+                '/questions?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!)re8-BBbvk3FbjEOb-AI';
+
+            var buildModels = function(items, res, ids){
+                console.log(items);
+                var questions = [];
+                for(var i in items){
+                    var result = items[i];
+                    var question = {
+                        _id: result.question_id,
+                        title: result.title,
+                        body: result.body,
+                        tags: result.tags,
+                        ownerId: ids.userId
+                    };
+                    questions.push(question);
                 }
-            });
+                return {
+                    dataSet: "questions",
+                    models: questions
+                }
+            }
+
+            stackOverflowRequest(url, ids, res, buildModels);
         }
     }
 
@@ -212,10 +223,29 @@ module.exports = function (BaseFrame){
 
         request(options, function (error, response, body){
             if (!error && response.statusCode == 200) {
+                if(!res.headersSent){
+                    res.sendStatus(200);
+                }
                 var results = JSON.parse(body);
                 console.log('Page ' + results.page);
 
-                callback(results.items, res, ids);
+                var build = callback(results.items, ids.userId);
+
+                var updateFields = {
+                    $addToSet: {}
+                };
+
+                updateFields.addToSet[build.dataSet] = {
+                    $each: build['models']
+                };
+
+                SoUser.update({soId: ids.soId, _id: ids.userId}, updateFields, {upsert: true}, function(err){
+                    if(err){
+                        console.log(err.message);
+                    }else{
+                        console.log('User updated successfully!');
+                    }
+                });
 
                 //Check for next page
                 if(results.has_more){
@@ -226,7 +256,9 @@ module.exports = function (BaseFrame){
 
             } else {
                 console.log(body);
-                res.sendStatus(500);
+                if(!res.headersSent){
+                    res.status(500).send(body);
+                }
             }
         });
     }
