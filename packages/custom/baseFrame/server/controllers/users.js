@@ -29,7 +29,6 @@ module.exports = function (BaseFrame){
         * @param res - Express response
         */
         populate: function(req, res){
-            console.log('populate');
             var repo = req.params;
 
             var options = {
@@ -96,7 +95,6 @@ module.exports = function (BaseFrame){
 
                     var lastEqualsIndex = new_url.lastIndexOf('=');
                     var nextPage = new_url.slice(lastEqualsIndex + 1, next.length);
-                    console.log(nextPage);
                     if(nextPage != 1){
                         options.url = new_url;
                         request(options, callback);
@@ -111,10 +109,9 @@ module.exports = function (BaseFrame){
             * To understand better how this works, check
             *https://api.stackexchange.com/docs/tags-on-users#pagesize=100&order=desc&sort=popular&ids=696885&filter=!4-J-dtwSuoIA.NOpA&site=stackoverflow
             */
-            var url = 'https://api.stackexchange.com/2.2/users/' + req.params.soId +
-                '/tags?pagesize=100&order=desc&sort=popular&site=stackoverflow&filter=!4-J-dtwSuoIA.NOpA';
+            var url = '/tags?pagesize=100&order=desc&sort=popular&site=stackoverflow&filter=!4-J-dtwSuoIA.NOpA';
 
-            var buildModels = function(items, res, ids){
+            var buildModels = function(items){
                 var tags = [];
                 for(var i in items){
                     var result = items[i];
@@ -135,14 +132,9 @@ module.exports = function (BaseFrame){
         },
 
         populateUserAnswers: function (req, res){
-            var ids = req.params;
-            console.log(ids);
+            var url = '/answers?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!t)IWIB_jIM*PQgVlKVx*bpK7iv9Avm9';
 
-            var url = 'https://api.stackexchange.com/2.2/users/' + ids.soId +
-                '/answers?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!t)IWIB_jIM*PQgVlKVx*bpK7iv9Avm9';
-
-            var buildModels = function(items, res, ids){
-                console.log(items);
+            var buildModels = function(items){
                 var answers = [];
                 for(var i in items){
                     var result = items[i];
@@ -150,8 +142,7 @@ module.exports = function (BaseFrame){
                         _id: result.answer_id,
                         questionId: result.question_id,
                         body: result.body,
-                        tags: result.tags,
-                        ownerId: ids.userId
+                        tags: result.tags
                     };
                     answers.push(question);
                 }
@@ -162,18 +153,15 @@ module.exports = function (BaseFrame){
                 }
             }
 
-            stackOverflowRequest(url, ids, res, buildModels);
+            stackOverflowRequest(url, req.params, res, buildModels);
         },
 
         populateUserQuestions: function (req, res){
             var ids = req.params;
-            console.log(ids);
 
-            var url = 'https://api.stackexchange.com/2.2/users/' + ids.soId +
-                '/questions?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!)re8-BBbvk3FbjEOb-AI';
+            var url = '/questions?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!)re8-BBbvk3FbjEOb-AI';
 
-            var buildModels = function(items, res, ids){
-                console.log(items);
+            var buildModels = function(items){
                 var questions = [];
                 for(var i in items){
                     var result = items[i];
@@ -181,18 +169,18 @@ module.exports = function (BaseFrame){
                         _id: result.question_id,
                         title: result.title,
                         body: result.body,
-                        tags: result.tags,
-                        ownerId: ids.userId
+                        tags: result.tags
                     };
                     questions.push(question);
                 }
+
                 return {
                     dataSet: "questions",
                     models: questions
                 }
             }
 
-            stackOverflowRequest(url, ids, res, buildModels);
+            stackOverflowRequest(url, req.params, res, buildModels);
         }
     }
 
@@ -209,10 +197,12 @@ module.exports = function (BaseFrame){
         different items and saving methods, this should be built in the Express
         function that calls this request.
     */
-    function stackOverflowRequest(url, ids, res, callback){
+    function stackOverflowRequest(specificUrl, ids, res, callback){
         /* StackOverflow requests are compressed, if this is not set, the data
         * won't be readable.
         */
+        var url = 'https://api.stackexchange.com/2.2/users/' + ids.soId +
+            specificUrl;
         var options = {
             headers: {
                 'Accept-Encoding': 'gzip'
@@ -223,27 +213,30 @@ module.exports = function (BaseFrame){
 
         request(options, function (error, response, body){
             if (!error && response.statusCode == 200) {
-                if(!res.headersSent){
-                    res.sendStatus(200);
-                }
                 var results = JSON.parse(body);
                 console.log('Page ' + results.page);
 
-                var build = callback(results.items, ids.userId);
+                var build = callback(results.items);
 
                 var updateFields = {
                     $addToSet: {}
                 };
 
-                updateFields.addToSet[build.dataSet] = {
+                updateFields.$addToSet[build.dataSet] = {
                     $each: build['models']
                 };
 
-                SoUser.update({soId: ids.soId, _id: ids.userId}, updateFields, {upsert: true}, function(err){
+                SoUser.findOne(ids, '_id soId tags', function(err, user){
                     if(err){
                         console.log(err.message);
                     }else{
-                        console.log('User updated successfully!');
+                        user[build.dataSet] = build.models;
+                        user.save(function (new_err){
+                            if(!res.headersSent){
+                                res.send(user);
+                            }
+                            console.log('User updated successfully!');
+                        });
                     }
                 });
 

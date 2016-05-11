@@ -25,9 +25,9 @@ module.exports = function (BaseFrame, app, auth, database) {
         .get(users.populate);
     app.route(base + 'user/:soId/tags/populate')
         .get(users.populateUserTags);
-    app.route(base + 'user/:userId/:soId/answers/populate')
+    app.route(base + 'user/:soId/answers/populate')
         .get(users.populateUserAnswers);
-    app.route(base + 'user/:userId/:soId/questions/populate')
+    app.route(base + 'user/:soId/questions/populate')
         .get(users.populateUserQuestions);
 
     var tags = require(controllers + 'tags')(BaseFrame);

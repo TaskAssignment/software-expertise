@@ -98,25 +98,12 @@ function ($scope,  $http, $location, $resource) {
     * @param username - github username
     */
     $scope.displayUserExpertise = function(user){
-        $location.search('username', user._id);
         $scope.selectedUser = user;
 
-        if(user.soId){
-            showLoadingScreen();
-            var Resource = $resource('/api/baseFrame/user/:_id/tags');
-            Resource.query({_id: user._id}).$promise.then(function(tags){
-                hideLoadingScreen();
-                if(tags.length == 0){
-                    $scope.selectedUser.emptyTags = true;
-                    populateUserTags();
-                }
-                convertTags(tags);
-            });
-
-        }else{
+        if(!user.soId){
             alert("User is not in StackOverflow. Please, choose a Stack Overflow user");
-            convertTags([]);
         }
+        convertTags(user.tags);
     }
 
     /**
@@ -143,6 +130,25 @@ function ($scope,  $http, $location, $resource) {
         });
     }
 
+    $scope.populateSOData = function() {
+        showLoadingScreen();
+        var filter = {
+            soId: $scope.selectedUser.soId,
+        }
+
+        var Resource = $resource('/api/baseFrame/user/:soId/answers/populate');
+        Resource.get(filter);
+
+        Resource = $resource('/api/baseFrame/user/:soId/questions/populate');
+        Resource.get(filter);
+
+        Resource = $resource('/api/baseFrame/user/:soId/tags/populate');
+        Resource.get(filter).$promise.then(function (user){
+            hideLoadingScreen();
+            $scope.selectedUser = user;
+            convertTags(user.tags);
+        });
+    }
 
     // *************** HELPER FUNCTIONS **************//
 
@@ -160,22 +166,6 @@ function ($scope,  $http, $location, $resource) {
         getRepoResources('issues');
         getRepoResources('users');
         hideLoadingScreen();
-    }
-
-    function populateUserTags() {
-        showLoadingScreen();
-        var Resource = $resource('/api/baseFrame/user/:soId/tags/populate');
-        var filter = {
-            soId: $scope.selectedUser.soId
-        }
-        Resource.query(filter).$promise.then(function (response){
-            hideLoadingScreen();
-            convertTags(response);
-        });
-
-        Resource = $resource('/api/baseFrame/user/:_id/:soId/answers/populate');
-        filter['_id'] = $scope.selectedUser._id;
-        Resource.query(filter);
     }
 
     function convertTags(tags){
