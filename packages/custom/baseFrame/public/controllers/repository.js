@@ -80,6 +80,7 @@ function ($scope,  $http, $location, $resource) {
 
     $scope.populateRepoResources = function (resource){
         showLoadingScreen();
+        console.log(resource);
         var Resource = $resource('/api/baseFrame/:projectId/' +
             resource + '/populate');
         var filter = {
