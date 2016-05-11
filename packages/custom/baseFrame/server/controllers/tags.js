@@ -67,18 +67,6 @@ module.exports = function (BaseFrame){
             });
         },
 
-        soIDFromUser: function(req, res){
-            var gitUsername = req.body.gitName;
-            SoUser.findOne({gitUsername: gitUsername}, 'soId', {lean:true},
-            function(err, user){
-                if(user){
-                    res.json(user.soId);
-                }else {
-                    res.json(undefined);
-                }
-            });
-        },
-
         coOccurrence: function (req, res) {
             //These tags come from 'displayIssueTags' on repository.js
             var tags = req.body.tags.split(',');
@@ -106,43 +94,37 @@ module.exports = function (BaseFrame){
 */
 
 function readFile(file, res, MongooseModel){
-    fs.readFile(file, 'utf8', function (err, result){
-        readFilesCallback(err, result, res, MongooseModel);
+    //Using readStream to avoid memory explosion
+    var readable = fs.createReadStream(file, {encoding: 'utf8'});
+    readable.on('data', (chunk) => {
+        readable.pause();
+        readFilesCallback(readable, chunk, res, MongooseModel);
     });
+    res.sendStatus(200);
 }
 
 /** The callback called once each file is read. It creates the models and
 * save all of them to the database (as one big collection).
 *
-* @param err - The error (if any) generated from opening/reading the file.
-* @param result - The read file as a variable
+* @param readable - The read stream
+* @param result - The chunk read
 * @param res - The response for the route
 * @param MongooseModel - The model that is responsible for the database connection.
 */
-function readFilesCallback(err, result, res, MongooseModel){
-    if(err) console.error(err);
-    else {
-        var convertResults = d3.tsv.parse(result);
-        console.log('Data file loaded');
+function readFilesCallback(readable, result, res, MongooseModel){
+    var lines = result.split(/\r?\n/);
 
-        /*I am still not sure if this is the best approach of if I should
-        * copy each result. Probably, it will have the same results in the end.
-        */
-        var models = createModel(convertResults, MongooseModel.modelName);
+    var models = createModel(lines, MongooseModel.modelName);
 
-        console.log('Models created. Saving to the database.');
-        /*Find a way of telling the user that the common occurrences will take a
-        *long time. Maybe send the response before saving.
-        */
-        MongooseModel.collection.insert(models, function(err){
-            if(err){
-                console.log(err.message);
-            }else{
-                console.log('Models saved successfully!');
-            }
-        });
-        res.sendStatus(200);
-    }
+    MongooseModel.create(models, function(err){
+        if(err){
+            console.log(err);
+        }else{
+            console.log('Models saved successfully!');
+        }
+    });
+
+    readable.resume();
 }
 /** This receives the converted results from reading a file
 * and returns an array with models based on these results.
@@ -155,37 +137,28 @@ function createModel(convertResults, modelName){
     var models = [];
 
     for(var index in convertResults){
-        var result = convertResults[index];
+        var line = convertResults[index].split('\t');
         var model = {};
-
-        /*The keys here (result.key) are the keys in the file (first row).
-        * If the file pattern changes, The results will be undefined
-        * and, probably, one erraneous occurence will
-        * be saved in the database.
-        */
 
         switch (modelName) {
             case 'Tag':
-                model['_id'] = result.TagName;
-                model['soTotalCount'] = result.Count;
+                //line[0] is an id that is not being used
+                model['_id'] = line[1];
+                model['soTotalCount'] = line[2];
                 break;
             case 'SoUser':
-                model['soId'] = result.SOId;
-                model['_id'] = result.login;
-                model['email'] = result.email;
+                model['soId'] = line[0];
+                model['_id'] = line[1];
+                model['email'] = line[2];
                 break;
             case 'CommonOccurrence':
-                model['source'] = result.Tag1 ;
-                model['target'] = result.Tag2 ;
-                model['occurrences'] = result.CoOccurrence;
+                model['source'] = line[0];
+                model['target'] = line[1];
+                model['occurrences'] = line[2];
                 break;
         }
         models.push(model);
     }
 
     return models;
-}
-
-function removeStopWords(allWords){
-
 }

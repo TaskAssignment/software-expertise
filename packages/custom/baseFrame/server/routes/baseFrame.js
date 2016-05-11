@@ -1,52 +1,50 @@
 'use strict';
 
 module.exports = function (BaseFrame, app, auth, database) {
+    //See how to nest this.
+    var base = '/api/baseFrame/';
     var controllers = '../controllers/';
 
     var projects = require(controllers + 'projects')(BaseFrame);
-    // app.route('/expertise')
-    //     .get(projects.find);
-    app.route('/api/baseFrame/project/find/:name')
+    app.route(base + 'project/find/:name')
         .get(projects.find);
-    app.route('/api/baseFrame/project/new/')
+    app.route(base + 'project/new/')
         .get(projects.save);
 
     //TODO: Refactor this to use a 'general class'. Issues and users do exactly the same thing!!!
     var issues = require(controllers + 'issues')(BaseFrame);
-    app.route('/api/baseFrame/:projectId/issues/')
+    app.route(base + ':projectId/issues/')
         .get(issues.find);
-    app.route('/api/baseFrame/:projectId/issues/populate')
+    app.route(base + ':projectId/issues/populate')
         .get(issues.populate);
 
     var users = require(controllers + 'users')(BaseFrame);
-    app.route('/api/baseFrame/:projectId/users')
+    app.route(base + ':projectId/users')
         .get(users.find);
-    app.route('/api/baseFrame/:projectId/users/populate')
+    app.route(base + ':projectId/users/populate')
         .get(users.populate);
-    app.route('/api/baseFrame/user/:_id/tags')
-        .get(users.tags);
-    app.route('/api/baseFrame/user/:soId/tags/populate')
+    app.route(base + 'user/:soId/tags/populate')
         .get(users.populateUserTags);
-    app.route('/api/baseFrame/user/:_id/:soId/answers/populate')
+    app.route(base + 'user/:userId/:soId/answers/populate')
         .get(users.populateUserAnswers);
+    app.route(base + 'user/:userId/:soId/questions/populate')
+        .get(users.populateUserQuestions);
 
     var tags = require(controllers + 'tags')(BaseFrame);
-    app.route('/api/baseFrame/populateSoTags')
+    app.route(base + 'populateSoTags')
         .post(tags.populateSoTags);
-    app.route('/api/baseFrame/populateCoOccurrences')
+    app.route(base + 'populateCoOccurrences')
         .post(tags.populateCommonOccurrences);
-    app.route('/api/baseFrame/populateSoUsers')
+    app.route(base + 'populateSoUsers')
         .post(tags.populateSoUsers);
-    app.route('/api/baseFrame/getIssueTags')
+    app.route(base + 'getIssueTags')
         .post(tags.getIssueTags);
-    app.route('/api/baseFrame/soIDFromUser')
-        .post(tags.soIDFromUser);
-    app.route('/api/baseFrame/coOccurrence')
+    app.route(base + 'coOccurrence')
         .post(tags.coOccurrence);
 
     var stopwords = require(controllers + 'stopWords')(BaseFrame);
 
-    app.route('/api/baseFrame/populateStopWords')
+    app.route(base + 'populateStopWords')
         .post(stopwords.populateStopWords);
 
 
