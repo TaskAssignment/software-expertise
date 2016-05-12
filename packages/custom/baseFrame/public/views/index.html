@@ -13,8 +13,9 @@ As soon as I figure this out, this will be removed!! -->
                 Populate Stack Overflow Users </a>
             <a class="btn btn-default" ng-click="populate('StopWords')">
                 Populate Stop Words</a>
-            <!-- <a class="btn btn-default" ng-click="populate('StopWords')">
-                Get More Repository Info</a> -->
+            <a class="btn btn-default" ng-if="selectedRepo"
+                ng-click="fullPopulateRepo()">
+                Get Full Repository Info</a>
         </div>
         <div id='leftSelectionPanel' class='col-md-4'>
             <br>

@@ -3,6 +3,14 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
+var CommentSchema = new Schema({
+    _id: String,
+    body: String,
+    user: String
+}, {
+    timestamps: true
+});
+
 var IssueSchema = new Schema({
     _id: { //GitHub issue id
         type: String,
@@ -14,22 +22,12 @@ var IssueSchema = new Schema({
         ref: 'Project',
     },
     //These are both GitHub logins that are SoUser._id
-    reporterId: {
-        type: String,
-    },
-    assigneeId: {
-        type: String,
-    },
-    body: {
-        type: String
-    },
-    title: {
-        type: String
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
+    reporterId: String,
+    assigneeId: String,
+    number: String,
+    body: String,
+    title: String,
+    comments: [CommentSchema]
 }, {
     timestamps: true
 });

@@ -20,6 +20,7 @@ function ($scope,  $http, $location, $resource) {
     // *************** SCOPE FUNCTIONS **************//
 
     $scope.populate = function(option){
+        //TODO: Change this to resource instead of http!!
         var url = '/api/baseFrame/populate' + option;
         showLoadingScreen();
         $http({
@@ -30,7 +31,27 @@ function ($scope,  $http, $location, $resource) {
         }).success(function (response){
             hideLoadingScreen();
         });
-        populateRequest();
+    }
+
+    $scope.fullPopulateRepo = function(){
+        var items = [
+            'issues/comments',
+            'commits/comments',
+            'commits',
+        ]
+
+        for(var item of items){
+            showLoadingScreen();
+            var Resource = $resource('/api/baseFrame/:projectId/populate/' +
+                item);
+            var filter = {
+                projectId: $scope.selectedRepo._id
+            }
+            Resource.get(filter).$promise.then(function (response){
+                hideLoadingScreen();
+            });
+        }
+
     }
 
     /** Looks for repositories with the given filters
@@ -54,6 +75,7 @@ function ($scope,  $http, $location, $resource) {
             // TODO: Figure out how to get next items
 
             var repos = [];
+            console.log(results[0]);
             for (var result of results) {
                 var repo = {
                     name: result.full_name,
@@ -79,7 +101,6 @@ function ($scope,  $http, $location, $resource) {
 
     $scope.populateRepoResources = function (resource){
         showLoadingScreen();
-        console.log(resource);
         var Resource = $resource('/api/baseFrame/:projectId/' +
             resource + '/populate');
         var filter = {

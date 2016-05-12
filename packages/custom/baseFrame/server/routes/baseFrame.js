@@ -10,6 +10,13 @@ module.exports = function (BaseFrame, app, auth, database) {
         .get(projects.find);
     app.route(base + 'project/new/')
         .get(projects.save);
+    app.route(base + ':projectId/populate/commits')
+        .get(projects.populateCommits);
+    app.route(base + ':projectId/populate/issues/comments')
+        .get(projects.populateIssuesComments);
+    app.route(base + ':projectId/populate/commits/comments')
+        .get(projects.populateCommitsComments);
+
 
     //TODO: Refactor this to use a 'general class'. Issues and users do exactly the same thing!!!
     var issues = require(controllers + 'issues')(BaseFrame);

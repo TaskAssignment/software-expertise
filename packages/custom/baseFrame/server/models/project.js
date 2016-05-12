@@ -16,7 +16,11 @@ var ProjectSchema = new Schema({
     },
     language: { //I'll get just the main language for now.
         type: String,
-    }
+    },
+    languages: [{
+        _id: String,
+        amount: String
+    }]
 }, {
     timestamps: true
 });

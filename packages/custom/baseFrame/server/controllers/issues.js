@@ -55,6 +55,7 @@ module.exports = function (BaseFrame){
                         var result = results[i];
                         var issue = {
                             _id: result.id,
+                            number: result.number,
                             body: result.body,
                             title: result.title,
                             projectId: repo.projectId,

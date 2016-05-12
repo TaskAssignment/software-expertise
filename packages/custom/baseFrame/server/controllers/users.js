@@ -198,11 +198,12 @@ module.exports = function (BaseFrame){
         function that calls this request.
     */
     function stackOverflowRequest(specificUrl, ids, res, callback){
+        var url = 'https://api.stackexchange.com/2.2/users/' + ids.soId +
+            specificUrl;
+
         /* StackOverflow requests are compressed, if this is not set, the data
         * won't be readable.
         */
-        var url = 'https://api.stackexchange.com/2.2/users/' + ids.soId +
-            specificUrl;
         var options = {
             headers: {
                 'Accept-Encoding': 'gzip'
@@ -211,20 +212,12 @@ module.exports = function (BaseFrame){
             url: url
         };
 
-        request(options, function (error, response, body){
+        var requestCallback = function (error, response, body){
             if (!error && response.statusCode == 200) {
                 var results = JSON.parse(body);
                 console.log('Page ' + results.page);
 
                 var build = callback(results.items);
-
-                var updateFields = {
-                    $addToSet: {}
-                };
-
-                updateFields.$addToSet[build.dataSet] = {
-                    $each: build['models']
-                };
 
                 SoUser.findOne(ids, '_id soId tags', function(err, user){
                     if(err){
@@ -244,7 +237,7 @@ module.exports = function (BaseFrame){
                 if(results.has_more){
                     var new_url = url + '&page=' + (parseInt(results.page) + 1);
                     options.url = new_url;
-                    request(options, callback);
+                    request(options, requestCallback);
                 }
 
             } else {
@@ -253,6 +246,8 @@ module.exports = function (BaseFrame){
                     res.status(500).send(body);
                 }
             }
-        });
+        }
+
+        request(options, requestCallback);
     }
 }
