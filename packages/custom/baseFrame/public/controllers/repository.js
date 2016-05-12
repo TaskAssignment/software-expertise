@@ -46,7 +46,7 @@ function ($scope,  $http, $location, $resource) {
             URL += '+' + $scope.repoReadme + '+in:readme';
         if($scope.repoUser)
             URL += '+user:' + $scope.repoUser;
-        URL += '+fork=true&sort=stars&order=desc&per_page=100';
+        URL += '+fork:true&sort=stars&order=desc&per_page=100';
 
         $http.get(URL).then(function (response) {
             var results = response.data.items;
