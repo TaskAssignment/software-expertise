@@ -19,21 +19,20 @@ function ($scope,  $http, $location, $resource) {
 
     // *************** SCOPE FUNCTIONS **************//
 
-    $scope.populateSoTags = function(){
-        populateRequest('/api/baseFrame/populateSoTags');
+    $scope.populate = function(option){
+        var url = '/api/baseFrame/populate' + option;
+        showLoadingScreen();
+        $http({
+            method: 'POST',
+            url: url,
+            data: '',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+        }).success(function (response){
+            hideLoadingScreen();
+        });
+        populateRequest();
     }
 
-    $scope.populateSoUsers = function(){
-        populateRequest('/api/baseFrame/populateSoUsers');
-    }
-
-    $scope.populateCoOccurrences = function(){
-        populateRequest('/api/baseFrame/populateCoOccurrences');
-    }
-
-    $scope.populateStopWords = function(){
-        populateRequest('/api/baseFrame/populateStopWords');
-    }
     /** Looks for repositories with the given filters
      */
     $scope.queryRepos = function () {
@@ -47,7 +46,7 @@ function ($scope,  $http, $location, $resource) {
             URL += '+' + $scope.repoReadme + '+in:readme';
         if($scope.repoUser)
             URL += '+user:' + $scope.repoUser;
-        URL += '&sort=stars&order=desc&per_page=100';
+        URL += '+fork=true&sort=stars&order=desc&per_page=100';
 
         $http.get(URL).then(function (response) {
             var results = response.data.items;
@@ -204,23 +203,6 @@ function ($scope,  $http, $location, $resource) {
                 getRepoInformation(project);
             });
         }
-    }
-
-    /**
-    * Executes a populate request on the server
-    *
-    * @param url - The url to have populate the data
-    */
-    function populateRequest(url){
-        showLoadingScreen();
-        $http({
-            method: 'POST',
-            url: url,
-            data: '',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-        }).success(function (response){
-            hideLoadingScreen();
-        });
     }
 
     function sendToGraph(){

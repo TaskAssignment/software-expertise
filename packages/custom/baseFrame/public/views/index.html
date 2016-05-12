@@ -5,10 +5,16 @@ As soon as I figure this out, this will be removed!! -->
 <section ng-controller="BaseFrameController" class="row">
     <div ng-controller="RepositoryController">
         <div id='populate'>
-            <a class="btn btn-default" ng-click=populateSoTags()> Populate SO Tags </a>
-            <a class="btn btn-default" ng-click=populateCoOccurrences()> Populate Common Occurrences </a>
-            <a class="btn btn-default" ng-click=populateSoUsers()> Populate Stack Overflow Users </a>
-            <a class="btn btn-default" ng-click=populateStopWords()> Populate Stop Words</a>
+            <a class="btn btn-default" ng-click="populate('SoTags')">
+                Populate SO Tags </a>
+            <a class="btn btn-default" ng-click="populate('CoOccurrences')">
+                Populate Common Occurrences </a>
+            <a class="btn btn-default" ng-click="populate('SoUsers')">
+                Populate Stack Overflow Users </a>
+            <a class="btn btn-default" ng-click="populate('StopWords')">
+                Populate Stop Words</a>
+            <!-- <a class="btn btn-default" ng-click="populate('StopWords')">
+                Get More Repository Info</a> -->
         </div>
         <div id='leftSelectionPanel' class='col-md-4'>
             <br>
@@ -60,7 +66,7 @@ As soon as I figure this out, this will be removed!! -->
                         <dd> {{ selectedUser._id }} </dd>
                         <dd ng-if="selectedUser.soId"> <span class="badge">SO User</span> </dd>
                         <dd ng-if="selectedIssue.assigneeId == selectedUser._id"> <span class="badge">Assignee</span> </dd>
-                        <p ng-if="selectedUser.tags.length == 0">
+                        <p ng-if="selectedUser.soId && selectedUser.tags.length == 0">
                             It looks like we don't have any StackOverflow data for this user. Try to <a ng-click="populateSOData()" >populate</a></p>
                     </dl>
                 </div>
