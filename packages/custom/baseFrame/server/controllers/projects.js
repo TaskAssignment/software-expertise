@@ -4,6 +4,7 @@ var mongoose = require('mongoose');
 var Project  = mongoose.model('Project');
 var Issue = mongoose.model('Issue');
 var Commit = mongoose.model('Commit');
+var SoUser = mongoose.model('SoUser');
 
 var request = require('request');
 
@@ -119,14 +120,14 @@ module.exports = function (BaseFrame){
         * @param res - Express response
         */
         populateContributors: function(req, res){
-            var url = '/contibutors';
+            var url = '/contributors';
 
             var buildModels = function(results, projectId){
                 for (var i in results) {
                     var result = results[i];
                     var user = {
                         gitHubId: result.id,
-                        $addToSet: {repositories: repo.projectId}
+                        $addToSet: {repositories: projectId}
                     };
 
                     SoUser.update({_id: result.login}, user, {upsert: true}, function(err){

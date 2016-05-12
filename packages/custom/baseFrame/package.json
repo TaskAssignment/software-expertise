@@ -6,7 +6,9 @@
     "name": "mean scaffold"
   },
   "mean": "0.5.5",
-  "dependencies": {},
+  "dependencies": {
+    "fast-csv": "latest"
+  },
   "license": "MIT",
   "scripts": {
     "postinstall" : "bower install"

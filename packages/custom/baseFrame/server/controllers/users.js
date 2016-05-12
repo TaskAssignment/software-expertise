@@ -5,9 +5,6 @@ var SoUser = mongoose.model('SoUser');
 
 var request = require('request');
 
-
-//TODO: Refactor this class to have a common class with issue or anything that
-// depends on the git api.
 module.exports = function (BaseFrame){
     return {
         /** Looks for the given user (req.params) in the database.

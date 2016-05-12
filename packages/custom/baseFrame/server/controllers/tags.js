@@ -8,8 +8,7 @@ var CommonOccurrence = mongoose.model('CommonOccurrence');
 var StopWord = mongoose.model('StopWord');
 
 var fs = require('fs');
-var cf = require('crossfilter');
-var d3 = require('d3');
+var csv = require('fast-csv');
 var pullAll = require('lodash.pullall');
 
 module.exports = function (BaseFrame){
@@ -96,38 +95,25 @@ module.exports = function (BaseFrame){
 function readFile(file, res, MongooseModel){
     //Using readStream to avoid memory explosion
     var readable = fs.createReadStream(file, {encoding: 'utf8'});
-    readable.on('data', (chunk) => {
-        readable.pause();
-        readFilesCallback(readable, chunk, res, MongooseModel);
+
+    csv.fromStream(readable, {ignoreEmpty: true})
+    .on("data", function(data){
+        // readable.pause();
+        var model = createModel(data, MongooseModel.modelName);
+        MongooseModel.create(model, function(err){
+            if(err){
+                console.log(err.message);
+            }else{
+                console.log(MongooseModel.modelName + ' saved successfully!');
+            }
+        });
+    })
+    .on("end", function(){
+        console.log("done");
     });
     res.sendStatus(200);
 }
 
-/** The callback called once each file is read. It creates the models and
-* save all of them to the database (as one big collection).
-*
-* @param readable - The read stream
-* @param result - The chunk read
-* @param res - The response for the route
-* @param MongooseModel - The model that is responsible for the database connection.
-*/
-function readFilesCallback(readable, result, res, MongooseModel){
-    var lines = result.split(/\n/);
-    console.log(lines[0]);
-    console.log(lines[lines.length - 1]);
-
-    // var models = createModel(lines, MongooseModel.modelName);
-    //
-    // MongooseModel.create(models, function(err){
-    //     if(err){
-    //         console.log(err.message);
-    //     }else{
-    //         console.log(MongooseModel.modelName + 'saved successfully!');
-    //     }
-    // });
-
-    readable.resume();
-}
 /** This receives the converted results from reading a file
 * and returns an array with models based on these results.
 *
@@ -135,32 +121,26 @@ function readFilesCallback(readable, result, res, MongooseModel){
 * @param modelName - The name of model that will be created.
 * @return array of models to be saved on the database.
 */
-function createModel(convertResults, modelName){
-    var models = [];
+function createModel(line, modelName){
+    var model = {};
 
-    for(var index in convertResults){
-        var line = convertResults[index].split(',');
-        var model = {};
-
-        switch (modelName) {
-            case 'Tag':
-                //line[0] is an id that is not being used
-                model['_id'] = line[1];
-                model['soTotalCount'] = line[2];
-                break;
-            case 'SoUser':
-                model['soId'] = line[0];
-                model['_id'] = line[1];
-                model['email'] = line[2];
-                break;
-            case 'CommonOccurrence':
-                model['source'] = line[0];
-                model['target'] = line[1];
-                model['occurrences'] = line[2];
-                break;
-        }
-        models.push(model);
+    switch (modelName) {
+        case 'Tag':
+            //line[0] is an id that is not being used
+            model['_id'] = line[1];
+            model['soTotalCount'] = line[2];
+            break;
+        case 'SoUser':
+            model['soId'] = line[0];
+            model['_id'] = line[1];
+            model['email'] = line[2];
+            break;
+        case 'CommonOccurrence':
+            model['source'] = line[0];
+            model['target'] = line[1];
+            model['occurrences'] = line[2];
+            break;
     }
 
-    return models;
+    return model;
 }
