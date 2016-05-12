@@ -10,6 +10,10 @@ module.exports = function (BaseFrame, app, auth, database) {
         .get(projects.find);
     app.route(base + 'project/new/')
         .get(projects.save);
+    app.route(base + ':projectId/populate/users')
+        .get(projects.populateContributors);
+    app.route(base + ':projectId/populate/issues')
+        .get(projects.populateIssues);
     app.route(base + ':projectId/populate/commits')
         .get(projects.populateCommits);
     app.route(base + ':projectId/populate/issues/comments')
@@ -18,42 +22,34 @@ module.exports = function (BaseFrame, app, auth, database) {
         .get(projects.populateCommitsComments);
 
 
-    //TODO: Refactor this to use a 'general class'. Issues and users do exactly the same thing!!!
     var issues = require(controllers + 'issues')(BaseFrame);
     app.route(base + ':projectId/issues/')
         .get(issues.find);
-    app.route(base + ':projectId/issues/populate')
-        .get(issues.populate);
 
     var users = require(controllers + 'users')(BaseFrame);
     app.route(base + ':projectId/users')
         .get(users.find);
-    app.route(base + ':projectId/users/populate')
-        .get(users.populate);
-    app.route(base + 'user/:soId/tags/populate')
+    app.route(base + 'user/:soId/populate/tags')
         .get(users.populateUserTags);
-    app.route(base + 'user/:soId/answers/populate')
+    app.route(base + 'user/:soId/populate/answers')
         .get(users.populateUserAnswers);
-    app.route(base + 'user/:soId/questions/populate')
+    app.route(base + 'user/:soId/populate/questions')
         .get(users.populateUserQuestions);
 
     var tags = require(controllers + 'tags')(BaseFrame);
-    app.route(base + 'populateSoTags')
+    app.route(base + 'populate/SoTags')
         .post(tags.populateSoTags);
-    app.route(base + 'populateCoOccurrences')
+    app.route(base + 'populate/CoOccurrences')
         .post(tags.populateCommonOccurrences);
-    app.route(base + 'populateSoUsers')
+    app.route(base + 'populate/SoUsers')
         .post(tags.populateSoUsers);
-    app.route(base + 'getIssueTags')
+    app.route(base + 'issueTags')
         .post(tags.getIssueTags);
     app.route(base + 'coOccurrence')
         .post(tags.coOccurrence);
 
     var stopwords = require(controllers + 'stopWords')(BaseFrame);
 
-    app.route(base + 'populateStopWords')
+    app.route(base + 'populate/StopWords')
         .post(stopwords.populateStopWords);
-
-
-
 };

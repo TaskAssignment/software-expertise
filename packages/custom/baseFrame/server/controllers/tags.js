@@ -15,15 +15,15 @@ var pullAll = require('lodash.pullall');
 module.exports = function (BaseFrame){
     return {
         populateSoTags: function (req, res){
-            readFile('files/tags.tsv', res, Tag);
+            readFile('files/tags.csv', res, Tag);
         },
 
         populateCommonOccurrences: function (req, res){
-            readFile('files/coOccurrences.tsv', res, CommonOccurrence);
+            readFile('files/coOccurrences.csv', res, CommonOccurrence);
         },
 
         populateSoUsers: function (req, res){
-            readFile('files/commonUsers.tsv', res, SoUser);
+            readFile('files/commonUsers.csv', res, SoUser);
         },
 
         getIssueTags: function(req, res){
@@ -112,17 +112,19 @@ function readFile(file, res, MongooseModel){
 * @param MongooseModel - The model that is responsible for the database connection.
 */
 function readFilesCallback(readable, result, res, MongooseModel){
-    var lines = result.split(/\r?\n/);
+    var lines = result.split(/\n/);
+    console.log(lines[0]);
+    console.log(lines[lines.length - 1]);
 
-    var models = createModel(lines, MongooseModel.modelName);
-
-    MongooseModel.create(models, function(err){
-        if(err){
-            console.log(err);
-        }else{
-            console.log('Models saved successfully!');
-        }
-    });
+    // var models = createModel(lines, MongooseModel.modelName);
+    //
+    // MongooseModel.create(models, function(err){
+    //     if(err){
+    //         console.log(err.message);
+    //     }else{
+    //         console.log(MongooseModel.modelName + 'saved successfully!');
+    //     }
+    // });
 
     readable.resume();
 }
@@ -137,7 +139,7 @@ function createModel(convertResults, modelName){
     var models = [];
 
     for(var index in convertResults){
-        var line = convertResults[index].split('\t');
+        var line = convertResults[index].split(',');
         var model = {};
 
         switch (modelName) {

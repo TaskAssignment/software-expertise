@@ -21,7 +21,7 @@ function ($scope,  $http, $location, $resource) {
 
     $scope.populate = function(option){
         //TODO: Change this to resource instead of http!!
-        var url = '/api/baseFrame/populate' + option;
+        var url = '/api/baseFrame/populate/' + option;
         showLoadingScreen();
         $http({
             method: 'POST',
@@ -71,11 +71,8 @@ function ($scope,  $http, $location, $resource) {
 
         $http.get(URL).then(function (response) {
             var results = response.data.items;
-            console.log(response.headers);
-            // TODO: Figure out how to get next items
 
             var repos = [];
-            console.log(results[0]);
             for (var result of results) {
                 var repo = {
                     name: result.full_name,
@@ -91,7 +88,6 @@ function ($scope,  $http, $location, $resource) {
     }
 
     $scope.saveProject = function(repo){
-        console.log(repo);
         var Project = $resource('/api/baseFrame/project/new/');
         Project.get(repo).$promise.then(function(project){
             getRepoInformation(repo);
@@ -101,14 +97,14 @@ function ($scope,  $http, $location, $resource) {
 
     $scope.populateRepoResources = function (resource){
         showLoadingScreen();
-        var Resource = $resource('/api/baseFrame/:projectId/' +
-            resource + '/populate');
+        var Resource = $resource('/api/baseFrame/:projectId/populate/' + resource);
         var filter = {
             projectId: $scope.selectedRepo._id
         }
         Resource.get(filter).$promise.then(function (response){
             $scope.selectedRepo['empty' + resource] = false;
             hideLoadingScreen();
+            getRepoInformation($scope.selectedRepo);
         });
     }
     /**
@@ -140,7 +136,7 @@ function ($scope,  $http, $location, $resource) {
         showLoadingScreen();
         $http({
             method: 'POST',
-            url: '/api/baseFrame/getIssueTags',
+            url: '/api/baseFrame/issueTags',
             data: 'title=' + issue.title + '&body=' + issue.body,
             headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         }).success(function (response) {
@@ -155,14 +151,14 @@ function ($scope,  $http, $location, $resource) {
         var filter = {
             soId: $scope.selectedUser.soId,
         }
-
-        var Resource = $resource('/api/baseFrame/user/:soId/answers/populate');
+        var url = '/api/baseFrame/user/:soId/populate/';
+        var Resource = $resource(url + 'answers');
         Resource.get(filter);
 
-        Resource = $resource('/api/baseFrame/user/:soId/questions/populate');
+        Resource = $resource(url + 'questions');
         Resource.get(filter);
 
-        Resource = $resource('/api/baseFrame/user/:soId/tags/populate');
+        Resource = $resource(url + 'tags');
         Resource.get(filter).$promise.then(function (user){
             hideLoadingScreen();
             $scope.selectedUser = user;

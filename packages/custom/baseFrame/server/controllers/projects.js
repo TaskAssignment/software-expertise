@@ -77,6 +77,118 @@ module.exports = function (BaseFrame){
         * @param req - Express request
         * @param res - Express response
         */
+        populateIssues: function(req, res){
+            var url = '/issues';
+
+            var buildModels = function(results, projectId){
+                for (var i in results) {
+                    var result = results[i];
+                    var issue = {
+                        _id: result.id,
+                        number: result.number,
+                        body: result.body,
+                        title: result.title,
+                        reporterId: result.user.login
+                    }
+
+                    if(result.assignee){
+                        issue.assigneeId = result.assignee.login;
+                    }
+
+                    var filter = {
+                        projectId: projectId,
+                        _id: result.id
+                    }
+
+                    Issue.update(filter, issue, {upsert: true}, function(err){
+                        if(err){
+                            console.log(err.message);
+                        }else{
+                            console.log('Issue updated/created successfully!');
+                        }
+                    });
+                }
+
+            }
+            gitHubRequest(url, req.params.projectId, res, buildModels);
+        },
+
+        /** Stores in the database all the issues from the given repository.
+        *
+        * @param req - Express request
+        * @param res - Express response
+        */
+        populateContributors: function(req, res){
+            var url = '/contibutors';
+
+            var buildModels = function(results, projectId){
+                for (var i in results) {
+                    var result = results[i];
+                    var user = {
+                        gitHubId: result.id,
+                        $addToSet: {repositories: repo.projectId}
+                    };
+
+                    SoUser.update({_id: result.login}, user, {upsert: true}, function(err){
+                        if(err){
+                            console.log(err.message);
+                        }else{
+                            console.log('User saved successfully!');
+                        }
+                    });
+                }
+            }
+            gitHubRequest(url, req.params.projectId, res, buildModels);
+        },
+
+        /** Stores in the database all the issues from the given repository.
+        *
+        * @param req - Express request
+        * @param res - Express response
+        */
+        populateLanguages: function(req, res){
+            var url = '/languages';
+
+            var buildModels = function(results, projectId){
+                var comments = [];
+
+                for (var i in results) {
+                    var result = results[i];
+                    var comment = {
+                        _id: result.id,
+                        body: result.body,
+                        user: result.user.login
+                    }
+
+                    var updateFields = {
+                        $addToSet: {
+                            comments: comment
+                        }
+                    };
+
+                    var filter = {
+                        projectId: projectId,
+                        number: result.issue_url.split('/').pop()
+                    }
+
+                    Issue.update(filter, updateFields, {upsert: true}, function(err){
+                        if(err){
+                            console.log(err.message);
+                        }else{
+                            console.log('Issue updated successfully!');
+                        }
+                    });
+                }
+
+            }
+            gitHubRequest(url, req.params.projectId, res, buildModels);
+        },
+
+        /** Stores in the database all the issues from the given repository.
+        *
+        * @param req - Express request
+        * @param res - Express response
+        */
         populateIssuesComments: function(req, res){
             var url = '/issues/comments';
 
@@ -106,7 +218,7 @@ module.exports = function (BaseFrame){
                         if(err){
                             console.log(err.message);
                         }else{
-                            console.log('Commit updated successfully!');
+                            console.log('Issue updated successfully!');
                         }
                     });
                 }
