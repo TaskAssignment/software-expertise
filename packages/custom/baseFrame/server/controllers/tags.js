@@ -37,13 +37,13 @@ module.exports = function (BaseFrame){
                 allWords.push(word);
             }
 
-            StopWord.find({}, '-_id', {lean: true}, function (err, words){
+            StopWord.find({}, '_id', {lean: true}, function (err, words){
                 if(err) {
                     console.log(err.message);
                 } else {
                     var stopWords = []
                     for(var index in words){
-                        stopWords.push(words[index].word);
+                        stopWords.push(words[index]._id);
                     }
                     pullAll(allWords, stopWords);
                 }

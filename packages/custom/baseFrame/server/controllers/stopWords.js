@@ -20,7 +20,7 @@ module.exports = function (BaseFrame) {
 
                     for(var j in words){
                         var stopword = {}
-                        stopword['word'] = words[j];
+                        stopword['_id'] = words[j];
 
                         stopwords.push(stopword);
                     }

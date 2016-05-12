@@ -4,10 +4,8 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var StopWordSchema = new Schema({
-    word: {
+    _id: {
         type: String,
-        required: true,
-        unique: true
     }
 }, {
     timestamps: true
