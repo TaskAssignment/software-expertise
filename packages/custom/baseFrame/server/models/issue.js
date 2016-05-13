@@ -12,11 +12,8 @@ var CommentSchema = new Schema({
 });
 
 var IssueSchema = new Schema({
-    _id: { //GitHub issue id
-        type: String,
-        required: true,
-        unique: true
-    },
+    //Using number here to sort properly. I'll think of something else.
+    _id: Number,
     projectId: {
         type: String,
         ref: 'Project',

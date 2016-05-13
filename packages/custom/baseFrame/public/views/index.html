@@ -83,6 +83,16 @@ As soon as I figure this out, this will be removed!! -->
                             PR </span>
                     </button>
                 </div>
+
+                <!-- TODO: Add pagination here. It take too long to load all the issues!!!
+                <nav>
+                    <ul class="pager">
+                        <li><a ng-click="populateRepoResources('issues', $scope.lastissues, '$lt')">Previous</a></li>
+                        <li><a ng-click="populateRepoResources('issues', $scope.lastissues)">Next</a></li>
+                    </ul>
+                </nav>
+                -->
+
                 <a class="btn btn-default" ng-if="selectedRepo.emptyissues" ng-click=populateRepoResources('issues')> Get All Issues</a>
                 <a class="btn btn-default" ng-click=populateRepoResources('issues')> Get New Issues</a>
 

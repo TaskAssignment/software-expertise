@@ -200,14 +200,21 @@ function ($scope,  $http, $location, $resource) {
     *
     * @param resource - The desired resource for this repository (issues, users)
     */
-    function getRepoResources(resource){
+    function getRepoResources(resource, id = 0, order = '$gt'){
         showLoadingScreen();
         var Resource = $resource('/api/baseFrame/:projectId/' + resource);
-        Resource.query({projectId: $scope.selectedRepo._id})
-          .$promise.then(function(resources){
+        var filter = {
+            projectId: $scope.selectedRepo._id,
+            order: order,
+            id: id
+        };
+        Resource.query(filter).$promise.then(function(resources){
             if(resources.length == 0){
                 $scope.selectedRepo['empty' + resource] = true;
             }
+
+            //Add the last id to pagination later!
+            $scope['last' + resource] = resources[resources.length - 1]._id
             $scope[resource] = resources;
             hideLoadingScreen();
         });
