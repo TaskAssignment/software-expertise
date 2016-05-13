@@ -78,10 +78,13 @@ As soon as I figure this out, this will be removed!! -->
                     <button ng-repeat="issue in issues" class="list-group-item"
                       ng-click="getIssueTags(issue)">
                         {{ issue.title }}
+                        <span class="badge"> {{ issue.state }}</span>
+                        <span class="badge" ng-if="issue.pull_request">
+                            PR </span>
                     </button>
                 </div>
                 <a class="btn btn-default" ng-if="selectedRepo.emptyissues" ng-click=populateRepoResources('issues')> Get All Issues</a>
-                <a class="btn btn-default disabled"> Get New Issues</a>
+                <a class="btn btn-default" ng-click=populateRepoResources('issues')> Get New Issues</a>
 
                 <h3>Users: </h3>
                 <div id='userSelection' class='scrollable list-group'>

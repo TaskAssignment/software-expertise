@@ -16,6 +16,8 @@ module.exports = function (BaseFrame, app, auth, database) {
         .get(projects.populateIssues);
     app.route(base + ':projectId/populate/commits')
         .get(projects.populateCommits);
+    app.route(base + ':projectId/populate/languages')
+        .get(projects.populateLanguages);
     app.route(base + ':projectId/populate/issues/comments')
         .get(projects.populateIssuesComments);
     app.route(base + ':projectId/populate/commits/comments')

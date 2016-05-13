@@ -27,6 +27,8 @@ var IssueSchema = new Schema({
     number: String,
     body: String,
     title: String,
+    pull_request: Boolean,
+    state: String,
     comments: [CommentSchema]
 }, {
     timestamps: true

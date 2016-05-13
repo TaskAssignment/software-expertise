@@ -35,9 +35,10 @@ function ($scope,  $http, $location, $resource) {
 
     $scope.fullPopulateRepo = function(){
         var items = [
+            'languages',
+            'commits',
             'issues/comments',
             'commits/comments',
-            'commits',
         ]
 
         for(var item of items){

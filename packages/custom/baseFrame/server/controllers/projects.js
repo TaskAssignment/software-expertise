@@ -39,38 +39,39 @@ module.exports = function (BaseFrame){
         * @param res - Express response
         */
         populateCommits: function(req, res){
-            var url = '/commits';
+            Commit.findOne(req.params, '-_id updatedAt', {sort: '-updatedAt', lean:true},function (err, lastUpdate){
+                var url = '/commits';
 
-            var buildModels = function(results, projectId){
-                var commits = [];
+                if(lastUpdate){
+                    url += '?since=' + lastUpdate.updatedAt.toISOString();
+                }
 
-                for (var i in results) {
-                    var result = results[i];
-                    var commit = {
-                        message: result.commit.message,
+                var buildModels = function(results, projectId){
+                    var commits = [];
+
+                    for (var i in results) {
+                        var result = results[i];
+                        var commit = {
+                            message: result.commit.message,
+                        }
+
+                        if(result.author){
+                            commit.user = result.author.login;
+                        }else if(result.commiter){
+                            commit.user = result.commiter.login;
+                        }
+
+                        commits.push(commit);
                     }
 
-                    if(result.author)
-                        commit.user = result.author.login
-                    else if(result.commiter)
-                        commit.user = result.commiter.login
-                    var filter = {
-                        projectId: projectId,
-                        _id: result.sha
-                    }
-
-                    Commit.update(filter, commit, {upsert: true}, function(err){
+                    Commit.create(commits, function(err){
                         if(err){
                             console.log(err.message);
-                        }else{
-                            console.log('Commit updated/created successfully!');
                         }
                     });
                 }
-
-
-            }
-            gitHubRequest(url, req.params.projectId, res, buildModels);
+                gitHubRequest(url, req.params.projectId, res, buildModels);
+            });
         },
 
         /** Stores in the database all the issues from the given repository.
@@ -79,39 +80,47 @@ module.exports = function (BaseFrame){
         * @param res - Express response
         */
         populateIssues: function(req, res){
-            var url = '/issues';
+            Issue.findOne(req.params, '-_id updatedAt', {sort: '-updatedAt', lean:true},function (err, lastUpdate){
+                var url = '/issues?state=all&sort=updated'
 
-            var buildModels = function(results, projectId){
-                for (var i in results) {
-                    var result = results[i];
-                    var issue = {
-                        _id: result.id,
-                        number: result.number,
-                        body: result.body,
-                        title: result.title,
-                        reporterId: result.user.login
-                    }
-
-                    if(result.assignee){
-                        issue.assigneeId = result.assignee.login;
-                    }
-
-                    var filter = {
-                        projectId: projectId,
-                        _id: result.id
-                    }
-
-                    Issue.update(filter, issue, {upsert: true}, function(err){
-                        if(err){
-                            console.log(err.message);
-                        }else{
-                            console.log('Issue updated/created successfully!');
-                        }
-                    });
+                if(lastUpdate){
+                    url += '&since=' + lastUpdate.updatedAt.toISOString();
                 }
 
-            }
-            gitHubRequest(url, req.params.projectId, res, buildModels);
+                var buildModels = function(results, projectId){
+                    var issues = []
+                    for (var i in results) {
+                        var result = results[i];
+                        var issue = {
+                            _id: result.id,
+                            number: result.number,
+                            body: result.body,
+                            title: result.title,
+                            state: result.state,
+                            projectId: projectId,
+                            reporterId: result.user.login
+                        }
+
+                        if(result.assignee){
+                            issue.assigneeId = result.assignee.login;
+                        }
+
+                        if(result.pull_request){
+                            issue.pull_request = true;
+                        }
+
+                        issues.push(issue);
+                    }
+
+                    Issue.create(issues, function(err){
+                        if(err){
+                            console.log(err.message);
+                        }
+                    });
+
+                }
+                gitHubRequest(url, req.params.projectId, res, buildModels);
+            });
         },
 
         /** Stores in the database all the issues from the given repository.
@@ -133,12 +142,11 @@ module.exports = function (BaseFrame){
                     SoUser.update({_id: result.login}, user, {upsert: true}, function(err){
                         if(err){
                             console.log(err.message);
-                        }else{
-                            console.log('User saved successfully!');
                         }
                     });
                 }
             }
+
             gitHubRequest(url, req.params.projectId, res, buildModels);
         },
 
@@ -151,35 +159,34 @@ module.exports = function (BaseFrame){
             var url = '/languages';
 
             var buildModels = function(results, projectId){
-                var comments = [];
+                var languages = [];
 
-                for (var i in results) {
-                    var result = results[i];
-                    var comment = {
-                        _id: result.id,
-                        body: result.body,
-                        user: result.user.login
-                    }
-
-                    var updateFields = {
-                        $addToSet: {
-                            comments: comment
-                        }
+                var keys = Object.keys(results);
+                keys.forEach(function(key, index, array){
+                    var language = {
+                        _id: key,
+                        amount: results[key]
                     };
+                    languages.push(language);
+                });
 
-                    var filter = {
-                        projectId: projectId,
-                        number: result.issue_url.split('/').pop()
-                    }
-
-                    Issue.update(filter, updateFields, {upsert: true}, function(err){
-                        if(err){
-                            console.log(err.message);
-                        }else{
-                            console.log('Issue updated successfully!');
-                        }
-                    });
+                var filter = {
+                    _id: projectId,
                 }
+
+                var updateFields = {
+                    $addToSet: {
+                        languages: {
+                            $each : languages
+                        }
+                    }
+                }
+
+                Project.update(filter, updateFields, function(err){
+                    if(err){
+                        console.log(err.message);
+                    }
+                });
 
             }
             gitHubRequest(url, req.params.projectId, res, buildModels);
@@ -191,41 +198,45 @@ module.exports = function (BaseFrame){
         * @param res - Express response
         */
         populateIssuesComments: function(req, res){
-            var url = '/issues/comments';
+            Issue.findOne(req.params, '-_id updatedAt', {sort: '-updatedAt', lean:true},function (err, lastUpdate){
+                var url = '/issues/comments';
 
-            var buildModels = function(results, projectId){
-                var comments = [];
-
-                for (var i in results) {
-                    var result = results[i];
-                    var comment = {
-                        _id: result.id,
-                        body: result.body,
-                        user: result.user.login
-                    }
-
-                    var updateFields = {
-                        $addToSet: {
-                            comments: comment
-                        }
-                    };
-
-                    var filter = {
-                        projectId: projectId,
-                        number: result.issue_url.split('/').pop()
-                    }
-
-                    Issue.update(filter, updateFields, {upsert: true}, function(err){
-                        if(err){
-                            console.log(err.message);
-                        }else{
-                            console.log('Issue updated successfully!');
-                        }
-                    });
+                if(lastUpdate){
+                    url += '?since=' + lastUpdate.updatedAt.toISOString();
                 }
 
-            }
-            gitHubRequest(url, req.params.projectId, res, buildModels);
+                var buildModels = function(results, projectId){
+                    var comments = [];
+
+                    for (var i in results) {
+                        var result = results[i];
+                        var comment = {
+                            _id: result.id,
+                            body: result.body,
+                            user: result.user.login
+                        }
+
+                        var updateFields = {
+                            $addToSet: {
+                                comments: comment
+                            }
+                        };
+
+                        var filter = {
+                            projectId: projectId,
+                            number: result.issue_url.split('/').pop()
+                        }
+
+                        Issue.update(filter, updateFields, {upsert: true}, function(err){
+                            if(err){
+                                console.log(err.message);
+                            }
+                        });
+                    }
+
+                }
+                gitHubRequest(url, req.params.projectId, res, buildModels);
+            });
         },
 
         /** Stores in the database all the issues from the given repository.
@@ -237,7 +248,6 @@ module.exports = function (BaseFrame){
             var url = '/comments';
 
             var buildModels = function(results, projectId){
-
                 for (var i in results) {
                     var result = results[i];
                     var comment = {
@@ -260,15 +270,11 @@ module.exports = function (BaseFrame){
                     Commit.update(filter, updateFields, {upsert: true}, function(err){
                         if(err){
                             console.log(err.message);
-                        }else{
-                            console.log('Commit updated successfully!');
                         }
                     });
                 }
-
-
-
             }
+
             gitHubRequest(url, req.params.projectId, res, buildModels);
         }
     }
@@ -291,7 +297,12 @@ module.exports = function (BaseFrame){
         * won't be readable.
         */
         var url = 'https://api.github.com/repositories/' + projectId +
-            specificUrl + '?per_page=100';
+            specificUrl;
+        if(specificUrl.lastIndexOf('?') < 0){
+            url += '?per_page=100'; //If there is no query it has to have the question mark
+        } else {
+            url += '&per_page=100';
+        }
         var options = {
             headers: {
                 'User-Agent': 'software-expertise',
@@ -316,7 +327,6 @@ module.exports = function (BaseFrame){
                 request(options, requestCallback);
 
             } else {
-                console.log(body);
                 if(!res.headersSent){
                     res.status(500).send(body);
                 }
@@ -343,7 +353,6 @@ module.exports = function (BaseFrame){
                 var new_url = next.substring(begin + 1, end);
 
                 var nextPage = new_url.split('=').pop();
-                console.log(nextPage);
                 if(nextPage != 1){
                     return new_url;
                 } else {
