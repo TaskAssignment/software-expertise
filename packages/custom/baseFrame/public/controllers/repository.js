@@ -9,7 +9,6 @@ function hideLoadingScreen(){
 }
 
 var baseFrame = angular.module('mean.baseFrame');
-
 baseFrame.controller('RepositoryController',
 ['$scope', '$http', '$location', '$resource',
 function ($scope,  $http, $location, $resource) {
@@ -18,6 +17,14 @@ function ($scope,  $http, $location, $resource) {
     findProject();
 
     // *************** SCOPE FUNCTIONS **************//
+
+    $scope.selectTab = function (tab){
+        angular.element('.tab').removeClass('active');
+        angular.element('.tab-pane').addClass('hidden');
+
+        angular.element(tab).addClass('active');
+        angular.element(tab).removeClass('hidden');
+    }
 
     $scope.populate = function(option){
         //TODO: Change this to resource instead of http!!
