@@ -66,7 +66,7 @@ module.exports = function (BaseFrame){
 
                     Commit.create(commits, function(err){
                         if(err){
-                            console.log(err.message);
+                            console.log(err);
                         }
                     });
                 }
@@ -113,8 +113,9 @@ module.exports = function (BaseFrame){
                     }
 
                     Issue.create(issues, function(err){
+
                         if(err){
-                            console.log(err.message);
+                            console.log(err);
                         }
                     });
 
@@ -141,7 +142,7 @@ module.exports = function (BaseFrame){
 
                     SoUser.update({_id: result.login}, user, {upsert: true}, function(err){
                         if(err){
-                            console.log(err.message);
+                            console.log(err);
                         }
                     });
                 }
@@ -184,7 +185,7 @@ module.exports = function (BaseFrame){
 
                 Project.update(filter, updateFields, function(err){
                     if(err){
-                        console.log(err.message);
+                        console.log(err);
                     }
                 });
 
@@ -229,7 +230,7 @@ module.exports = function (BaseFrame){
 
                         Issue.update(filter, updateFields, {upsert: true}, function(err){
                             if(err){
-                                console.log(err.message);
+                                console.log(err);
                             }
                         });
                     }
@@ -269,7 +270,7 @@ module.exports = function (BaseFrame){
 
                     Commit.update(filter, updateFields, {upsert: true}, function(err){
                         if(err){
-                            console.log(err.message);
+                            console.log(err);
                         }
                     });
                 }
