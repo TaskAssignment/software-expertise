@@ -2,7 +2,7 @@
 
 var mean = require('meanio');
 
-module.exports = function(System, app, auth, database) {
+module.exports = function(System, app, database) {
 
   // Home route
   var index = require('../controllers/index')(System);

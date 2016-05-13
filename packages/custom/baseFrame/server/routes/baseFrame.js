@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = function (BaseFrame, app, auth, database) {
+module.exports = function (BaseFrame, app, database) {
     //See how to nest this.
     var base = '/api/baseFrame/';
     var controllers = '../controllers/';

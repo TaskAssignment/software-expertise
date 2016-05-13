@@ -31,6 +31,8 @@ function ExpertiseGraph() {
             var width = $('#expertiseGraph').innerWidth();
             var height = $('#leftSelectionPanel').innerHeight();
 
+            console.log(width, height);
+
             var force = d3.layout.force()
                 .size([width, height])
                 .charge(-400)

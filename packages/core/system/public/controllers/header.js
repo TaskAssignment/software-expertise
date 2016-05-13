@@ -1,16 +1,11 @@
 'use strict';
 
-angular.module('mean.system').controller('HeaderController', ['$scope', '$rootScope', 'Menus', 'MeanUser', '$state',
-  function($scope, $rootScope, Menus, MeanUser, $state) {
-    
+angular.module('mean.system').controller('HeaderController', ['$scope', '$rootScope', 'Menus', '$state',
+  function($scope, $rootScope, Menus, $state) {
+
     var vm = this;
 
     vm.menus = {};
-    vm.hdrvars = {
-      authenticated: MeanUser.loggedin,
-      user: MeanUser.user, 
-      isAdmin: MeanUser.isAdmin
-    };
 
     // Default hard coded menu items for main menu
     var defaultMainMenu = [];
@@ -40,19 +35,6 @@ angular.module('mean.system').controller('HeaderController', ['$scope', '$rootSc
 
     $scope.isCollapsed = false;
 
-    $rootScope.$on('loggedin', function() {
-      queryMenu('main', defaultMainMenu);
-
-      vm.hdrvars = {
-        authenticated: MeanUser.loggedin,
-        user: MeanUser.user,
-        isAdmin: MeanUser.isAdmin
-      };
-    });
-
-    vm.logout = function(){
-      MeanUser.logout();
-    };
 
     $rootScope.$on('logout', function() {
       vm.hdrvars = {

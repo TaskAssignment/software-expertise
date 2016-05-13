@@ -14,10 +14,10 @@ var SystemPackage = new Module('system');
  * All MEAN packages require registration
  * Dependency injection is used to define required modules
  */
-SystemPackage.register(function(app, auth, database, circles) {
+SystemPackage.register(function(app, database) {
 
   //We enable routing. By default the Package Object is passed to the routes
-  SystemPackage.routes(app, auth, database);
+  SystemPackage.routes(app, database);
 
   SystemPackage.aggregateAsset('css', 'common.css');
   SystemPackage.angularDependencies(['ui.router', 'mean-factory-interceptor']);
