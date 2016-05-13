@@ -49,7 +49,7 @@ module.exports = function (BaseFrame){
         },
 
         populateAnswers: function (req, res){
-            var url = '/answers?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!t)IWIB_jIM*PQgVlKVx*bpK7iv9Avm9';
+            var url = '/answers?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!b0OfNaTQkaCT1X';
 
             var buildModels = function(items){
                 var answers = [];
@@ -59,6 +59,9 @@ module.exports = function (BaseFrame){
                         _id: result.answer_id,
                         questionId: result.question_id,
                         body: result.body,
+                        up_vote_count: result.up_vote_count,
+                        down_vote_count: result.down_vote_count,
+                        score: result.score,
                         tags: result.tags
                     };
                     answers.push(question);
@@ -76,7 +79,7 @@ module.exports = function (BaseFrame){
         populateQuestions: function (req, res){
             var ids = req.params;
 
-            var url = '/questions?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!)re8-BBbvk3FbjEOb-AI';
+            var url = '/questions?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!-*f(6pXDgxE9';
 
             var buildModels = function(items){
                 var questions = [];
@@ -86,6 +89,10 @@ module.exports = function (BaseFrame){
                         _id: result.question_id,
                         title: result.title,
                         body: result.body,
+                        up_vote_count: result.up_vote_count,
+                        down_vote_count: result.down_vote_count,
+                        favorite_count: result.favorite_count,
+                        score: result.score,
                         tags: result.tags
                     };
                     questions.push(question);

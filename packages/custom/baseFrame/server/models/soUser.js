@@ -8,6 +8,9 @@ var QuestionSchema = new Schema({
     title: String,
     body: String,
     tags: [String],
+    up_vote_count: Number,
+    down_vote_count: Number,
+    score: Number
 },{
     timestamps: true
 });
@@ -17,6 +20,10 @@ var AnswerSchema = new Schema({
     body: String,
     questionId: String,
     tags: [String],
+    favorite_count: Number,
+    up_vote_count: Number,
+    down_vote_count: Number,
+    score: Number
 }, {
     timestamps: true
 });
