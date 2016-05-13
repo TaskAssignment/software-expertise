@@ -102,19 +102,60 @@ As soon as I figure this out, this will be removed!! -->
         </div>
         <div id="rightPanel" class="col-md-6 col-lg-7">
             <ul class="nav nav-tabs">
-                <li role="presentation" class="tab active tabGraph">
+                <li role="presentation" class="tab tabGraph">
                     <a href="" ng-click="selectTab('.tabGraph')">Graph</a>
                 </li>
-                <li role="presentation" class="tab tabTable">
+                <li role="presentation" class="tab active tabTable">
                     <a href="" ng-click="selectTab('.tabTable')">Table</a>
+                </li>
+                <li role="presentation" class="tab tabAdmin">
+                    <a href="" ng-click="selectTab('.tabAdmin')">Admin</a>
                 </li>
             </ul>
 
             <div class="row">
-                <div role="tabpanel" class="tab-pane tabGraph" id="expertiseGraph">
+                <div role="tabpanel" class="tab-pane hidden tabGraph" id="expertiseGraph">
                 </div>
-                <div role="tabpanel" class="tab-pane hidden tabTable" id="expertiseTable">
-                    TESTE!
+                <div role="tabpanel" class="tab-pane tabTable" id="expertiseTable">
+
+                    <div ng-if="selectedIssue || selectedUser">
+                    <h3> {{ selectedIssue.title }} </h3>
+                    <hr>
+
+                    <h4>Most indicated users:</h4>
+                    <h5>Top 1 Similarity</h5>
+                    <p>
+                    User1
+                    </p>
+<hr>
+                    <h5>Top 5 Similarity</h5>
+                    <p>
+                    User1
+                    ...
+                    User5
+                    </p>
+<hr>
+                    <h5>Top 10 Similarity</h5>
+                    <p>
+                    User1
+                    ...
+                    User10
+                    </p>
+                    </div>
+                </div>
+
+                <div role="tabpanel" class="tab-pane hidden tabAdmin" id='populate'>
+                    <a class="btn btn-default" ng-click="populate('SoTags')">
+                        Populate SO Tags </a>
+                    <a class="btn btn-default" ng-click="populate('CoOccurrences')">
+                        Populate Common Occurrences </a>
+                    <a class="btn btn-default" ng-click="populate('SoUsers')">
+                        Populate Stack Overflow Users </a>
+                    <a class="btn btn-default" ng-click="populate('StopWords')">
+                        Populate Stop Words</a>
+                    <a class="btn btn-default" ng-if="selectedRepo"
+                        ng-click="fullPopulateRepo()">
+                        Get Full Repository Info</a>
                 </div>
             </div>
         </div>
@@ -122,19 +163,7 @@ As soon as I figure this out, this will be removed!! -->
 </section>
 
 <div class="row">
-    <div id='populate'>
-        <a class="btn btn-default" ng-click="populate('SoTags')">
-            Populate SO Tags </a>
-        <a class="btn btn-default" ng-click="populate('CoOccurrences')">
-            Populate Common Occurrences </a>
-        <a class="btn btn-default" ng-click="populate('SoUsers')">
-            Populate Stack Overflow Users </a>
-        <a class="btn btn-default" ng-click="populate('StopWords')">
-            Populate Stop Words</a>
-        <a class="btn btn-default" ng-if="selectedRepo"
-            ng-click="fullPopulateRepo()">
-            Get Full Repository Info</a>
-    </div>
+
 </div>
 
 <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
