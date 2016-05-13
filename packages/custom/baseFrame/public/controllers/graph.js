@@ -16,6 +16,7 @@ function ExpertiseGraph() {
         }
         showLoadingScreen();
 
+        //TODO: Change this request!!!!
         $http({
             method: 'POST',
             url: '/api/baseFrame/coOccurrence',
@@ -27,9 +28,8 @@ function ExpertiseGraph() {
         });
 
         function drawGraph(links, allTags){
-            //temporary numbers just to see how things work
-            var width = 900,
-                height = 900;
+            var width = $('#expertiseGraph').innerWidth();
+            var height = $('#leftSelectionPanel').innerHeight();
 
             var force = d3.layout.force()
                 .size([width, height])
@@ -42,7 +42,7 @@ function ExpertiseGraph() {
 
             d3.select('svg').remove(); //Remove old svg before adding a new one.
 
-            var svg = d3.select('#expertiseGraphDiv').append('svg')
+            var svg = d3.select('#expertiseGraph').append('svg')
                 .attr('width', width)
                 .attr('height', height);
 

@@ -2,23 +2,9 @@
 how to link RepositoryController from the client with with the server side.
 As soon as I figure this out, this will be removed!! -->
 <!-- Css is in theme package!! -->
-<section ng-controller="BaseFrameController" class="row">
+<section ng-controller="BaseFrameController" class="row" id="container">
     <div ng-controller="RepositoryController">
-        <div id='populate'>
-            <a class="btn btn-default" ng-click="populate('SoTags')">
-                Populate SO Tags </a>
-            <a class="btn btn-default" ng-click="populate('CoOccurrences')">
-                Populate Common Occurrences </a>
-            <a class="btn btn-default" ng-click="populate('SoUsers')">
-                Populate Stack Overflow Users </a>
-            <a class="btn btn-default" ng-click="populate('StopWords')">
-                Populate Stop Words</a>
-            <a class="btn btn-default" ng-if="selectedRepo"
-                ng-click="fullPopulateRepo()">
-                Get Full Repository Info</a>
-        </div>
         <div id='leftSelectionPanel' class='col-md-4'>
-            <br>
             <div id='repositorySearch'>
                 <div class='searchBoxInput'>
                     <form class='form-group form-horizontal' ng-submit=queryRepos()>
@@ -113,10 +99,24 @@ As soon as I figure this out, this will be removed!! -->
                 <a class="btn btn-default disabled"> Get New Contributors</a>
             </div>
         </div>
-        <div id="expertiseGraphDiv" class="col-md-8">
+        <div id="expertiseGraph" class="col-md-8">
 
         </div>
-
+        <div class="row">
+            <div id='populate'>
+                <a class="btn btn-default" ng-click="populate('SoTags')">
+                    Populate SO Tags </a>
+                <a class="btn btn-default" ng-click="populate('CoOccurrences')">
+                    Populate Common Occurrences </a>
+                <a class="btn btn-default" ng-click="populate('SoUsers')">
+                    Populate Stack Overflow Users </a>
+                <a class="btn btn-default" ng-click="populate('StopWords')">
+                    Populate Stop Words</a>
+                <a class="btn btn-default" ng-if="selectedRepo"
+                    ng-click="fullPopulateRepo()">
+                    Get Full Repository Info</a>
+            </div>
+        </div>
     </div>
 </section>
 
