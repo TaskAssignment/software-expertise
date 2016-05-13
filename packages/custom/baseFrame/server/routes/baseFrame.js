@@ -30,11 +30,11 @@ module.exports = function (BaseFrame, app, auth, database) {
     app.route(base + ':projectId/users')
         .get(users.find);
     app.route(base + 'user/:soId/populate/tags')
-        .get(users.populateUserTags);
+        .get(users.populateTags);
     app.route(base + 'user/:soId/populate/answers')
-        .get(users.populateUserAnswers);
+        .get(users.populateAnswers);
     app.route(base + 'user/:soId/populate/questions')
-        .get(users.populateUserQuestions);
+        .get(users.populateQuestions);
 
     var tags = require(controllers + 'tags')(BaseFrame);
     app.route(base + 'populate/SoTags')
