@@ -39,19 +39,26 @@ module.exports = function (BaseFrame, app, database) {
         .get(users.populateQuestions);
 
     var tags = require(controllers + 'tags')(BaseFrame);
-    app.route(base + 'populate/SoTags')
-        .post(tags.populateSoTags);
-    app.route(base + 'populate/CoOccurrences')
-        .post(tags.populateCommonOccurrences);
-    app.route(base + 'populate/SoUsers')
-        .post(tags.populateSoUsers);
     app.route(base + 'issueTags')
         .post(tags.getIssueTags);
     app.route(base + 'coOccurrence')
         .post(tags.coOccurrence);
 
-    var stopwords = require(controllers + 'stopWords')(BaseFrame);
+    var admin = require(controllers + 'admin')(BaseFrame);
+    app.route(base + 'populate/SoTags')
+        .get(admin.populateSoTags);
+    app.route(base + 'populate/CoOccurrences')
+        .get(admin.populateCommonOccurrences);
+    app.route(base + 'populate/SoUsers')
+        .get(admin.populateSoUsers);
+    app.route(base + 'export/SoTags')
+        .get(admin.exportSoTags);
+    app.route(base + 'export/CoOccurrences')
+        .get(admin.exportCommonOccurrences);
+    app.route(base + 'export/SoUsers')
+        .get(admin.exportSoUsers);
 
+    var stopwords = require(controllers + 'stopWords')(BaseFrame);
     app.route(base + 'populate/StopWords')
         .post(stopwords.populateStopWords);
 };

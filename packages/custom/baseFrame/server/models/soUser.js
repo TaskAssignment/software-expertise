@@ -2,6 +2,7 @@
 
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var mongooseToCsv = require('mongoose-to-csv');
 
 var QuestionSchema = new Schema({
     _id: String,
@@ -51,6 +52,15 @@ var SoUserSchema = new Schema({
     answers: [AnswerSchema]
 }, {
     timestamps: true
+});
+
+SoUserSchema.plugin(mongooseToCsv, {
+    headers: 'Username Email SoId',
+    constraints: {
+        'Username': '_id',
+        'Email': 'email',
+        'SoId': 'soId'
+    }
 });
 
 mongoose.model('SoUser', SoUserSchema);

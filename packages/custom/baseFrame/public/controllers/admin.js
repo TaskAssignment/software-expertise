@@ -1,24 +1,23 @@
 'use strict';
 
 var baseFrame = angular.module('mean.baseFrame');
-baseFrame.controller('AdminController', ['$scope', function ($scope){
+baseFrame.controller('AdminController', ['$scope', '$resource', '$http',
+function ($scope, $resource, $http){
 
     $scope.populate = function(option){
-        //TODO: Change this to resource instead of http!!
-        var url = '/api/baseFrame/populate/' + option;
         showLoadingScreen();
-        $http({
-            method: 'POST',
-            url: url,
-            data: '',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-        }).success(function (response){
+        var Resource = $resource('/api/baseFrame/populate/' + option);
+
+        Resource.get().$promise.then(function (response){
             hideLoadingScreen();
         });
     }
 
     $scope.export = function(option){
-        //TODO: Change this to resource instead of http!!
-
+        showLoadingScreen();
+        $http.get('/api/baseFrame/export/' + option).then(function (response){
+            hideLoadingScreen();
+            alert("File downloaded!");
+        });
     }
 }]);
