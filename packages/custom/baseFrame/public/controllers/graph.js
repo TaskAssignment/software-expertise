@@ -109,10 +109,13 @@ function ExpertiseGraph() {
         }
 
         function calculateCircleRatio(counter){
-            var MAX_RATIO = 10;
-            var MIN_RATIO = 2;
-            var result = counter/MAX_RATIO + MIN_RATIO;
-            return result > MAX_RATIO ? MAX_RATIO : result;
+            var sqrt = Math.sqrt(counter);
+            var result = 0;
+            if(sqrt != 0){
+                result = 1/sqrt;
+            }
+            var MAX_RATIO = 10; //Add max ratio because 1 is too small to see
+            return result * MAX_RATIO;
         }
 
         /**
@@ -131,7 +134,7 @@ function ExpertiseGraph() {
                 var link = {
                     source: allTags[occurrence.source].index,
                     target: allTags[occurrence.target].index,
-                    value: occurrence.occurrences
+                    value: parseInt(occurrence.occurrences)
                 };
 
                 new_links.push(link);
@@ -160,6 +163,7 @@ function ExpertiseGraph() {
                 nodes: nodes,
                 links: new_links
             }
+            console.log(graph);
             return graph;
         }
 
@@ -181,7 +185,7 @@ function ExpertiseGraph() {
                 allTags[tag] = {
                     origin: ISSUE,
                     index: index,
-                    issueCount: tagsFromIssue[tag],
+                    issueCount: parseInt(tagsFromIssue[tag]),
                     soCount: 0,
                 }
                 index++;
@@ -192,13 +196,13 @@ function ExpertiseGraph() {
                     allTags[tag] = {
                         origin: SO,
                         index: index,
-                        soCount: tagsFromUserOnSO[tag],
+                        soCount: parseInt(tagsFromUserOnSO[tag]),
                         issueCount: 0
                     }
                     index++;
                 }else{
                     allTags[tag].origin = BOTH;
-                    allTags[tag].soCount += tagsFromUserOnSO[tag];
+                    allTags[tag].soCount += parseInt(tagsFromUserOnSO[tag]);
                 }
             }
 
