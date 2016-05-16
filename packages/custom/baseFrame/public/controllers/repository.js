@@ -26,20 +26,6 @@ function ($scope,  $http, $location, $resource) {
         angular.element(tab).removeClass('hidden');
     }
 
-    $scope.populate = function(option){
-        //TODO: Change this to resource instead of http!!
-        var url = '/api/baseFrame/populate/' + option;
-        showLoadingScreen();
-        $http({
-            method: 'POST',
-            url: url,
-            data: '',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-        }).success(function (response){
-            hideLoadingScreen();
-        });
-    }
-
     $scope.fullPopulateRepo = function(){
         var items = [
             'languages',
@@ -136,7 +122,6 @@ function ($scope,  $http, $location, $resource) {
     * @param issue - Dictionary with id, title and body from github issue
     */
     $scope.getIssueTags = function (issue) {
-        $location.search('issueId', issue._id);
         $scope.selectedIssue = issue;
 
         //Any word from the issue that is an SO tag will be in this array.
@@ -182,8 +167,13 @@ function ($scope,  $http, $location, $resource) {
     * @param repo - The selected repository (id,name,language,description)
     */
     function getRepoInformation(repo) {
-        $scope.repos = undefined;
         $scope.selectedRepo = repo;
+        $scope.repos = undefined;
+        $scope.users = [];
+        $scope.issues = [];
+        $scope.selectedUser = undefined;
+        $scope.selectedIssue = undefined;
+
         $location.search('repoName', repo.name);
 
         showLoadingScreen();
