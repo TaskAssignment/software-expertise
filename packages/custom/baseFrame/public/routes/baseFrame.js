@@ -6,8 +6,8 @@ function ($stateProvider){
     $stateProvider.state('Expertise', {
         url: '/expertise',
         templateUrl: 'baseFrame/views/index.html'
-    }).state('Expertise Table', {
-        url: '/expertise/table',
-        templateUrl: 'baseFrame/views/expertise_table.html'
+    }).state('Admin Tasks', {
+        url: '/admin',
+        templateUrl: 'baseFrame/views/admin.html'
     });
 }]);

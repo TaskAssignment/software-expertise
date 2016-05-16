@@ -114,6 +114,7 @@ As soon as I figure this out, this will be removed!! -->
             </ul>
 
             <div class="row">
+                <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
                 <div role="tabpanel" class="tab-pane hidden tabGraph" id="expertiseGraph">
                 </div>
                 <div role="tabpanel" class="tab-pane tabTable" id="expertiseTable">
@@ -145,14 +146,6 @@ As soon as I figure this out, this will be removed!! -->
                 </div>
 
                 <div role="tabpanel" class="tab-pane hidden tabAdmin" id='populate'>
-                    <a class="btn btn-default" ng-click="populate('SoTags')">
-                        Populate SO Tags </a>
-                    <a class="btn btn-default" ng-click="populate('CoOccurrences')">
-                        Populate Common Occurrences </a>
-                    <a class="btn btn-default" ng-click="populate('SoUsers')">
-                        Populate Stack Overflow Users </a>
-                    <a class="btn btn-default" ng-click="populate('StopWords')">
-                        Populate Stop Words</a>
                     <a class="btn btn-default" ng-if="selectedRepo"
                         ng-click="fullPopulateRepo()">
                         Get Full Repository Info</a>
@@ -162,9 +155,4 @@ As soon as I figure this out, this will be removed!! -->
     </div>
 </section>
 
-<div class="row">
-
-</div>
-
-<img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.15/d3.js"></script>
