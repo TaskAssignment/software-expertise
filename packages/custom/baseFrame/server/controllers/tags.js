@@ -10,6 +10,12 @@ var pullAll = require('lodash.pullall');
 
 module.exports = function (BaseFrame){
     return {
+
+        /** Gets the words that are SO Tags given an issue text.
+        *
+        * @param req - Express request.
+        * @param res - Express response.
+        */
         getIssueTags: function(req, res){
             var issue = req.body;
 
@@ -51,6 +57,11 @@ module.exports = function (BaseFrame){
             });
         },
 
+        /** Gets the coOccurrences from a list of tags
+        *
+        * @param req - Express request.
+        * @param res - Express response.
+        */
         coOccurrence: function (req, res) {
             //These tags come from 'displayIssueTags' on repository.js
             var tags = req.body.tags.split(',');

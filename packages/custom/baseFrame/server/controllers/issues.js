@@ -7,7 +7,7 @@ var request = require('request');
 
 module.exports = function (BaseFrame){
     return {
-        /** Looks for the given (req.params) repository in the database.
+        /** Looks for the issues of the given repository in the database
         *
         * @param req - Express request
         * @param res - Express response

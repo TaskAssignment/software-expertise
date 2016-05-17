@@ -11,35 +11,73 @@ var csv = require('fast-csv');
 
 module.exports = function (BaseFrame){
     return {
+        /** Populates general StackOverflow tags from saved file.
+        *
+        * @param req - Express request.
+        * @param res - Express respnse.
+        */
         populateSoTags: function (req, res){
             readFile('files/tags.csv', res, Tag);
         },
 
+        /** Populates general StackOverflow coOccurrences from saved file.
+        *
+        * @param req - Express request.
+        * @param res - Express respnse.
+        */
         populateCommonOccurrences: function (req, res){
             readFile('files/coOccurrences.csv', res, CommonOccurrence);
         },
 
+        /** Populates StackOverflow users that have github accounts from saved file.
+        *
+        * @param req - Express request.
+        * @param res - Express respnse.
+        */
         populateSoUsers: function (req, res){
             readFile('files/commonUsers.csv', res, SoUser);
         },
 
+        /** Exports the SO Tags to a file.
+        *
+        * @param req - Express request.
+        * @param res - Express respnse.
+        */
         exportSoTags: function (req, res){
             writeFile('files/tags2.tsv', '_id soTotalCount',res, Tag);
         },
 
+        /** Exports the coOccurrences to a file.
+        *
+        * @param req - Express request.
+        * @param res - Express respnse.
+        */
         exportCommonOccurrences: function (req, res){
             writeFile('files/CommonOccurrences.tsv', '-_id source target occurrences', res, CommonOccurrence);
-            res.sendStatus(200);
         },
 
+        /** Exports all users to a file.
+        *
+        * @param req - Express request.
+        * @param res - Express respnse.
+        */
         exportSoUsers: function (req, res){
             writeFile('files/SoUsers.tsv', '_id gitHubId email', res, SoUser);
         },
     }
 }
 
+/** This is responsible for writing the file with the StackOverflow data. My
+* idea was to send the file via response, but it just worked for tags (the
+* other are too big to load and the request times out).
+*
+* @param file - The file address/name. The path given should be from the root
+  folder instead of from the baseFrame package!
+* @param items - The items that will be selected from the Schema.
+* @param res - Express response.
+* @param MongooseModel - The Model that represents a Schema.
+*/
 function writeFile(file, items,  res, MongooseModel){
-    //TODO: Add transform model!!
     console.log("Writing File!");
     var stream = fs.createWriteStream(file);
     MongooseModel.findAndStreamCsv({}, items, {lean: true})
@@ -56,6 +94,8 @@ function writeFile(file, items,  res, MongooseModel){
             res.download(file);
         }
     });
+
+    //This is to avoid timeout.
     res.sendStatus(200);
 }
 
@@ -73,7 +113,6 @@ function readFile(file, res, MongooseModel){
 
     csv.fromStream(readable, {ignoreEmpty: true})
     .on("data", function(data){
-        // readable.pause();
         var model = createModel(data, MongooseModel.modelName);
         MongooseModel.create(model, function(err){
             if(err){
@@ -89,12 +128,11 @@ function readFile(file, res, MongooseModel){
     res.sendStatus(200);
 }
 
-/** This receives the converted results from reading a file
-* and returns an array with models based on these results.
+/** This receives a line of a file and returns the equivalent model for it.
 *
-* @param convertResults - an array of dicts with the first row as keys
+* @param line - Array with the words in that line
 * @param modelName - The name of model that will be created.
-* @return array of models to be saved on the database.
+* @return model to be saved in the database.
 */
 function createModel(line, modelName){
     var model = {};

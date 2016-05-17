@@ -7,6 +7,11 @@ var fs = require('fs');
 
 module.exports = function (BaseFrame) {
     return {
+        /** Read file and populate StopWords.
+        *
+        * @param req - Express request.
+        * @param res - Express response.
+        */
         populateStopWords: function(req, res){
             var folder = 'files/stopwords/';
             fs.readdir(folder, function (err, files){

@@ -16,7 +16,7 @@ function ExpertiseGraph() {
         }
         showLoadingScreen();
 
-        //TODO: Change this request!!!!
+        //TODO: Change this to a GET request!!!!
         $http({
             method: 'POST',
             url: '/api/baseFrame/coOccurrence',
@@ -54,8 +54,8 @@ function ExpertiseGraph() {
             /* In order to draw the graph, force must receive an ARRAY of nodes.
             * Each node must have at least a name.
             *
-            * You must also pass an ARRAY of links.
-            * Each link must have a source and a target, both are INDEXES of a node
+            * You must also pass an ARRAY of links. Each link must have a source
+            * and a target, both are INDEXES of a node.
             */
             var graph = formatDataToGraph(links, allTags);
 

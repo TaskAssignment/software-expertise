@@ -10,6 +10,13 @@ var request = require('request');
 
 module.exports = function (BaseFrame){
     return {
+
+        /** Saves a project if it doens't exist in the database yet. Otherwise
+        * just retrives the database that matches the params.
+        *
+        * @param req - Express request.
+        * @param res - Express response.
+        */
         save: function(req, res){
             Project.findOne(req.query,
             function (err, result){
@@ -27,13 +34,19 @@ module.exports = function (BaseFrame){
                 }
             });
         },
+
+        /** Looks for a project in the databse with the given contraints
+        *
+        * @param req - Express request.
+        * @param res - Express response.
+        */
         find: function(req, res){
             Project.findOne(req.params, 'name', {lean: true}, function(err, project){
                 res.send(project);
             });
         },
 
-        /** Stores in the database all the issues from the given repository.
+        /** Stores in the database all the commits of a given repository.
         *
         * @param req - Express request
         * @param res - Express response
@@ -74,7 +87,7 @@ module.exports = function (BaseFrame){
             });
         },
 
-        /** Stores in the database all the issues from the given repository.
+        /** Stores in the database all the issues of a given repository.
         *
         * @param req - Express request
         * @param res - Express response
@@ -124,7 +137,7 @@ module.exports = function (BaseFrame){
             });
         },
 
-        /** Stores in the database all the issues from the given repository.
+        /** Stores in the database all the contributors of a given repository.
         *
         * @param req - Express request
         * @param res - Express response
@@ -151,7 +164,7 @@ module.exports = function (BaseFrame){
             gitHubRequest(url, req.params.projectId, res, buildModels);
         },
 
-        /** Stores in the database all the issues from the given repository.
+        /** Stores in the database all the languages of a given repository.
         *
         * @param req - Express request
         * @param res - Express response
@@ -193,7 +206,7 @@ module.exports = function (BaseFrame){
             gitHubRequest(url, req.params.projectId, res, buildModels);
         },
 
-        /** Stores in the database all the issues from the given repository.
+        /** Stores in the database all the issue comments of a given repository.
         *
         * @param req - Express request
         * @param res - Express response
@@ -240,7 +253,7 @@ module.exports = function (BaseFrame){
             });
         },
 
-        /** Stores in the database all the issues from the given repository.
+        /** Stores in the database all the commit comments of a given repository.
         *
         * @param req - Express request
         * @param res - Express response
@@ -280,14 +293,13 @@ module.exports = function (BaseFrame){
         }
     }
 
-    /** This function should be used to do any StackOverflow requests. It
-    * represents the basic flow to the StackExchange API. It retrives the
-    * data and stores in the database. It checks for pagination following the
-    * StackExchange pattern.
+    /** This function should be used to do any GitHub requests. It
+    * represents the basic flow to the GitHub API. It retrives the
+    * data and stores in the database.
     *
-    * @param url - The url that will receive the request. It's important that
-        there is no page specified in. The pagination will be added as needed.
-    * @param ids - An object with soId and userId to use in the model building.
+    * @param url - Url to be added to the baseUrl(api.github.com/repositories/:id).
+        Pagination will be added as needed.
+    * @param projectId - The id of the GitHub repository
     * @param res - The express response to be sent after the data is fetched.
     * @param callback - A callback to build the models. Because every model has
         different items and saving methods, this should be built in the Express
@@ -340,7 +352,7 @@ module.exports = function (BaseFrame){
         * next url and avoid infinite loop (next of the last page
         * is the first one)
         *
-        * @param link - Value of headers['link'] from the response
+        * @param link - Value of headers['link'] of the response
         */
         function nextPageUrl(link){
             if(link){
