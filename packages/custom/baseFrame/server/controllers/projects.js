@@ -111,6 +111,7 @@ module.exports = function (BaseFrame){
                             title: result.title,
                             state: result.state,
                             projectId: projectId,
+                            parsed: false,
                             reporterId: result.user.login
                         }
 

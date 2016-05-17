@@ -23,6 +23,12 @@ module.exports = function (BaseFrame){
 
                 res.send(issues);
             });
+        },
+
+        findOne: function (req, res){
+            Issue.findOne(req.params, 'tags', function(err, issue){
+                res.send(issue);
+            });
         }
     }
 }

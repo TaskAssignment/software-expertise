@@ -144,8 +144,8 @@ function ExpertiseGraph() {
                 allTags[occurrence.target].soCount += (link.value || 0);
             }
 
-            /* The graph needs an array and the indexes in links will be this array
-            * indexes. That's why I created this like that, instead of pushing to
+            /* The links reference to array indexes.
+            * That's why I created this like that, instead of pushing to
             * the array's last position.
             */
             var length = allTags.length || 0;
@@ -182,11 +182,12 @@ function ExpertiseGraph() {
             var ISSUE = 'yellow';
             var BOTH = 'red';
             for(var tag in tagsFromIssue){
+                console.log(tagsFromIssue[tag]);
                 allTags[tag] = {
                     origin: ISSUE,
                     index: index,
-                    issueCount: parseInt(tagsFromIssue[tag]),
-                    soCount: 0,
+                    issueCount: parseInt(tagsFromIssue[tag].issueCount),
+                    soCount: parseInt(tagsFromIssue[tag].soCount),
                 }
                 index++;
             }

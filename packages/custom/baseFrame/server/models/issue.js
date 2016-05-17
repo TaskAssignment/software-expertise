@@ -11,6 +11,14 @@ var CommentSchema = new Schema({
     timestamps: true
 });
 
+var TagSchema = new Schema({
+    _id: String,
+    issueCount: Number,
+    soCount: Number
+}, {
+    timestamps: true
+});
+
 var IssueSchema = new Schema({
     //Using number here to sort properly. I'll think of something else.
     _id: Number,
@@ -24,8 +32,13 @@ var IssueSchema = new Schema({
     number: String,
     body: String,
     title: String,
-    pull_request: Boolean,
+    pull_request: {
+        type: Boolean,
+        default: false
+    },
     state: String,
+    parsed: Boolean,
+    tags: [TagSchema],
     comments: [CommentSchema]
 }, {
     timestamps: true

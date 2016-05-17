@@ -27,6 +27,8 @@ module.exports = function (BaseFrame, app, database) {
     var issues = require(controllers + 'issues')(BaseFrame);
     app.route(base + ':projectId/issues/')
         .get(issues.find);
+    app.route(base + ':projectId/issue/:_id')
+        .get(issues.findOne);
 
     var users = require(controllers + 'users')(BaseFrame);
     app.route(base + ':projectId/users')
@@ -39,8 +41,8 @@ module.exports = function (BaseFrame, app, database) {
         .get(users.populateQuestions);
 
     var tags = require(controllers + 'tags')(BaseFrame);
-    app.route(base + 'issueTags')
-        .post(tags.getIssueTags);
+    app.route(base + ':projectId/makeIssuesTags')
+        .get(tags.makeIssuesTags);
     app.route(base + 'coOccurrence')
         .post(tags.coOccurrence);
 

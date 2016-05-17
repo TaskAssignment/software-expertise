@@ -45,7 +45,17 @@ function ($scope,  $http, $location, $resource) {
                 hideLoadingScreen();
             });
         }
+    }
 
+    $scope.makeIssuesTags = function (){
+        showLoadingScreen();
+        var Resource = $resource('/api/baseFrame/:projectId/makeIssuesTags');
+        var filter = {
+            projectId: $scope.selectedRepo._id
+        }
+        Resource.get(filter).$promise.then(function (response){
+            hideLoadingScreen();
+        });
     }
 
     /** Looks for repositories with the given filters
@@ -101,6 +111,7 @@ function ($scope,  $http, $location, $resource) {
             getRepoInformation($scope.selectedRepo);
         });
     }
+
     /**
     * Displays the user portion of the expertise graph, based on StackOverflow
     * user tags.
@@ -123,18 +134,17 @@ function ($scope,  $http, $location, $resource) {
     */
     $scope.getIssueTags = function (issue) {
         $scope.selectedIssue = issue;
-
-        //Any word from the issue that is an SO tag will be in this array.
-        //This is the array that is sent to '/api/baseFrame/coOccurrence'
         showLoadingScreen();
-        $http({
-            method: 'POST',
-            url: '/api/baseFrame/issueTags',
-            data: 'title=' + issue.title + '&body=' + issue.body,
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-        }).success(function (response) {
+        var Resource = $resource('/api/baseFrame/:projectId/issue/:_id');
+        var filter = {
+            _id: issue._id,
+            projectId: $scope.selectedRepo._id
+        };
+
+        Resource.get(filter).$promise.then(function (response){
             hideLoadingScreen();
-            tagsFromIssue = response;
+            console.log(response);
+            tagsFromIssue = response.tags;
             sendToGraph();
         });
     }
