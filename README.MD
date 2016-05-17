@@ -8,7 +8,8 @@
 3. Install nodejs 6.1.0 and npm 3.8.6
 4. Install gulp globally `$ [sudo] npm install gulp -g`
 5. Run `npm install` to install project dependencies
-6. Run `gulp` in the root directory of this project.
+6. Run `gulp` in the root directory of this project to run the server.
+7. Go to [localhost](localhost:3000) and enjoy it!
 
 #### Troubleshooting:
 
