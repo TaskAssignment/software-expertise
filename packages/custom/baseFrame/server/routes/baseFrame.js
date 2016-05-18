@@ -27,8 +27,6 @@ module.exports = function (BaseFrame, app, database) {
     var issues = require(controllers + 'issues')(BaseFrame);
     app.route(base + ':projectId/issues/')
         .get(issues.find);
-    app.route(base + ':projectId/issue/:_id')
-        .get(issues.getTags);
 
     var users = require(controllers + 'users')(BaseFrame);
     app.route(base + ':projectId/users')

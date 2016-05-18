@@ -19,15 +19,9 @@ module.exports = function (BaseFrame){
             filter._id = {};
             filter._id[req.query.order] = req.query.id;
 
-            Issue.find(req.params, '_id state title tags pull_request', {sort: '-state pull_request', lean: true, limit: 500}, function(err, issues){
+            Issue.find(req.params, '_id state title parsed pull_request', {sort: '-state pull_request', lean: true, limit: 500}, function(err, issues){
 
                 res.send(issues);
-            });
-        },
-
-        getTags: function (req, res){
-            Issue.findOne(req.params, 'tags', {lean: true}, function(err, issueTags){
-                res.send(issueTags);
             });
         }
     }

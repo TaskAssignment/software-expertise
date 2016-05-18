@@ -15,7 +15,7 @@ module.exports = function (BaseFrame){
         find: function (req, res){
             var repo = {repositories: req.params.projectId};
 
-            SoUser.find(repo, 'soId _id tags', {sort: '-soId -updatedAt'}, function(err, users){
+            SoUser.find(repo, 'soId _id', {sort: '-soId -updatedAt'}, function(err, users){
                 res.send(users);
             });
         },
