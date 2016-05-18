@@ -44,6 +44,10 @@ module.exports = function (BaseFrame){
 
                 for(var k in body){
                     var word = body[k];
+                    if(word.indexOf('_') >= 0){
+                        // Tags in SO are dash separated.
+                        word = word.replace(/_/g, '-');
+                    }
                     if(allWords[word] === undefined){
                         allWords[word] = 1;
                     } else {
@@ -127,28 +131,6 @@ module.exports = function (BaseFrame){
 
                     getIssues(stopWords, filter, res);
                 }
-            });
-        },
-
-
-
-        /** Gets the coOccurrences from a list of tags
-        *
-        * @param req - Express request.
-        * @param res - Express response.
-        */
-        coOccurrence: function (req, res) {
-            var tags = req.query.tags.split(',');
-            tags = tags.slice(0, -1); //Remove the last empty string
-
-            var conditions = {
-                $and:
-                  [{source: {$in: tags}} ,
-                  {target: {$in: tags}} ]
-            }
-
-            CoOccurrence.find(conditions, function(err, occurrences){
-                res.json(occurrences);
             });
         }
     }

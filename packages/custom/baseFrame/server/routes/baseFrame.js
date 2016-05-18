@@ -41,8 +41,6 @@ module.exports = function (BaseFrame, app, database) {
     var tags = require(controllers + 'tags')(BaseFrame);
     app.route(base + ':projectId/makeIssuesTags')
         .get(tags.makeIssuesTags);
-    app.route(base + 'coOccurrence')
-        .get(tags.coOccurrence);
 
     var admin = require(controllers + 'admin')(BaseFrame);
     app.route(base + 'populate/SoTags')

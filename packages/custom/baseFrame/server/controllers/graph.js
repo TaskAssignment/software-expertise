@@ -124,7 +124,6 @@ module.exports = function (BaseFrame){
         getDataForGraph: function(req, res){
             var issueId = req.query.issueId;
             var userId = req.query.userId;
-
         }
     }
 }
