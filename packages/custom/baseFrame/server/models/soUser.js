@@ -31,7 +31,7 @@ var AnswerSchema = new Schema({
 
 var TagSchema = new Schema({
     _id: String,
-    count: String
+    count: Number
 }, {
     timestamps: true
 });

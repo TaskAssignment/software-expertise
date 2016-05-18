@@ -98,10 +98,10 @@
     </div>
     <div id="rightPanel" class="col-md-6 col-lg-7">
         <ul class="nav nav-tabs">
-            <li role="presentation" class="tab tabGraph">
+            <li role="presentation" class="tab tabGraph active">
                 <a href="" ng-click="selectTab('.tabGraph')">Graph</a>
             </li>
-            <li role="presentation" class="tab active tabTable">
+            <li role="presentation" class="tab tabTable">
                 <a href="" ng-click="selectTab('.tabTable')">Table</a>
             </li>
             <li role="presentation" class="tab tabAdmin">
@@ -111,9 +111,9 @@
 
         <div class="row">
             <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
-            <div role="tabpanel" class="tab-pane hidden tabGraph" id="expertiseGraph">
+            <div role="tabpanel" class="tab-pane tabGraph" id="expertiseGraph">
             </div>
-            <div role="tabpanel" class="tab-pane tabTable" id="expertiseTable">
+            <div role="tabpanel" class="tab-pane hidden tabTable" id="expertiseTable">
 
                 <div ng-if="selectedIssue || selectedUser">
                     <h3> {{ selectedIssue.title }} </h3>

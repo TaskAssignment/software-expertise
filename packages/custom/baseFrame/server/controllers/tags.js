@@ -13,28 +13,50 @@ module.exports = function (BaseFrame){
 
     function getIssues(stopWords, filter) {
         Issue.find(filter, '_id body title', {lean: true}, function (err, issues){
-            console.log(issues);
             for(var i in issues){
                 var issue = issues[i];
 
                 var title = issue.title.toLowerCase().split(' ');
-                var allWords = new Set(issue.body.toLowerCase().split(' '));
+                var body = issue.body.toLowerCase().split(' ');
 
+                var allWords = {};
                 for(var j in title) {
                     var word = title[j];
-                    allWords.add(word);
+                    if(word.indexOf('_') >= 0){
+                        // Tags in SO are dash separated.
+                        word = word.replace(/_/g, '-');
+                    }
+                    if(allWords[word] === undefined){
+                        allWords[word] = 1;
+                    } else {
+                        allWords[word] += 1;
+                    }
                 }
 
-                allWords = Array.from(allWords)
-                //Lodash pullAll: removes the second array from the first one.
-                pullAll(allWords, stopWords);
+                for(var k in body){
+                    var word = body[k];
+                    if(allWords[word] === undefined){
+                        allWords[word] = 1;
+                    } else {
+                        allWords[word] += 1;
+                    }
+                }
+
+                for(var l in stopWords){
+                    var word = stopWords[l];
+
+                    if(allWords[word]){
+                        delete allWords[word];
+                    }
+                }
+
                 getTags(allWords, issue._id);
             }
         });
     }
 
     function getTags(issueWords, issueId){
-        Tag.find({_id: {$in: issueWords }}, '_id soTotalCount', {lean: true}, function(err, tags){
+        Tag.find({_id: {$in: Object.keys(issueWords) }}, '_id soTotalCount', {lean: true}, function(err, tags){
             var issueUpdate = {
                 tags: [],
             }
@@ -45,12 +67,14 @@ module.exports = function (BaseFrame){
                     _id: tag._id,
                     soCount: tag.soTotalCount,
                     //I don't have the count for the issue right now.
-                    issueCount: 1
+                    issueCount: issueWords[tag._id]
                 };
 
                 issueUpdate.tags.push(issueTag);
             }
             issueUpdate.parsed = true;
+
+            console.log(issueUpdate);
 
             Issue.update({_id: issueId}, issueUpdate, function (err){
                 if(err){
@@ -72,7 +96,6 @@ module.exports = function (BaseFrame){
         makeIssuesTags: function(req, res){
             var filter = {
                 projectId: req.params.projectId,
-                parsed: false,
                 pull_request: false
             };
 
@@ -81,6 +104,7 @@ module.exports = function (BaseFrame){
                     _id: req.query._id
                 };
             }
+            filter.parsed = false;
 
             StopWord.find({}, '_id', {lean: true}, function (err, words){
                 if(err) {
@@ -105,7 +129,7 @@ module.exports = function (BaseFrame){
         * @param res - Express response.
         */
         coOccurrence: function (req, res) {
-            var tags = req.body.tags.split(',');
+            var tags = req.query.tags.split(',');
             tags = tags.slice(0, -1); //Remove the last empty string
 
             var conditions = {

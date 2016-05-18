@@ -124,7 +124,7 @@ function ($scope,  $http, $location, $resource) {
         if(!user.soId){
             alert("User is not in StackOverflow. Please, choose a Stack Overflow user");
         }
-        convertTags(user.tags);
+        sendToGraph();
     }
 
     /**
@@ -135,7 +135,7 @@ function ($scope,  $http, $location, $resource) {
     $scope.getIssueTags = function (issue) {
         showLoadingScreen();
         $scope.selectedIssue = issue;
-        console.log(issue.tags);
+        tagsFromIssue = issue.tags; //I'll remove this
         if(issue.tags.length == 0){
             var filter = {
                 projectId: $scope.selectedRepo._id,
@@ -149,6 +149,7 @@ function ($scope,  $http, $location, $resource) {
 
             Issue.get(filter).$promise.then(function (response){
                 issue.tags = response.tags;
+                tagsFromIssue = issue.tags; //I'll remove this
                 sendToGraph();
             });
         } else {
@@ -172,7 +173,7 @@ function ($scope,  $http, $location, $resource) {
         Resource.get(filter).$promise.then(function (user){
             hideLoadingScreen();
             $scope.selectedUser = user;
-            convertTags(user.tags);
+            sendToGraph();
         });
     }
 
@@ -197,15 +198,6 @@ function ($scope,  $http, $location, $resource) {
         getRepoResources('issues');
         getRepoResources('users');
         hideLoadingScreen();
-    }
-
-    function convertTags(tags){
-        tagsFromUserOnSO = {};
-        $scope.selectedUser.emptyTags = false;
-        for(var tag of tags){
-            tagsFromUserOnSO[tag._id] = tag.count;
-        }
-        sendToGraph();
     }
 
     /**
@@ -245,6 +237,15 @@ function ($scope,  $http, $location, $resource) {
     function sendToGraph(){
         hideLoadingScreen();
         var graphs = new ExpertiseGraph();
-        graphs.drawWithNewData(tagsFromIssue, tagsFromUserOnSO, $http);
+        var issueTags = [];
+        var userTags = [];
+        if($scope.selectedIssue){
+            issueTags = $scope.selectedIssue.tags;
+        }
+
+        if($scope.selectedUser){
+            userTags = $scope.selectedUser.tags;
+        }
+        graphs.drawWithNewData(issueTags, userTags, $http);
     }
 }]);

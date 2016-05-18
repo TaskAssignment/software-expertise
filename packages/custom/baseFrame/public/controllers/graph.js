@@ -7,7 +7,7 @@ function ExpertiseGraph() {
 
     var expertGraph = this;
 
-    expertGraph.drawWithNewData = function(tagsFromIssue = {}, tagsFromUserOnSO = {}, $http){
+    expertGraph.drawWithNewData = function(tagsFromIssue = [], tagsFromUserOnSO = [], $http){
         var allTags = mergeTags();
 
         var dataString = 'tags=';
@@ -16,12 +16,9 @@ function ExpertiseGraph() {
         }
         showLoadingScreen();
 
-        //TODO: Change this to a GET request!!!!
         $http({
-            method: 'POST',
-            url: '/api/baseFrame/coOccurrence',
-            data: dataString,
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+            method: 'GET',
+            url: '/api/baseFrame/coOccurrence?' + dataString
         }).success(function (links) {
             drawGraph(links, allTags);
             hideLoadingScreen();
@@ -76,15 +73,28 @@ function ExpertiseGraph() {
                 .on("dblclick", dblclick)
                 .call(drag);
 
+            node.append('text')
+                .attr('dx', 12)
+                .text(function(d) { return d.name });
+
             node.append("circle")
                 .attr('r', function(d) {
                     return calculateCircleRatio(d.soCount);
                 })
-                .style('fill', function(d) { return d.origin; });
+                .style('fill', function(d) { return 'yellow'; });
 
-            node.append('text')
-               .attr('dx', 12)
-               .text(function(d) { return d.name });
+            node.append("circle")
+                .attr('r', function(d) {
+                    return calculateCircleRatio(d.userCount);
+                })
+                .style('fill', function(d) { return 'blue'; });
+
+            node.append("circle")
+                .attr('r', function(d) {
+                    return calculateCircleRatio(d.issueCount);
+                })
+                .style('fill', function(d) { return 'green'; });
+
 
             function tick() {
                 link.attr("x1", function(d) { return d.source.x; })
@@ -107,26 +117,29 @@ function ExpertiseGraph() {
         }
 
         function calculateCircleRatio(counter){
+            if(counter < 1){
+                return 0;
+            }
             var sqrt = Math.sqrt(counter);
             var result = 0;
             if(sqrt != 0){
                 result = 1/sqrt;
             }
             var MAX_RATIO = 10; //Add max ratio because 1 is too small to see
-            return result * MAX_RATIO;
+            return (1 - result) * MAX_RATIO;
         }
 
         /**
         * This will format the tags and links to what is expected to render the graph
         *
-        * @param links - Array of dicts with source, target and coOccurrence
-        * @param allTags - Dict where key is tagName
+        * @param links - Array of objects with source, target and coOccurrence
+        * @param allTags - Object where key is tagName
         *
-        * @return graph - Dict with links and nodes.
+        * @return graph - Object with links and nodes.
         */
         function formatDataToGraph(links, allTags){
             var graph = {};
-            var new_links = []
+            var new_links = [];
             for(var i = 0; i < links.length; i++){
                 var occurrence = links[i];
                 var link = {
@@ -134,7 +147,6 @@ function ExpertiseGraph() {
                     target: allTags[occurrence.target].index,
                     value: parseInt(occurrence.occurrences)
                 };
-
                 new_links.push(link);
 
                 // Adds the values of these occurences to the tags counter
@@ -149,18 +161,14 @@ function ExpertiseGraph() {
             var length = allTags.length || 0;
             var nodes = new Array(length);
             for(var tag in allTags){
-                nodes[allTags[tag].index] = {
-                    name: tag,
-                    origin: allTags[tag].origin,
-                    issueCount: allTags[tag].issueCount,
-                    soCount: allTags[tag].soCount
-                };
+                nodes[allTags[tag].index] = allTags[tag];
             }
 
             var graph = {
                 nodes: nodes,
                 links: new_links
             }
+
             return graph;
         }
 
@@ -168,38 +176,44 @@ function ExpertiseGraph() {
         * This function will merge the tagsFromIssue with the tagsFromUserOnSO
         * Both tagsFromIssue and tagsFromUserOnSO have the format: name: count
         *
-        * @return Dict of dicts with tag name being the main key
-        and origin, index, issueCount and soCount as subkeys.
+        * @return Object of objects with tag name being the main key
+        and origin, index, issueCount, userCount and soCount as subkeys.
         */
         function mergeTags(){
             var allTags = {};
             var index = 0;
 
-            var SO = 'blue';
-            var ISSUE = 'yellow';
-            var BOTH = 'red';
-            for(var tag in tagsFromIssue){
-                allTags[tag] = {
+            var BOTH = 1;
+            var ISSUE = 2;
+            var USER = 3;
+            for(var i in tagsFromIssue){
+                var tag = tagsFromIssue[i];
+                allTags[tag._id] = {
+                    name: tag._id,
                     origin: ISSUE,
                     index: index,
-                    issueCount: parseInt(tagsFromIssue[tag].issueCount),
-                    soCount: parseInt(tagsFromIssue[tag].soCount),
+                    issueCount: tag.issueCount,
+                    soCount: tag.soCount,
+                    userCount: 0,
                 }
                 index++;
             }
 
-            for(var tag in tagsFromUserOnSO){
-                if(allTags[tag] === undefined) {
-                    allTags[tag] = {
-                        origin: SO,
+            for(var i in tagsFromUserOnSO){
+                var tag = tagsFromUserOnSO[i];
+                if(allTags[tag._id] === undefined) {
+                    allTags[tag._id] = {
+                        name: tag._id,
+                        origin: USER,
                         index: index,
-                        soCount: parseInt(tagsFromUserOnSO[tag]),
-                        issueCount: 0
+                        userCount: tag.count,
+                        issueCount: 0,
+                        soCount: 0
                     }
                     index++;
                 }else{
-                    allTags[tag].origin = BOTH;
-                    allTags[tag].soCount += parseInt(tagsFromUserOnSO[tag]);
+                    allTags[tag._id].origin = BOTH;
+                    allTags[tag._id].userCount = tag.count;
                 }
             }
 
