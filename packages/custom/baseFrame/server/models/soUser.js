@@ -12,8 +12,6 @@ var QuestionSchema = new Schema({
     up_vote_count: Number,
     down_vote_count: Number,
     score: Number
-},{
-    timestamps: true
 });
 
 var AnswerSchema = new Schema({

@@ -15,8 +15,6 @@ var TagSchema = new Schema({
     _id: String,
     issueCount: Number,
     soCount: Number
-}, {
-    timestamps: true
 });
 
 var IssueSchema = new Schema({
