@@ -125,6 +125,11 @@ function ($scope,  $http, $location, $resource) {
         sendToGraph();
     }
 
+    $scope.deselect = function (resource){
+        $scope['selected' + resource] = undefined;
+        sendToGraph();
+    }
+
     /**
     * display information based on issues
     *
@@ -225,7 +230,6 @@ function ($scope,  $http, $location, $resource) {
 
     function sendToGraph(){
         hideLoadingScreen();
-        console.log("Send to graph");
         var ids = {};
         if($scope.selectedIssue){
             ids.issueId = $scope.selectedIssue._id;

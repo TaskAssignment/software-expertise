@@ -37,6 +37,7 @@
                 <h4> Selected Items: </h4>
                 <hr>
                 <dl class="dl-horizontal" ng-if="selectedIssue">
+                    <button type="button" class="close" ng-click="deselect('Issue')" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     <dt> Issue: </dt>
                     <dd> {{ selectedIssue.title }} </dd>
                     <dt> Reporter: </dt>
@@ -46,6 +47,7 @@
                 </dl>
                 <hr>
                 <dl class="dl-horizontal" ng-if="selectedUser">
+                    <button type="button" class="close" ng-click="deselect('User')" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     <dt> User: </dt>
                     <dd> {{ selectedUser._id }} </dd>
                     <dd ng-if="selectedUser.soId"> <span class="badge">SO User</span> </dd>
