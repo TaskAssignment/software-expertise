@@ -4,7 +4,7 @@
 var mongoose = require('mongoose');
 var Tag = mongoose.model('Tag');
 var SoUser = mongoose.model('SoUser');
-var CommonOccurrence = mongoose.model('CommonOccurrence');
+var CoOccurrence = mongoose.model('CoOccurrence');
 
 var fs = require('fs');
 var csv = require('fast-csv');
@@ -25,8 +25,8 @@ module.exports = function (BaseFrame){
         * @param req - Express request.
         * @param res - Express respnse.
         */
-        populateCommonOccurrences: function (req, res){
-            readFile('files/coOccurrences.csv', res, CommonOccurrence);
+        populateCoOccurrences: function (req, res){
+            readFile('files/coOccurrences.csv', res, CoOccurrence);
         },
 
         /** Populates StackOverflow users that have github accounts from saved file.
@@ -52,8 +52,8 @@ module.exports = function (BaseFrame){
         * @param req - Express request.
         * @param res - Express respnse.
         */
-        exportCommonOccurrences: function (req, res){
-            writeFile('files/CommonOccurrences.tsv', '-_id source target occurrences', res, CommonOccurrence);
+        exportCoOccurrences: function (req, res){
+            writeFile('files/CoOccurrences.tsv', '-_id source target occurrences', res, CoOccurrence);
         },
 
         /** Exports all users to a file.
@@ -148,7 +148,7 @@ function createModel(line, modelName){
             model['_id'] = line[1];
             model['email'] = line[2];
             break;
-        case 'CommonOccurrence':
+        case 'CoOccurrence':
             model['source'] = line[0];
             model['target'] = line[1];
             model['occurrences'] = line[2];

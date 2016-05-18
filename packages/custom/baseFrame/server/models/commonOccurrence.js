@@ -4,7 +4,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var mongooseToCsv = require('mongoose-to-csv');
 
-var CommonOccurrenceSchema = new Schema({
+var CoOccurrenceSchema = new Schema({
     source: {
         type: String,
         ref: 'Tag',
@@ -23,13 +23,13 @@ var CommonOccurrenceSchema = new Schema({
     timestamps: true
 });
 
-CommonOccurrenceSchema.index({source: 1, target: 1});
+CoOccurrenceSchema.index({source: 1, target: 1});
 
-CommonOccurrenceSchema.path('occurrences').validate(function (occurrences){
+CoOccurrenceSchema.path('occurrences').validate(function (occurrences){
     return !!occurrences;
 }, 'Occurrences cannot be blank!');
 
-CommonOccurrenceSchema.plugin(mongooseToCsv, {
+CoOccurrenceSchema.plugin(mongooseToCsv, {
     headers: 'Source Target Occurrences',
     constraints: {
         'Source': 'source',
@@ -38,4 +38,4 @@ CommonOccurrenceSchema.plugin(mongooseToCsv, {
     }
 });
 
-mongoose.model('CommonOccurrence', CommonOccurrenceSchema);
+mongoose.model('CoOccurrence', CoOccurrenceSchema);

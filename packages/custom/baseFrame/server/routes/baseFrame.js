@@ -50,13 +50,13 @@ module.exports = function (BaseFrame, app, database) {
     app.route(base + 'populate/SoTags')
         .get(admin.populateSoTags);
     app.route(base + 'populate/CoOccurrences')
-        .get(admin.populateCommonOccurrences);
+        .get(admin.populateCoOccurrences);
     app.route(base + 'populate/SoUsers')
         .get(admin.populateSoUsers);
     app.route(base + 'export/SoTags')
         .get(admin.exportSoTags);
     app.route(base + 'export/CoOccurrences')
-        .get(admin.exportCommonOccurrences);
+        .get(admin.exportCoOccurrences);
     app.route(base + 'export/SoUsers')
         .get(admin.exportSoUsers);
 

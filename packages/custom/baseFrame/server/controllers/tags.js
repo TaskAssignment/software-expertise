@@ -3,7 +3,7 @@
 // Database connections
 var mongoose = require('mongoose');
 var Tag = mongoose.model('Tag');
-var CommonOccurrence = mongoose.model('CommonOccurrence');
+var CoOccurrence = mongoose.model('CoOccurrence');
 var StopWord = mongoose.model('StopWord');
 var Issue = mongoose.model('Issue');
 
@@ -114,7 +114,7 @@ module.exports = function (BaseFrame){
                   {target: {$in: tags}} ]
             }
 
-            CommonOccurrence.find(conditions, function(err, occurrences){
+            CoOccurrence.find(conditions, function(err, occurrences){
                 res.json(occurrences);
             });
         }
