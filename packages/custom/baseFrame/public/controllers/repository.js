@@ -117,12 +117,14 @@ function ($scope,  $http, $location, $resource) {
     * @param username - github username
     */
     $scope.selectUser = function(user){
+        showLoadingScreen();
         $scope.selectedUser = user;
 
         if(!user.soId){
             alert("User is not in StackOverflow. Please, choose a Stack Overflow user");
         }
         sendToGraph();
+        hideLoadingScreen();
     }
 
     $scope.deselect = function (resource){

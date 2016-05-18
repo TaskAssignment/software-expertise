@@ -4,19 +4,14 @@
  */
 var graphCallback = function ($scope,  $http, $resource) {
     $scope.$on('fetchGraphData', function(event, params){
+        showLoadingScreen();
         var GraphData = $resource('api/baseFrame/:modeIssue/:modeUser/graphData');
 
         params.modeIssue = 'default';
         params.modeUser = 'default';
-        GraphData.get(params).$promise.then(function (data){
-            var graphData = {
-                links: [{source: 0, target: 1}],
-                nodes: [
-                    {name: "Temp1", soCount: 100, userCount: 5, issueCount: 2},
-                    {name: "Temp2", soCount: 100, userCount: 5, issueCount: 2},
-                ]
-            };
+        GraphData.get(params).$promise.then(function (graphData){
             drawGraph(graphData);
+            hideLoadingScreen();
         })
     });
 }
