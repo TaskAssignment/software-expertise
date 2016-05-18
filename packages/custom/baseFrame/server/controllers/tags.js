@@ -10,6 +10,57 @@ var Issue = mongoose.model('Issue');
 var pullAll = require('lodash.pullall');
 
 module.exports = function (BaseFrame){
+
+    function getIssues(stopWords, filter) {
+        Issue.find(filter, '_id body title', {lean: true}, function (err, issues){
+            for(var i in issues){
+                var issue = issues[i];
+
+                var title = issue.title.toLowerCase().split(' ');
+                var allWords = new Set(issue.body.toLowerCase().split(' '));
+
+                for(var j in title) {
+                    var word = title[j];
+                    allWords.add(word);
+                }
+
+                allWords = Array.from(allWords)
+                //Lodash pullAll: removes the second array from the first one.
+                pullAll(allWords, stopWords);
+                getTags(allWords, issue._id);
+            }
+        });
+    }
+
+    function getTags(issueWords, issueId){
+        Tag.find({_id: {$in: issueWords }}, '_id soTotalCount', {lean: true}, function(err, tags){
+            var issueUpdate = {
+                tags: [],
+            }
+            for(var i in tags){
+                var tag = tags[i];
+
+                var issueTag = {
+                    _id: tag._id,
+                    soCount: tag.soTotalCount,
+                    //I don't have the count for the issue right now.
+                    issueCount: 1
+                };
+
+                issueUpdate.tags.push(issueTag);
+            }
+            issueUpdate.parsed = true;
+
+            Issue.update({_id: issueId}, issueUpdate, function (err){
+                if(err){
+                    console.log(err.message);
+                } else {
+                    console.log("Issue updated!");
+                }
+            });
+        });
+    }
+
     return {
 
         /** Gets the words that are SO Tags given an issue text.
@@ -27,72 +78,23 @@ module.exports = function (BaseFrame){
             if(req.query.issueId){
                 filter._id = req.query.issueId;
             }
-            StopWord.find({}, '_id', {lean: true}, function (err,words){
+
+            StopWord.find({}, '_id', {lean: true}, function (err, words){
                 if(err) {
                     console.log(err.message);
                 } else {
-                    var stopWords = [];
+                    var stopWords = []
                     for(var index in words){
                         stopWords.push(words[index]._id);
                     }
 
-
-                    Issue.find(filter, 'title body', function(err, issues){
-                        if(err){
-                            console.log(err);
-                        }
-                        console.log(issues.length);
-                        var issue = "";
-                        for(var i in issues){
-
-                            issue = issues[i];
-
-                            var title = issue.title.toLowerCase().split(' ');
-                            var allWords = issue.body.toLowerCase().split(' ');
-
-                            for(var index in title) {
-                                var word = title[index];
-                                allWords.push(word);
-                            }
-
-                            pullAll(allWords, stopWords);
-
-                            // Any tag that has any of the words in the given array
-                            // The lean option is to avoid Mongoose wrapers. It returns just a json
-                            Tag.find({_id: {$in: allWords }}, '_id soTotalCount', {lean: true}, function(err, tags){
-                                if(err){
-                                    console.log(err.message);
-                                    res.sendStatus(500);
-                                }
-
-                                var tagsFromIssue = [];
-                                for(var index in tags){
-                                    var tag = tags[index];
-                                    var issuetag = {}
-                                    issuetag[tag._id] = {
-                                        soCount: tag.soTotalCount,
-                                        //I don't have the count for the issue right now.
-                                        issueCount: 1
-                                    };
-                                    tagsFromIssue.push(issuetag);
-                                }
-
-                                issue.tags = tagsFromIssue;
-                                issue.parsed = true;
-                                issue.save(function (err){
-                                    if(err){
-                                        console.log(err.message);
-                                    }else{
-                                        console.log("Issue updated successfully!");
-                                    }
-                                });
-                            });
-                        }
-                    });
+                    getIssues(stopWords, filter);
                 }
             });
             res.sendStatus(200);
         },
+
+
 
         /** Gets the coOccurrences from a list of tags
         *
