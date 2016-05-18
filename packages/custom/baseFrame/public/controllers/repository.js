@@ -12,8 +12,6 @@ var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('RepositoryController',
 ['$scope', '$http', '$location', '$resource',
 function ($scope,  $http, $location, $resource) {
-    var tagsFromIssue;
-    var tagsFromUserOnSO;
     findProject();
 
     // *************** SCOPE FUNCTIONS **************//
@@ -118,7 +116,7 @@ function ($scope,  $http, $location, $resource) {
     *
     * @param username - github username
     */
-    $scope.displayUserExpertise = function(user){
+    $scope.selectUser = function(user){
         $scope.selectedUser = user;
 
         if(!user.soId){
@@ -132,11 +130,11 @@ function ($scope,  $http, $location, $resource) {
     *
     * @param issue - Dictionary with id, title and body from github issue
     */
-    $scope.getIssueTags = function (issue) {
+    $scope.selectIssue = function (issue) {
         showLoadingScreen();
         $scope.selectedIssue = issue;
-        tagsFromIssue = issue.tags; //I'll remove this
-        if(issue.tags.length == 0){
+
+        if(!issue.parsed){
             var filter = {
                 projectId: $scope.selectedRepo._id,
                 _id: issue._id
@@ -144,17 +142,8 @@ function ($scope,  $http, $location, $resource) {
 
             var Issue = $resource('/api/baseFrame/:projectId/makeIssuesTags');
             Issue.get(filter);
-
-            Issue = $resource('/api/baseFrame/:projectId/issue/:_id');
-
-            Issue.get(filter).$promise.then(function (response){
-                issue.tags = response.tags;
-                tagsFromIssue = issue.tags; //I'll remove this
-                sendToGraph();
-            });
-        } else {
-            sendToGraph();
         }
+        sendToGraph();
     }
 
     $scope.populateSOData = function() {
@@ -172,7 +161,6 @@ function ($scope,  $http, $location, $resource) {
         Resource = $resource(url + 'tags');
         Resource.get(filter).$promise.then(function (user){
             hideLoadingScreen();
-            $scope.selectedUser = user;
             sendToGraph();
         });
     }
@@ -237,16 +225,14 @@ function ($scope,  $http, $location, $resource) {
 
     function sendToGraph(){
         hideLoadingScreen();
-        var graphs = new ExpertiseGraph();
-        var issueTags = [];
-        var userTags = [];
+        console.log("Send to graph");
+        var ids = {};
         if($scope.selectedIssue){
-            issueTags = $scope.selectedIssue.tags;
+            ids.issueId = $scope.selectedIssue._id;
         }
-
         if($scope.selectedUser){
-            userTags = $scope.selectedUser.tags;
+            ids.userId = $scope.selectedUser._id;
         }
-        graphs.drawWithNewData(issueTags, userTags, $http);
+        $scope.$broadcast('fetchGraphData', ids);
     }
 }]);

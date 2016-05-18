@@ -61,7 +61,7 @@
             <!-- Showing only 500 issues for now. But all of them are saved! -->
             <div id='issueSelection' class='scrollable list-group'>
                 <button ng-repeat="issue in issues" class="list-group-item"
-                  ng-click="getIssueTags(issue)">
+                  ng-click="selectIssue(issue)">
                     {{ issue.title }}
                     <span class="badge"> {{ issue.state }}</span>
                     <span class="badge" ng-if="issue.pull_request">
@@ -85,7 +85,7 @@
             <div id='userSelection' class='scrollable list-group'>
                 <button ng-repeat="user in users"
                  class='list-group-item'
-                  ng-click="displayUserExpertise(user)">
+                  ng-click="selectUser(user)">
                     {{ user._id }}
                     <span ng-if="user.soId" class="badge">SO User</span>
                     <span ng-if="selectedIssue.reporterId == user._id" class="badge">Reporter</span>
@@ -111,7 +111,7 @@
 
         <div class="row">
             <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
-            <div role="tabpanel" class="tab-pane tabGraph" id="expertiseGraph">
+            <div role="tabpanel" class="tab-pane tabGraph" id="expertiseGraph" ng-controller="GraphController">
             </div>
             <div role="tabpanel" class="tab-pane hidden tabTable" id="expertiseTable">
 
