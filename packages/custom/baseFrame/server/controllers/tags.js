@@ -13,6 +13,7 @@ module.exports = function (BaseFrame){
 
     function getIssues(stopWords, filter) {
         Issue.find(filter, '_id body title', {lean: true}, function (err, issues){
+            console.log(issues);
             for(var i in issues){
                 var issue = issues[i];
 
@@ -73,10 +74,12 @@ module.exports = function (BaseFrame){
                 projectId: req.params.projectId,
                 parsed: false,
                 pull_request: false
-            }
+            };
 
-            if(req.query.issueId){
-                filter._id = req.query.issueId;
+            if(req.query._id){
+                filter = {
+                    _id: req.query._id
+                };
             }
 
             StopWord.find({}, '_id', {lean: true}, function (err, words){

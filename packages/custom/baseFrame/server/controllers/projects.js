@@ -127,9 +127,10 @@ module.exports = function (BaseFrame){
                     }
 
                     Issue.create(issues, function(err){
-
                         if(err){
                             console.log(err);
+                        } else {
+                            console.log("Issues created!");
                         }
                     });
 

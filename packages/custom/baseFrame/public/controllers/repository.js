@@ -133,20 +133,27 @@ function ($scope,  $http, $location, $resource) {
     * @param issue - Dictionary with id, title and body from github issue
     */
     $scope.getIssueTags = function (issue) {
-        $scope.selectedIssue = issue;
         showLoadingScreen();
-        var Resource = $resource('/api/baseFrame/:projectId/issue/:_id');
-        var filter = {
-            _id: issue._id,
-            projectId: $scope.selectedRepo._id
-        };
+        $scope.selectedIssue = issue;
+        console.log(issue.tags);
+        if(issue.tags.length == 0){
+            var filter = {
+                projectId: $scope.selectedRepo._id,
+                _id: issue._id
+            };
 
-        Resource.get(filter).$promise.then(function (response){
-            hideLoadingScreen();
-            console.log(response);
-            tagsFromIssue = response.tags;
+            var Issue = $resource('/api/baseFrame/:projectId/makeIssuesTags');
+            Issue.get(filter);
+
+            Issue = $resource('/api/baseFrame/:projectId/issue/:_id');
+
+            Issue.get(filter).$promise.then(function (response){
+                issue.tags = response.tags;
+                sendToGraph();
+            });
+        } else {
             sendToGraph();
-        });
+        }
     }
 
     $scope.populateSOData = function() {
@@ -220,8 +227,6 @@ function ($scope,  $http, $location, $resource) {
                 $scope.selectedRepo['empty' + resource] = true;
             }
 
-            //Add the last id to pagination later!
-            $scope['last' + resource] = resources[resources.length - 1]._id
             $scope[resource] = resources;
             hideLoadingScreen();
         });
@@ -238,6 +243,7 @@ function ($scope,  $http, $location, $resource) {
     }
 
     function sendToGraph(){
+        hideLoadingScreen();
         var graphs = new ExpertiseGraph();
         graphs.drawWithNewData(tagsFromIssue, tagsFromUserOnSO, $http);
     }

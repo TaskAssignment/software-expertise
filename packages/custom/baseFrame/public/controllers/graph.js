@@ -31,8 +31,6 @@ function ExpertiseGraph() {
             var width = $('#expertiseGraph').innerWidth();
             var height = $('#leftSelectionPanel').innerHeight();
 
-            console.log(width, height);
-
             var force = d3.layout.force()
                 .size([width, height])
                 .charge(-400)
@@ -163,7 +161,6 @@ function ExpertiseGraph() {
                 nodes: nodes,
                 links: new_links
             }
-            console.log(graph);
             return graph;
         }
 
@@ -182,7 +179,6 @@ function ExpertiseGraph() {
             var ISSUE = 'yellow';
             var BOTH = 'red';
             for(var tag in tagsFromIssue){
-                console.log(tagsFromIssue[tag]);
                 allTags[tag] = {
                     origin: ISSUE,
                     index: index,
