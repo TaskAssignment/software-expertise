@@ -3,16 +3,21 @@
  * Class that handles drawing of the expertise graph
  */
 var graphCallback = function ($scope,  $http, $resource) {
-    $scope.$on('fetchGraphData', function(event, ids){
-        console.log(ids);
-        var graphData = {
-            links: [{source: 0, target: 1}],
-            nodes: [
-                {name: "Temp1", soCount: 100, userCount: 5, issueCount: 2},
-                {name: "Temp2", soCount: 100, userCount: 5, issueCount: 2},
-            ]
-        }
-        drawGraph(graphData);
+    $scope.$on('fetchGraphData', function(event, params){
+        var GraphData = $resource('api/baseFrame/:modeIssue/:modeUser/graphData');
+
+        params.modeIssue = 'default';
+        params.modeUser = 'default';
+        GraphData.get(params).$promise.then(function (data){
+            var graphData = {
+                links: [{source: 0, target: 1}],
+                nodes: [
+                    {name: "Temp1", soCount: 100, userCount: 5, issueCount: 2},
+                    {name: "Temp2", soCount: 100, userCount: 5, issueCount: 2},
+                ]
+            };
+            drawGraph(graphData);
+        })
     });
 }
 

@@ -23,7 +23,6 @@ module.exports = function (BaseFrame, app, database) {
     app.route(base + ':projectId/populate/commits/comments')
         .get(projects.populateCommitsComments);
 
-
     var issues = require(controllers + 'issues')(BaseFrame);
     app.route(base + ':projectId/issues/')
         .get(issues.find);
@@ -59,4 +58,12 @@ module.exports = function (BaseFrame, app, database) {
     var stopwords = require(controllers + 'stopWords')(BaseFrame);
     app.route(base + 'populate/StopWords')
         .post(stopwords.populateStopWords);
+
+    /** My idea here is to be able to fetch data from different places.
+    * The modes, for now, will be 'default' and 'default' to fetch data from our
+    * database (populated from github/SO).
+    */
+    var graph = require(controllers + 'graph')(BaseFrame);
+    app.route(base + ':modeIssue/:modeUser/graphData').
+        get(graph.getDataForGraph)
 };
