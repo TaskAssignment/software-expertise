@@ -52,7 +52,7 @@
                     <dd> {{ selectedUser._id }} </dd>
                     <dd ng-if="selectedUser.soId"> <span class="badge">SO User</span> </dd>
                     <dd ng-if="selectedIssue.assigneeId == selectedUser._id"> <span class="badge">Assignee</span> </dd>
-                    <p ng-if="selectedUser.soId && selectedUser.tags.length == 0">
+                    <p ng-if="selectedUser.soId && selectedUser.soPopulated == false">
                         It looks like we don't have any StackOverflow data for this user. Try to <a ng-click="populateSOData()" >populate</a></p>
                 </dl>
             </div>

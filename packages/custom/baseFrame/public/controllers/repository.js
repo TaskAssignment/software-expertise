@@ -164,8 +164,9 @@ function ($scope,  $http, $location, $resource) {
         Resource.get(filter);
 
         Resource = $resource(url + 'tags');
-        Resource.get(filter).$promise.then(function (user){
+        Resource.get(filter).$promise.then(function (){
             hideLoadingScreen();
+            $scope.selectedUser.soPopulated = true;
             sendToGraph();
         });
     }

@@ -12,6 +12,8 @@ var QuestionSchema = new Schema({
     up_vote_count: Number,
     down_vote_count: Number,
     score: Number
+}, {
+    timestamps: true
 });
 
 var AnswerSchema = new Schema({
@@ -30,8 +32,6 @@ var AnswerSchema = new Schema({
 var TagSchema = new Schema({
     _id: String,
     count: Number
-}, {
-    timestamps: true
 });
 
 var SoUserSchema = new Schema({
@@ -45,6 +45,10 @@ var SoUserSchema = new Schema({
     emailHash: String,
     soId: String,
     repositories: [String],
+    soPopulated: {
+        type: Boolean,
+        default: false
+    },
     tags: [TagSchema],
     questions: [QuestionSchema],
     answers: [AnswerSchema]

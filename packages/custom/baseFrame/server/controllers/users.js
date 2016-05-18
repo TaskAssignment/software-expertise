@@ -15,7 +15,7 @@ module.exports = function (BaseFrame){
         find: function (req, res){
             var repo = {repositories: req.params.projectId};
 
-            SoUser.find(repo, 'soId _id', {sort: '-soId -updatedAt'}, function(err, users){
+            SoUser.find(repo, 'soId _id soPopulated', {sort: '-soId -updatedAt'}, function(err, users){
                 res.send(users);
             });
         },
@@ -168,9 +168,10 @@ module.exports = function (BaseFrame){
                         console.log(err.message);
                     }else{
                         user[build.dataSet] = build.models;
+                        user.soPopulated = true;
                         user.save(function (new_err){
                             if(!res.headersSent){
-                                res.send(user);
+                                res.sendStatus(200);
                             }
                             console.log('User updated successfully!');
                         });
