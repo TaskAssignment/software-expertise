@@ -232,6 +232,7 @@ function ($scope,  $http, $location, $resource) {
                 getRepoInformation(project);
             });
         }
+        angular.element('svg').remove();
     }
 
     function sendToGraph(){

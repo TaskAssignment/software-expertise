@@ -11,13 +11,22 @@ var pullAll = require('lodash.pullall');
 
 module.exports = function (BaseFrame){
 
-    function getIssues(stopWords, filter) {
+    function getIssues(stopWords, filter, res) {
         Issue.find(filter, '_id body title', {lean: true}, function (err, issues){
+            if(err){
+                console.log(err.message);
+                if(!res.headersSent){
+                    res.sendStatus(500);
+                }
+            }
             for(var i in issues){
                 var issue = issues[i];
 
                 var title = issue.title.toLowerCase().split(' ');
-                var body = issue.body.toLowerCase().split(' ');
+                var body = [];
+                if(issue.body){
+                    body = issue.body.toLowerCase().split(' ');
+                }
 
                 var allWords = {};
                 for(var j in title) {
@@ -52,6 +61,9 @@ module.exports = function (BaseFrame){
 
                 getTags(allWords, issue._id);
             }
+            if(!res.headersSent){
+                res.sendStatus(200);
+            }
         });
     }
 
@@ -73,8 +85,6 @@ module.exports = function (BaseFrame){
                 issueUpdate.tags.push(issueTag);
             }
             issueUpdate.parsed = true;
-
-            console.log(issueUpdate);
 
             Issue.update({_id: issueId}, issueUpdate, function (err){
                 if(err){
@@ -115,10 +125,9 @@ module.exports = function (BaseFrame){
                         stopWords.push(words[index]._id);
                     }
 
-                    getIssues(stopWords, filter);
+                    getIssues(stopWords, filter, res);
                 }
             });
-            res.sendStatus(200);
         },
 
 
