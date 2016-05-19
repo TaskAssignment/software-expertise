@@ -5,7 +5,7 @@
 </div>
 
 <div id="graph-options" ng-show="config">
-    <form>
+    <form name="graph-options">
         <label>Number of occurrences and co-occurrences</label>
         <div class="radio">
             <label>
@@ -67,6 +67,25 @@
                 <input ng-click="apply()" type="radio"
                  ng-model="graphOptions.direction"
                   value="undirected"> Undirected
+            </label>
+        </div>
+    </form>
+
+    <br><br>
+    <form name="similarity-options">
+        <label>Calculate the similarity</label>
+        <div class="radio">
+            <label>
+                <input ng-click="apply()" type="radio"
+                 ng-model="similarityOptions.type"
+                 value="cosine"> Cosine
+             </label>
+        </div>
+        <div class="radio">
+             <label>
+                <input ng-click="apply()" type="radio"
+                 ng-model="similarityOptions.type"
+                  value="jaccard"> Jaccard
             </label>
         </div>
     </form>

@@ -22,12 +22,12 @@ var controllerCallback = function ($scope,  $http, $resource) {
     };
 
     $scope.similarityOptions = {
-        cosine: 'default',
-        jacardy: 'default'
+        type: 'cosine'
     };
 
     $scope.apply = function(){
         console.log($scope.graphOptions);
+        console.log($scope.similarityOptions);
     }
 }
 
