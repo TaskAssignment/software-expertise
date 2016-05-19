@@ -2,100 +2,16 @@
 
 <section ng-controller="RepositoryController" class="row">
     <div id='leftSelectionPanel' class='col-md-offset-1 col-lg-offset-1 col-md-4 col-lg-3'>
-        <div id='repositorySearch'>
-            <div class='searchBoxInput'>
-                <p>Search for a repository:</p>
-                <form class='form-group form-horizontal' ng-submit=queryRepos()>
-                    <input type='text' ng-model="repoUser" name='repoUser'
-                      class='form-control col-md-3'
-                      placeholder='User or Organization'>
-                    <input type='text' ng-model="repositoryName"
-                      name='repositoryName' class='form-control col-md-3'
-                      placeholder='Repository name'>
-                    <input type='text' ng-model="repoDescription"
-                      name='repoDescription' class='form-control'
-                      placeholder='Any phrase in the repo description'>
-                    <input type='text' ng-model="repoReadme"
-                      name='repoReadme' class='form-control'
-                      placeholder='Any thing in the repository readme'>
-                    <button class="btn btn-default"
-                      ng-submit="queryRepos()"> Search </button>
-                </form>
-            </div>
+        <ng-include src="'baseFrame/views/repo_search.html'"></ng-include>
 
-            <div id='repoSelection' class='scrollable' ng-if='repos'>
-                <button ng-repeat="repo in repos" class="list-group-item"
-                  ng-click="saveProject(repo)">
-                    {{ repo.name }}
-                </button>
-            </div>
-        </div>
 
         <div id='repositoyInfoDisplay' ng-if="selectedRepo.name">
             <h2> {{ selectedRepo.name }}: </h2>
-            <div id="selected" ng-if="selectedIssue || selectedUser">
-                <h4> Selected Items: </h4>
-                <hr>
-                <dl class="dl-horizontal" ng-if="selectedIssue">
-                    <button type="button" class="close" ng-click="deselect('Issue')" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <dt> Issue: </dt>
-                    <dd> {{ selectedIssue.title }} </dd>
-                    <dt> Reporter: </dt>
-                    <dd> {{ selectedIssue.reporterId }} </dd>
-                    <dt> Assignee: </dt>
-                    <dd> {{ selectedIssue.assigneeId }} <dd>
-                </dl>
-                <hr>
-                <dl class="dl-horizontal" ng-if="selectedUser">
-                    <button type="button" class="close" ng-click="deselect('User')" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <dt> User: </dt>
-                    <dd> {{ selectedUser._id }} </dd>
-                    <dd ng-if="selectedUser.soId"> <span class="badge">SO User</span> </dd>
-                    <dd ng-if="selectedIssue.assigneeId == selectedUser._id"> <span class="badge">Assignee</span> </dd>
-                    <p ng-if="selectedUser.soId && selectedUser.soPopulated == false">
-                        It looks like we don't have any StackOverflow data for this user. Try to <a ng-click="populateSOData()" >populate</a></p>
-                </dl>
-            </div>
+            <ng-include src="'baseFrame/views/selected_resources.html'"></ng-include>
             <hr>
 
-            <h3>Issues: </h3>
-
-            <!-- Showing only 500 issues for now. But all of them are saved! -->
-            <div id='issueSelection' class='scrollable list-group'>
-                <button ng-repeat="issue in issues" class="list-group-item"
-                  ng-click="selectIssue(issue)">
-                    {{ issue.title }}
-                    <span class="badge"> {{ issue.state }}</span>
-                    <span class="badge" ng-if="issue.pull_request">
-                        PR </span>
-                </button>
-            </div>
-
-            <!-- TODO: Add pagination here. It take too long to load all the issues!!!
-            <nav>
-                <ul class="pager">
-                    <li><a ng-click="populateRepoResources('issues', $scope.lastissues, '$lt')">Previous</a></li>
-                    <li><a ng-click="populateRepoResources('issues', $scope.lastissues)">Next</a></li>
-                </ul>
-            </nav>
-            -->
-
-            <a class="btn btn-default" ng-if="selectedRepo.emptyissues" ng-click=populateRepoResources('issues')> Get All Issues</a>
-            <a class="btn btn-default" ng-click=populateRepoResources('issues')> Get New Issues</a>
-
-            <h3>Users: </h3>
-            <div id='userSelection' class='scrollable list-group'>
-                <button ng-repeat="user in users"
-                 class='list-group-item'
-                  ng-click="selectUser(user)">
-                    {{ user._id }}
-                    <span ng-if="user.soId" class="badge">SO User</span>
-                    <span ng-if="selectedIssue.reporterId == user._id" class="badge">Reporter</span>
-                    <span ng-if="selectedIssue.assigneeId == user._id" class="badge">Assignee</span>
-                </button>
-            </div>
-            <a class="btn btn-default" ng-if="selectedRepo.emptyusers" ng-click=populateRepoResources('users')> Get All Contributors</a>
-            <a class="btn btn-default disabled"> Get New Contributors</a>
+            <ng-include src="'baseFrame/views/issues.html'"></ng-include>
+            <ng-include src="'baseFrame/views/contributors.html'"></ng-include>
         </div>
     </div>
     <div id="rightPanel" class="col-md-6 col-lg-7">
@@ -113,44 +29,9 @@
 
         <div class="row">
             <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
-            <div role="tabpanel" class="tab-pane tabGraph" id="expertiseGraph" ng-controller="GraphController">
-            </div>
-            <div role="tabpanel" class="tab-pane hidden tabTable" id="expertiseTable">
-
-                <div ng-if="selectedIssue || selectedUser">
-                    <h3> {{ selectedIssue.title }} </h3>
-                    <hr>
-
-                    <h4>Most indicated users:</h4>
-                    <h5>Top 1 Similarity</h5>
-                    <p>
-                        User1
-                    </p>
-                    <hr>
-                    <h5>Top 5 Similarity</h5>
-                    <p>
-                        User1
-                        ...
-                        User5
-                    </p>
-                    <hr>
-                    <h5>Top 10 Similarity</h5>
-                    <p>
-                        User1
-                        ...
-                        User10
-                    </p>
-                </div>
-            </div>
-
-            <div role="tabpanel" class="tab-pane hidden tabAdmin" id='populate'>
-                <a class="btn btn-default" ng-if="selectedRepo"
-                    ng-click="fullPopulateRepo()">
-                    Get Full Repository Info</a>
-                <a class="btn btn-default" ng-if="selectedRepo"
-                    ng-click="makeIssuesTags()">
-                    Parse Issues to Tags</a>
-            </div>
+            <ng-include src="'baseFrame/views/graph.html'"></ng-include>
+            <ng-include src="'baseFrame/views/table.html'"></ng-include>
+            <ng-include src="'baseFrame/views/repo_admin.html'"></ng-include>
         </div>
     </div>
 </section>

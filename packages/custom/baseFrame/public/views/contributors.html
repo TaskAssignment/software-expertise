@@ -1,0 +1,13 @@
+<h3>Users: </h3>
+<div id='userSelection' class='scrollable list-group'>
+    <button ng-repeat="user in users"
+     class='list-group-item'
+      ng-click="selectUser(user)">
+        {{ user._id }}
+        <span ng-if="user.soId" class="badge">SO User</span>
+        <span ng-if="selectedIssue.reporterId == user._id" class="badge">Reporter</span>
+        <span ng-if="selectedIssue.assigneeId == user._id" class="badge">Assignee</span>
+    </button>
+</div>
+<a class="btn btn-default" ng-if="selectedRepo.emptyusers" ng-click=populateRepoResources('users')> Get All Contributors</a>
+<a class="btn btn-default disabled"> Get New Contributors</a>
