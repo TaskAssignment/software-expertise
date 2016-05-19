@@ -147,13 +147,20 @@ function drawGraph(graphData){
 var calculateDistance =  function (link){
     var num = 2 * link.value;
     var den = link.source.issueCount + link.target.issueCount;
+
     if(den == 0){
         den = link.source.userCount + link.target.userCount;
         if(den == 0){
             return 0;
         }
     }
-    return num/den;
+
+    var distance = num/den;
+    if(distance > 400){
+        return 400;
+    } else {
+        return distance;
+    }
 }
 
 var calculateCircleRatio = function (counter){
