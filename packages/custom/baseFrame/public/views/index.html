@@ -4,6 +4,7 @@
     <div id='leftSelectionPanel' class='col-md-offset-1 col-lg-offset-1 col-md-4 col-lg-3'>
         <ng-include src="'baseFrame/views/repo_search.html'"></ng-include>
 
+        {{selectedRepo}}
 
         <div id='repositoyInfoDisplay' ng-if="selectedRepo.name">
             <h2> {{ selectedRepo.name }}: </h2>
@@ -29,11 +30,13 @@
 
         <div class="row">
             <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
-            <ng-include src="'baseFrame/views/graph.html'"></ng-include>
+            <div role="tabpanel" class="tab-pane tabGraph" id="expertiseGraph" ng-controller="GraphController">
+            </div>
             <ng-include src="'baseFrame/views/table.html'"></ng-include>
             <ng-include src="'baseFrame/views/repo_admin.html'"></ng-include>
         </div>
     </div>
+    <!-- <ng-include src="'baseFrame/views/graph_options.html'"></ng-include> -->
 </section>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.15/d3.js"></script>
