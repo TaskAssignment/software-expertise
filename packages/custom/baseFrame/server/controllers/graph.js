@@ -155,7 +155,7 @@ module.exports = function (BaseFrame){
     }
 
     return {
-        /** Gets and formats the graph data. As
+        /** Gets and formats the graph data.
         *
         * @param req - Express request.
         * @param res - Express response.
@@ -167,6 +167,40 @@ module.exports = function (BaseFrame){
         getDataForGraph: function(req, res){
             //For now I'll treat all the requests as default ones.
             findIssueTags(req.query, res);
+        },
+
+        calculateSimilarity: function(req, res){
+            var response = {
+                similarity: 'No similarity',
+                args: 'no method'
+            };
+
+            if(req.params.similarity == 'cosine'){
+                var num = 0;
+                var sum_bug = 0;
+                var sum_dev = 0;
+                for(let nodeJson of req.query.nodes){
+                    var node = JSON.parse(nodeJson);
+
+                    console.log(node);
+
+                    num += (node.issueCount * node.userCount);
+                    sum_bug += (node.issueCount * node.issueCount);
+                    sum_dev += (node.userCount * node.userCount);
+                }
+
+                console.log(num);
+                console.log(sum_bug);
+                console.log(sum_dev);
+
+                var similarity = num/(Math.sqrt(sum_bug) * Math.sqrt(sum_dev));
+
+                response.similarity = similarity;
+                response.args = 'cosine';
+
+            }
+
+            res.json(response);
         }
     }
 }

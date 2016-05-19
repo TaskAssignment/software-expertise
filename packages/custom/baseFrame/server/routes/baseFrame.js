@@ -64,6 +64,8 @@ module.exports = function (BaseFrame, app, database) {
     * database (populated from github/SO).
     */
     var graph = require(controllers + 'graph')(BaseFrame);
-    app.route(base + ':modeIssue/:modeUser/graphData').
-        get(graph.getDataForGraph)
+    app.route(base + ':modeIssue/:modeUser/graphData')
+        .get(graph.getDataForGraph);
+    app.route(base + 'calculate/:similarity/')
+        .get(graph.calculateSimilarity);
 };

@@ -3,17 +3,11 @@
  * Class that handles drawing of the expertise graph
  */
 var controllerCallback = function ($scope,  $http, $resource) {
-    $scope.$on('fetchGraphData', function(event, params){
-        showLoadingScreen();
-        var GraphData = $resource('api/baseFrame/:modeIssue/:modeUser/graphData');
 
-        params.modeIssue = 'default';
-        params.modeUser = 'default';
-        GraphData.get(params).$promise.then(function (graphData){
-            drawGraph(graphData);
-            hideLoadingScreen();
-        })
-    });
+    $scope.graphData = {
+        nodes: [],
+        links: []
+    };
 
     $scope.graphOptions = {
         occurrencesSo: 'regular',
@@ -25,9 +19,40 @@ var controllerCallback = function ($scope,  $http, $resource) {
         type: 'cosine'
     };
 
-    $scope.apply = function(){
+    $scope.$on('fetchGraphData', function(event, params){
+        showLoadingScreen();
+        var GraphData = $resource('api/baseFrame/:modeIssue/:modeUser/graphData');
+
+        params.modeIssue = 'default';
+        params.modeUser = 'default';
+        GraphData.get(params).$promise.then(function (graphData){
+            $scope.graphData.nodes = graphData.nodes;
+            $scope.graphData.links = graphData.links;
+            drawGraph(graphData);
+            hideLoadingScreen();
+        });
+    });
+
+    $scope.applyGraphOptions = function(){
+        console.log($scope.graphData);
         console.log($scope.graphOptions);
-        console.log($scope.similarityOptions);
+    }
+
+    $scope.applySimilarityOptions = function(){
+        showLoadingScreen();
+        var Similarity = $resource('api/baseFrame/calculate/:similarity');
+
+        var params = {
+            similarity: $scope.similarityOptions.type
+        };
+
+        params.nodes = $scope.graphData.nodes
+        Similarity.get(params).$promise.then(function (response){
+            $scope.similarity = response.similarity;
+            $scope.methods = response.args;
+            console.log(response);
+        });
+        hideLoadingScreen();
     }
 }
 

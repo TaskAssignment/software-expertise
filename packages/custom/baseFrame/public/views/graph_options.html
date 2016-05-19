@@ -1,53 +1,56 @@
-<div ng-model="config" ng-init="config = false" >
+<div ng-model="config" ng-init="config = true" >
     <a ng-click="config = !config" href="">
-        <i class="fa fa-cogs fa-lg" aria-hidden="true"></i>
+        <i class="fa fa-cogs fa-2x" aria-hidden="true"></i>
     </a>
 </div>
 
+Similarity User-Issue: {{ similarity }}
+Using method: {{ methods }}
+
 <div id="graph-options" ng-show="config">
     <form name="graph-options">
-        <label>Number of occurrences and co-occurrences</label>
+        <label>SO occurrences</label>
         <div class="radio">
             <label>
-                <input ng-click="apply()" type="radio"
+                <input ng-click="applyGraphOptions()" type="radio"
                  ng-model="graphOptions.occurrencesSo"
                  value="regular"> Regular Numbers
              </label>
         </div>
         <div class="radio">
              <label>
-                <input ng-click="apply()" type="radio"
+                <input ng-click="applyGraphOptions()" type="radio"
                  ng-model="graphOptions.occurrencesSo"
-                  value="sqrt"> Square Root of the regular numbers
+                  value="sqrt"> Square Root
             </label>
         </div>
         <div class="radio">
             <label>
-                  <input ng-click="apply()" type="radio"
+                  <input ng-click="applyGraphOptions()" type="radio"
                    ng-model="graphOptions.occurrencesSo"
                   value="log"> Log scaled (base 2)
             </label>
         </div>
 
         <hr>
-        <label>Counting a tag in txt</label>
+        <label>Text occurrences</label>
         <div class="radio">
             <label>
-                <input ng-click="apply()" type="radio"
+                <input ng-click="applyGraphOptions()" type="radio"
                  ng-model="graphOptions.tagText"
                  value="regular"> Regular Numbers
              </label>
         </div>
         <div class="radio">
              <label>
-                <input ng-click="apply()" type="radio"
+                <input ng-click="applyGraphOptions()" type="radio"
                  ng-model="graphOptions.tagText"
-                  value="sqrt"> Square Root of the regular numbers
+                  value="sqrt"> Square Root
             </label>
         </div>
         <div class="radio">
             <label>
-                  <input ng-click="apply()" type="radio"
+                  <input ng-click="applyGraphOptions()" type="radio"
                    ng-model="graphOptions.tagText"
                   value="log"> Log scaled (base 2)
             </label>
@@ -57,14 +60,14 @@
         <label>Graph style</label>
         <div class="radio">
             <label>
-                <input ng-click="apply()" type="radio"
+                <input ng-click="applyGraphOptions()" type="radio"
                  ng-model="graphOptions.direction"
                  value="directed"> Directed
              </label>
         </div>
         <div class="radio">
              <label>
-                <input ng-click="apply()" type="radio"
+                <input ng-click="applyGraphOptions()" type="radio"
                  ng-model="graphOptions.direction"
                   value="undirected"> Undirected
             </label>
@@ -76,14 +79,14 @@
         <label>Calculate the similarity</label>
         <div class="radio">
             <label>
-                <input ng-click="apply()" type="radio"
+                <input ng-click="applySimilarityOptions()" type="radio"
                  ng-model="similarityOptions.type"
                  value="cosine"> Cosine
              </label>
         </div>
         <div class="radio">
              <label>
-                <input ng-click="apply()" type="radio"
+                <input ng-click="applySimilarityOptions()" type="radio"
                  ng-model="similarityOptions.type"
                   value="jaccard"> Jaccard
             </label>
