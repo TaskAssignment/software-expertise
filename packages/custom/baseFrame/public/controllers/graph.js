@@ -2,7 +2,7 @@
 /**
  * Class that handles drawing of the expertise graph
  */
-var graphCallback = function ($scope,  $http, $resource) {
+var controllerCallback = function ($scope,  $http, $resource) {
     $scope.$on('fetchGraphData', function(event, params){
         showLoadingScreen();
         var GraphData = $resource('api/baseFrame/:modeIssue/:modeUser/graphData');
@@ -14,10 +14,25 @@ var graphCallback = function ($scope,  $http, $resource) {
             hideLoadingScreen();
         })
     });
+
+    $scope.graphOptions = {
+        occurrencesSo: 'regular',
+        tagText: 'sqrt',
+        direction: 'undirected'
+    };
+
+    $scope.similarityOptions = {
+        cosine: 'default',
+        jacardy: 'default'
+    };
+
+    $scope.apply = function(){
+        console.log($scope.graphOptions);
+    }
 }
 
 var baseFrame = angular.module('mean.baseFrame');
-baseFrame.controller('GraphController', ['$scope', '$http', '$resource', graphCallback]);
+baseFrame.controller('GraphController', ['$scope', '$http', '$resource', controllerCallback]);
 
 function drawGraph(graphData){
     var width = $('#expertiseGraph').innerWidth();

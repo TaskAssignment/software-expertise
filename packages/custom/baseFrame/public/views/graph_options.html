@@ -1,5 +1,78 @@
-<div id="graph-options">
-    (option 1) For number of occurrences and co-occurrences, use:
+<div ng-model="config" ng-init="config = false" >
+    <a ng-click="config = !config" href="">
+        <i class="fa fa-cogs fa-lg" aria-hidden="true"></i>
+    </a>
+</div>
+
+<div id="graph-options" ng-show="config">
+    <form>
+        <label>Number of occurrences and co-occurrences</label>
+        <div class="radio">
+            <label>
+                <input ng-click="apply()" type="radio"
+                 ng-model="graphOptions.occurrencesSo"
+                 value="regular"> Regular Numbers
+             </label>
+        </div>
+        <div class="radio">
+             <label>
+                <input ng-click="apply()" type="radio"
+                 ng-model="graphOptions.occurrencesSo"
+                  value="sqrt"> Square Root of the regular numbers
+            </label>
+        </div>
+        <div class="radio">
+            <label>
+                  <input ng-click="apply()" type="radio"
+                   ng-model="graphOptions.occurrencesSo"
+                  value="log"> Log scaled (base 2)
+            </label>
+        </div>
+
+        <hr>
+        <label>Counting a tag in txt</label>
+        <div class="radio">
+            <label>
+                <input ng-click="apply()" type="radio"
+                 ng-model="graphOptions.tagText"
+                 value="regular"> Regular Numbers
+             </label>
+        </div>
+        <div class="radio">
+             <label>
+                <input ng-click="apply()" type="radio"
+                 ng-model="graphOptions.tagText"
+                  value="sqrt"> Square Root of the regular numbers
+            </label>
+        </div>
+        <div class="radio">
+            <label>
+                  <input ng-click="apply()" type="radio"
+                   ng-model="graphOptions.tagText"
+                  value="log"> Log scaled (base 2)
+            </label>
+        </div>
+
+        <hr>
+        <label>Graph style</label>
+        <div class="radio">
+            <label>
+                <input ng-click="apply()" type="radio"
+                 ng-model="graphOptions.direction"
+                 value="directed"> Directed
+             </label>
+        </div>
+        <div class="radio">
+             <label>
+                <input ng-click="apply()" type="radio"
+                 ng-model="graphOptions.direction"
+                  value="undirected"> Undirected
+            </label>
+        </div>
+    </form>
+
+</div>
+<!-- (option 1) For number of occurrences and co-occurrences, use:
 
 (option 1.a) regular numbers
 
@@ -42,4 +115,4 @@ All the above check boxes are not selected by default.
 (option 4.a) Digraph
 
 (option 4.b) Undirected graph
-</div>
+ -->
