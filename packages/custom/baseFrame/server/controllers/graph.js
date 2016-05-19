@@ -154,6 +154,47 @@ module.exports = function (BaseFrame){
         })
     }
 
+    function cosineSimilarity(nodesJson){
+        var num = 0;
+        var sum_bug = 0;
+        var sum_dev = 0;
+
+        for(let nodeJson of nodesJson){
+            var node = JSON.parse(nodeJson);
+
+            num += (node.issueCount * node.userCount);
+            sum_bug += (node.issueCount * node.issueCount);
+            sum_dev += (node.userCount * node.userCount);
+        }
+
+        var similarity = num/(Math.sqrt(sum_bug) * Math.sqrt(sum_dev));
+
+        return similarity
+    }
+
+    function jaccardSimilarity(nodesJson){
+        var numerator = 0;
+        var denominator = 0;
+        for(let nodeJson of nodesJson){
+            var node = JSON.parse(nodeJson);
+
+            var issueWeight = 0;
+            var userWeight = 0;
+            if(node.issueCount) {
+                issueWeight = 1/Math.sqrt(node.issueCount);
+            }
+
+            if(node.userCount){
+                userWeight = 1/Math.sqrt(node.userCount);
+            }
+
+            numerator += Math.min(issueWeight, userWeight);
+            denominator += issueWeight;
+        }
+
+        return numerator/denominator;
+    }
+
     return {
         /** Gets and formats the graph data.
         *
@@ -170,29 +211,18 @@ module.exports = function (BaseFrame){
         },
 
         calculateSimilarity: function(req, res){
+            var mode = req.params.similarity;
             var response = {
                 similarity: 'No similarity',
-                args: 'no method'
+                args: mode
             };
 
-            if(req.params.similarity == 'cosine'){
-                var num = 0;
-                var sum_bug = 0;
-                var sum_dev = 0;
-
-                for(let nodeJson of req.query.nodes){
-                    var node = JSON.parse(nodeJson);
-
-                    num += (node.issueCount * node.userCount);
-                    sum_bug += (node.issueCount * node.issueCount);
-                    sum_dev += (node.userCount * node.userCount);
-                }
-
-                var similarity = num/(Math.sqrt(sum_bug) * Math.sqrt(sum_dev));
-
-                response.similarity = similarity;
-                response.args = 'cosine';
-
+            switch (mode) {
+                case 'jaccard':
+                    response.similarity = jaccardSimilarity(req.query.nodes);
+                    break;
+                default:
+                    response.similarity = cosineSimilarity(req.query.nodes);
             }
 
             res.json(response);
