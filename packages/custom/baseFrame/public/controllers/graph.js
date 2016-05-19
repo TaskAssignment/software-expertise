@@ -26,7 +26,7 @@ function drawGraph(graphData){
     var force = d3.layout.force()
         .size([width, height])
         .charge(-400)
-        .linkDistance(300)
+        .linkDistance(calculateDistance)
         .on("tick", tick);
 
     var drag = force.drag()
@@ -72,21 +72,15 @@ function drawGraph(graphData){
         .text(function(d) { return d.name });
 
     node.append("circle")
-        .attr('r', function(d) {
-            return calculateCircleRatio(d.soCount);
-        })
+        .attr('r', function(d) { return calculateCircleRatio(d.soCount); })
         .style('fill', function(d) { return 'yellow'; });
 
     node.append("circle")
-        .attr('r', function(d) {
-            return calculateCircleRatio(d.userCount);
-        })
+        .attr('r', function(d) { return calculateCircleRatio(d.userCount); })
         .style('fill', function(d) { return 'blue'; });
 
     node.append("circle")
-        .attr('r', function(d) {
-            return calculateCircleRatio(d.issueCount);
-        })
+        .attr('r', function(d) { return calculateCircleRatio(d.issueCount); })
         .style('fill', function(d) { return 'green'; });
 
 
@@ -110,7 +104,19 @@ function drawGraph(graphData){
     }
 }
 
-function calculateCircleRatio(counter){
+var calculateDistance =  function (link){
+    var num = 2 * link.value;
+    var den = link.source.issueCount + link.target.issueCount;
+    if(den == 0){
+        den = link.source.userCount + link.target.userCount;
+        if(den == 0){
+            return 0;
+        }
+    }
+    return num/den;
+}
+
+var calculateCircleRatio = function (counter){
     if(counter < 1){
         return 0;
     }
