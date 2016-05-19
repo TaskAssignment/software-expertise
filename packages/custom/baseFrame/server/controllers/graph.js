@@ -179,19 +179,14 @@ module.exports = function (BaseFrame){
                 var num = 0;
                 var sum_bug = 0;
                 var sum_dev = 0;
+
                 for(let nodeJson of req.query.nodes){
                     var node = JSON.parse(nodeJson);
-
-                    console.log(node);
 
                     num += (node.issueCount * node.userCount);
                     sum_bug += (node.issueCount * node.issueCount);
                     sum_dev += (node.userCount * node.userCount);
                 }
-
-                console.log(num);
-                console.log(sum_bug);
-                console.log(sum_dev);
 
                 var similarity = num/(Math.sqrt(sum_bug) * Math.sqrt(sum_dev));
 

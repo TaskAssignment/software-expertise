@@ -3,7 +3,6 @@
  * Class that handles drawing of the expertise graph
  */
 var controllerCallback = function ($scope,  $http, $resource) {
-
     $scope.graphData = {
         nodes: [],
         links: []
@@ -20,6 +19,7 @@ var controllerCallback = function ($scope,  $http, $resource) {
     };
 
     $scope.$on('fetchGraphData', function(event, params){
+        console.log("Receiving data");
         showLoadingScreen();
         var GraphData = $resource('api/baseFrame/:modeIssue/:modeUser/graphData');
 
@@ -29,17 +29,18 @@ var controllerCallback = function ($scope,  $http, $resource) {
             $scope.graphData.nodes = graphData.nodes;
             $scope.graphData.links = graphData.links;
             drawGraph(graphData);
+            $scope.applySimilarityOptions();
             hideLoadingScreen();
         });
     });
 
     $scope.applyGraphOptions = function(){
-        console.log($scope.graphData);
-        console.log($scope.graphOptions);
+        console.log("Test");
     }
 
     $scope.applySimilarityOptions = function(){
         showLoadingScreen();
+        console.log("Calculating similarity");
         var Similarity = $resource('api/baseFrame/calculate/:similarity');
 
         var params = {
@@ -50,7 +51,6 @@ var controllerCallback = function ($scope,  $http, $resource) {
         Similarity.get(params).$promise.then(function (response){
             $scope.similarity = response.similarity;
             $scope.methods = response.args;
-            console.log(response);
         });
         hideLoadingScreen();
     }

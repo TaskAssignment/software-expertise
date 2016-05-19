@@ -235,6 +235,7 @@ function ($scope,  $http, $location, $resource) {
     }
 
     function sendToGraph(){
+        console.log("Sending to Graph");
         hideLoadingScreen();
         var ids = {};
         if($scope.selectedIssue){

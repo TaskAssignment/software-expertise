@@ -13,28 +13,34 @@
             <ng-include src="'baseFrame/views/contributors.html'"></ng-include>
         </div>
     </div>
-    <div id="rightPanel" class="col-md-5 col-lg-6">
-        <ul class="nav nav-tabs">
-            <li role="presentation" class="tab tabGraph active">
-                <a href="" ng-click="selectTab('.tabGraph')">Graph</a>
-            </li>
-            <li role="presentation" class="tab tabTable">
-                <a href="" ng-click="selectTab('.tabTable')">Table</a>
-            </li>
-            <li role="presentation" class="tab tabAdmin">
-                <a href="" ng-click="selectTab('.tabAdmin')">Admin</a>
-            </li>
-        </ul>
+    <div id="rightPanel" ng-controller="GraphController">
+        <div class="col-md-5 col-lg-6">
+            <ul class="nav nav-tabs">
+                <li role="presentation" class="tab tabGraph active">
+                    <a href="" ng-click="selectTab('.tabGraph')">Graph</a>
+                </li>
+                <li role="presentation" class="tab tabTable">
+                    <a href="" ng-click="selectTab('.tabTable')">Table</a>
+                </li>
+                <li role="presentation" class="tab tabAdmin">
+                    <a href="" ng-click="selectTab('.tabAdmin')">Admin</a>
+                </li>
+            </ul>
 
-        <div class="row">
-            <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
-            <div role="tabpanel" class="tab-pane tabGraph" id="expertiseGraph" ng-controller="GraphController">
+            <div class="row">
+                <div class="row" ng-if="selectedUser">
+                    <b> Similarity User-Issue: </b> {{ similarity }}
+                    <b> Using method: </b> {{ methods }}
+                </div>
+                <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
+                <div role="tabpanel" class="tab-pane tabGraph" id="expertiseGraph">
+                </div>
+                <ng-include src="'baseFrame/views/table.html'"></ng-include>
+                <ng-include src="'baseFrame/views/repo_admin.html'"></ng-include>
             </div>
-            <ng-include src="'baseFrame/views/table.html'"></ng-include>
-            <ng-include src="'baseFrame/views/repo_admin.html'"></ng-include>
         </div>
+        <ng-include class="col-md-1 col-lg-1" src="'baseFrame/views/graph_options.html'"></ng-include>
     </div>
-    <ng-include class="col-md-1 col-lg-1" ng-controller="GraphController" src="'baseFrame/views/graph_options.html'"></ng-include>
 </section>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.15/d3.js"></script>
