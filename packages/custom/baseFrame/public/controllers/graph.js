@@ -156,11 +156,8 @@ var calculateDistance =  function (link){
     }
 
     var distance = num/den;
-    if(distance > 400){
-        return 400;
-    } else {
-        return distance;
-    }
+    var MAX_DISTANCE = 400;
+    return Math.min(MAX_DISTANCE, distance);
 }
 
 var calculateCircleRatio = function (counter){
@@ -172,6 +169,6 @@ var calculateCircleRatio = function (counter){
     if(sqrt != 0){
         result = 1/sqrt;
     }
-    var MAX_RATIO = 10; //Add max ratio because 1 is too small to see
+    var MAX_RATIO = 9; //Add max ratio because 1 is too small to see
     return (1 - result) * MAX_RATIO;
 }
