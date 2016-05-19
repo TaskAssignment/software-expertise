@@ -86,6 +86,9 @@ function ($scope,  $http, $location, $resource) {
             }
             $scope.repos = repos;
             hideLoadingScreen();
+        }, function (response){
+            console.log(response);
+            hideLoadingScreen();
         });
     }
 
