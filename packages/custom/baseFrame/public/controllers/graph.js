@@ -39,6 +39,7 @@ var controllerCallback = function ($scope,  $http, $resource) {
 
     var findMatches = function (event, params) {
         if(params.issueId){
+            $scope.issueId = params.issueId;
             showLoadingScreen();
             console.log("Looking for matches");
             var Match = $resource('api/baseFrame/find/:issueId/match/:similarity');
@@ -72,6 +73,7 @@ var controllerCallback = function ($scope,  $http, $resource) {
         Similarity.get(params).$promise.then(function (response){
             $scope.similarity = response.similarity;
             $scope.methods = response.args;
+            findMatches(null, {issueId: $scope.issueId});
         });
         hideLoadingScreen();
     }

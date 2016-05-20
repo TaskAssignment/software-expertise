@@ -23,3 +23,8 @@ circle {
 svg {
   border: .5px solid #ddd;
 }
+
+body {
+    font-family: "Abel";
+    font-size: medium;
+}
