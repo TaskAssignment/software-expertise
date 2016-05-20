@@ -66,28 +66,22 @@ module.exports = function (BaseFrame){
         var allTags = {};
         var index = 0;
 
-        for(var i in issueTags){
-            var tag = issueTags[i];
-            allTags[tag._id] = {
-                name: tag._id,
-                index: index,
-                issueCount: tag.issueCount,
-                soCount: tag.soCount,
-                userCount: 0,
-            }
+        for(var tag of issueTags){
+            tag.index = index;
+            tag.userCount = 0;
+
+            allTags[tag._id] = tag;
             index++;
         }
 
-        for(var i in userTags){
-            var tag = userTags[i];
+        for(var tag of userTags){
             if(allTags[tag._id] === undefined) {
-                allTags[tag._id] = {
-                    name: tag._id,
-                    index: index,
-                    userCount: tag.count,
-                    issueCount: 0,
-                    soCount: 0
-                }
+                tag.index = index;
+                tag.userCount = tag.count;
+                tag.issueCount = 0;
+                tag.soCount = 0;
+
+                allTags[tag._id] = tag;
                 index++;
             }else{
                 allTags[tag._id].userCount = tag.count;
@@ -151,7 +145,7 @@ module.exports = function (BaseFrame){
             } else {
                 findUserTags(ids.userId, res);
             }
-        })
+        });
     }
 
     function cosineSimilarity(nodesJson){
@@ -226,6 +220,11 @@ module.exports = function (BaseFrame){
             }
 
             res.json(response);
+        },
+
+        findMatches: function (req, res) {
+console.log(req.query);
+            res.sendStatus(200);
         }
     }
 }
