@@ -6,7 +6,7 @@
 
 <div id="graph-options" ng-show="config">
     <form name="similarity-options">
-        <label>Calculate the similarity</label>
+        <label>Similarity Method</label>
         <div class="radio">
             <label>
                 <input ng-click="applySimilarityOptions()" type="radio"
@@ -88,49 +88,4 @@
             </label>
         </div>
     </form>
-
 </div>
-<!-- (option 1) For number of occurrences and co-occurrences, use:
-
-(option 1.a) regular numbers
-
-(option 1.b) square root () of the regular numbers
-
-(option 1.c) log-scaled (base 2)
-
-The above option defines a scaling for all the general numbers (occurrences of a tag and co-occurrences in SO)
-
-to scale them down. If 1.b or 1.c is selected, then all the above values when considering the whole SO are
-
-affected (i.e., the occurrences of a term in a bug or developers’ records is not affected; this is the next option).
-
-(option 2) For counting a tag in txt (a bug or a developer’s record), use:
-
-(option 2.a) regular counts
-
-(option 2.b) square root () of the regular counts
-
-(option 2.c) log (regular counts) –with base 2
-
-The above option defines a scaling for all the counted numbers (occurrences of a tag in a piece of text which
-
-can be B or D) to scale them down. If 2.b or 2.c is selected, then all the above values of occurrence(i, B) and
-
-occurrence(i, D) in Cosine and Jaccard similarity will be affected.
-
-(option 3.a) Use Cosine similarity
-
-(option 3.a.1) Use adjusted node weights (based on their occurrences in SO)
-
-(option 3.b) Use Jaccard similarity
-
-(option 3.b.1) Use adjusted node weights (based on their occurrences in a piece of given text)
-
-(option 3.b.2) For determining matching score between two graphs, also consider edges’ overlaps
-
-All the above check boxes are not selected by default.
-
-(option 4.a) Digraph
-
-(option 4.b) Undirected graph
- -->

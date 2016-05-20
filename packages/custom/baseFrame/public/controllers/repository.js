@@ -16,9 +16,14 @@ function ($scope,  $http, $location, $resource) {
 
     // *************** SCOPE FUNCTIONS **************//
 
+    //Change this to another controller
     $scope.selectTab = function (tab){
         angular.element('.tab').removeClass('active');
         angular.element('.tab-pane').addClass('hidden');
+
+        if(tab == '.tabTable'){
+            sendToTable();
+        }
 
         angular.element(tab).addClass('active');
         angular.element(tab).removeClass('hidden');
@@ -119,7 +124,7 @@ function ($scope,  $http, $location, $resource) {
     *
     * @param username - github username
     */
-    $scope.selectUser = function(user){
+    $scope.selectUser = function (user){
         showLoadingScreen();
         $scope.selectedUser = user;
 
@@ -154,6 +159,7 @@ function ($scope,  $http, $location, $resource) {
             Issue.get(filter);
         }
         sendToGraph();
+        sendToTable();
     }
 
     $scope.populateSOData = function() {
@@ -232,6 +238,10 @@ function ($scope,  $http, $location, $resource) {
             });
         }
         angular.element('svg').remove();
+    }
+
+    function sendToTable(){
+        $scope.$broadcast('findMatches', $scope.selectedIssue);
     }
 
     function sendToGraph(){

@@ -18,7 +18,7 @@ var controllerCallback = function ($scope,  $http, $resource) {
         type: 'cosine'
     };
 
-    $scope.$on('fetchGraphData', function(event, params){
+    var fetchGraphData = function (event, params){
         console.log("Receiving data");
         showLoadingScreen();
         var GraphData = $resource('api/baseFrame/:modeIssue/:modeUser/graphData');
@@ -32,13 +32,19 @@ var controllerCallback = function ($scope,  $http, $resource) {
             $scope.applySimilarityOptions();
             hideLoadingScreen();
         });
+    }
+
+    $scope.$on('fetchGraphData', fetchGraphData);
+
+    $scope.$on('findMatches', function (event, params){
+        console.log($scope.graphData);
     });
 
-    $scope.applyGraphOptions = function(){
+    $scope.applyGraphOptions = function (){
         console.log("Test");
     }
 
-    $scope.applySimilarityOptions = function(){
+    $scope.applySimilarityOptions = function (){
         showLoadingScreen();
         console.log("Calculating similarity");
         var Similarity = $resource('api/baseFrame/calculate/:similarity');
@@ -109,7 +115,7 @@ function drawGraph(graphData){
 
     node.append('text')
         .attr('dx', 12)
-        .text(function(d) { return d.name });
+        .text(function(d) { return d._id });
 
     node.append("circle")
         .attr('r', function(d) { return calculateCircleRatio(d.soCount); })
@@ -156,7 +162,7 @@ var calculateDistance =  function (link){
     }
 
     var distance = num/den;
-    var MAX_DISTANCE = 400;
+    var MAX_DISTANCE = 500;
     return Math.min(MAX_DISTANCE, distance);
 }
 
