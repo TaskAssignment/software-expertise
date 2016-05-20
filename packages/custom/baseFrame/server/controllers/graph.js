@@ -12,140 +12,73 @@ module.exports = function (BaseFrame){
     /**
     * This will format the tags and links to what is expected to render the graph
     *
-    * @param links - Array of objects with source, target and coOccurrence
-    * @param allTags - Object where keys are the tag names
-    *
-    * @return graph - Object with links and nodes.
     */
-    function formatDataToGraph(links, allTags, res){
-        var graph = {};
-        var new_links = [];
-        for(var i = 0; i < links.length; i++){
-            var occurrence = links[i];
-            var link = {
-                source: allTags[occurrence.source].index,
-                target: allTags[occurrence.target].index,
-                value: parseInt(occurrence.occurrences)
-            };
-            new_links.push(link);
-
+    function formatDataToGraph(links, allTags, callback, callbackParams = {}){
+        for(var link of links){
             // Adds the values of these occurences to the tags counter
-            allTags[occurrence.source].soCount += (link.value || 0);
-            allTags[occurrence.target].soCount += (link.value || 0);
+            allTags[link.source].soCount += (link.occurrences || 0);
+            allTags[link.target].soCount += (link.occurrences || 0);
+
+            link.source = allTags[link.source].index;
+            link.target = allTags[link.target].index;
+
         }
 
-        /* The links reference to array indexes.
-        * That's why I created this like that, instead of pushing to
-        * the array's last position.
-        */
-        var length = allTags.length || 0;
-        var nodes = new Array(length);
+        var nodes = [];
         for(var tag in allTags){
             nodes[allTags[tag].index] = allTags[tag];
         }
 
-        var graph = {
-            nodes: nodes,
-            links: new_links
-        }
+        callbackParams.nodes = nodes;
+        callbackParams.links = links;
 
-        res.send(graph);
+        callback(callbackParams);
+
     }
 
     /**
     * This function will merge the issueTags with the userTags
     * Both issueTags and userTags have _id, count[, soCount].
-    *
-    * @param userTags - Tags from user on StackOverflow
-    * @param issueTags - Issue text converted into SO tags.
-    * @param res - Express response
-    * @return Object of objects with tag name being the main key
-    and origin, index, issueCount, userCount and soCount as subkeys.
     */
-    function mergeTags(userTags, issueTags, res){
-        var allTags = {};
+    function mergeTags(modelsTags, callback, callbackParams = {}){
+        callbackParams.tags = {};
         var index = 0;
 
-        for(var tag of issueTags){
-            tag.index = index;
-            tag.userCount = 0;
+        for(var model in modelsTags){
+            for(var tag of modelsTags[model].tags){
+                if(callbackParams.tags[tag._id] === undefined){
+                    tag.index = index;
+                    tag.userCount = tag.count || 0;
+                    tag.issueCount = tag.issueCount || 0;
+                    tag.soCount = tag.soCount || 0;
+                    index++;
+                } else {
+                    tag.userCount += tag.count || 0;
+                    tag.issueCount += tag.issueCount || 0;
+                    tag.soCount += tag.soCount || 0;
+                }
 
-            allTags[tag._id] = tag;
-            index++;
-        }
-
-        for(var tag of userTags){
-            if(allTags[tag._id] === undefined) {
-                tag.index = index;
-                tag.userCount = tag.count;
-                tag.issueCount = 0;
-                tag.soCount = 0;
-
-                allTags[tag._id] = tag;
-                index++;
-            }else{
-                allTags[tag._id].userCount = tag.count;
+                callbackParams.tags[tag._id] = tag;
             }
         }
 
-        var tags = Object.keys(allTags);
-
-        var conditions = {
-            $and: [
-                {source: {$in: tags}} ,
-                {target: {$in: tags}}
-            ]
-        };
-
-        CoOccurrence.find(conditions, '-_id occurrences source target', {lean: true}, function(err, occurrences){
-            formatDataToGraph(occurrences, allTags, res);
-        });
+        callback(callbackParams);
     }
 
     /** Fetches user tags from database.
-    *
-    * @param userId - user to have its tags retrieved.
-    * @param res - Express response.
-    * @param issueTags - Issue text converted into SO tags. This is only needed to call the next function.
     */
 
-    function findUserTags(userId, res, issueTags = []){
-        SoUser.findOne({_id: userId}, 'tags', {lean: true}, function (err, user){
+    function findOneModel(Model, id, callback, callbackParams = {}){
+        Model.findOne({_id: id}, 'tags', {lean: true}, function (err, model){
             if(err){
                 console.log(err);
                 if(!res.headersSent){
                     res.sendStatus(500);
                 }
             }
-
-            if(user){
-                mergeTags(user.tags, issueTags, res);
-            } else {
-                mergeTags([], issueTags, res);
-            }
+            callbackParams[Model.modelName] = model || {tags: []};
+            callback(callbackParams);
         })
-    }
-
-    /** Fetches issue tags from database. Sends the tags and userId to findUserTags
-    *
-    * @param ids - Dict with userId and issueId. The userId will call the next function.
-    * @param res - Express response.
-    */
-    function findIssueTags(ids, res){
-        Issue.findOne({_id: ids.issueId}, 'tags', {lean: true}, function (err, issue){
-            if(err){
-                console.log(err);
-                if(!res.headersSent){
-                    res.sendStatus(500);
-                }
-            }
-
-            if(issue){
-                findUserTags(ids.userId, res, issue.tags);
-            } else {
-                findUserTags(ids.userId, res);
-            }
-        });
     }
 
     function cosineSimilarity(nodesJson){
@@ -201,7 +134,36 @@ module.exports = function (BaseFrame){
         */
         getDataForGraph: function(req, res){
             //For now I'll treat all the requests as default ones.
-            findIssueTags(req.query, res);
+            var ids = req.query;
+
+            var formatCallback = function (params){
+                res.send(params);
+            };
+
+            var mergeCallback = function (params){
+                var tags = Object.keys(params.tags);
+
+                var conditions = {
+                    $and: [
+                        {source: {$in: tags}} ,
+                        {target: {$in: tags}}
+                    ]
+                };
+
+                CoOccurrence.find(conditions, '-_id occurrences source target', {lean: true}, function(err, occurrences){
+                    formatDataToGraph(occurrences, params.tags, formatCallback);
+                });
+            };
+
+            var userCallback = function (params){
+                mergeTags(params, mergeCallback);
+            };
+
+            var issueCallback = function(params){
+                findOneModel(SoUser, ids.userId, userCallback, params);
+            };
+
+            findOneModel(Issue, ids.issueId, issueCallback);
         },
 
         calculateSimilarity: function(req, res){
@@ -223,7 +185,7 @@ module.exports = function (BaseFrame){
         },
 
         findMatches: function (req, res) {
-console.log(req.query);
+            console.log(req.query);
             res.sendStatus(200);
         }
     }

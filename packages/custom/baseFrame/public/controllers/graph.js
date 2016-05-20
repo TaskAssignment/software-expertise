@@ -151,7 +151,7 @@ function drawGraph(graphData){
 }
 
 var calculateDistance =  function (link){
-    var num = 2 * link.value;
+    var num = 2 * link.occurrences;
     var den = link.source.issueCount + link.target.issueCount;
 
     if(den == 0){
