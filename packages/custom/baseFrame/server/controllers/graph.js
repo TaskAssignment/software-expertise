@@ -213,6 +213,7 @@ module.exports = function (BaseFrame){
                 } else {
                     similarities[value] = [params.userId];
                 }
+
             }
 
             var issueCallback = function (params){
@@ -223,8 +224,10 @@ module.exports = function (BaseFrame){
                         mergeTags(params, mergeCallback, {userId: user._id});
                     }
 
+                    var amount = users.length - similarities[0].length;
                     delete similarities[0];
-                    res.json(similarities);
+
+                    res.json({similarities: similarities, amount: amount});
                 });
             }
 

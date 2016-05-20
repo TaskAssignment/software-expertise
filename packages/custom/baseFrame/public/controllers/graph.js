@@ -46,6 +46,8 @@ var controllerCallback = function ($scope,  $http, $resource) {
 
             Match.get(params).$promise.then(function (matches){
                 console.log(matches);
+                $scope.bestUsers = matches.similarities;
+                $scope.similaritiesAmount = matches.amount;
                 hideLoadingScreen();
             });
         }
