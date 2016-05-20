@@ -23,6 +23,8 @@ function ($scope,  $http, $location, $resource) {
 
         if(tab == '.tabTable'){
             sendToTable();
+        } else if(tab == '.tabGraph'){
+            sendToGraph();
         }
 
         angular.element(tab).addClass('active');
