@@ -45,20 +45,22 @@ module.exports = function (BaseFrame){
         var index = 0;
 
         for(var model in modelsTags){
-            for(var tag of modelsTags[model].tags){
+            var tags = modelsTags[model].tags || [];
+            for(var tag of tags){
                 if(callbackParams.tags[tag._id] === undefined){
                     tag.index = index;
-                    tag.userCount = tag.count || 0;
-                    tag.issueCount = tag.issueCount || 0;
-                    tag.soCount = tag.soCount || 0;
+                    tag.userCount = (tag.count || 0);
+                    tag.issueCount = (tag.issueCount || 0);
+                    tag.soCount = (tag.soCount || 0);
                     index++;
+                    callbackParams.tags[tag._id] = tag;
                 } else {
-                    tag.userCount += tag.count || 0;
-                    tag.issueCount += tag.issueCount || 0;
-                    tag.soCount += tag.soCount || 0;
+                    let new_tag = callbackParams.tags[tag._id];
+                    new_tag.userCount += (tag.count || 0);
+                    new_tag.issueCount += (tag.issueCount || 0);
+                    new_tag.soCount += (tag.soCount || 0);
+                    tag.index = callbackParams.tags[tag._id].index;
                 }
-
-                callbackParams.tags[tag._id] = tag;
             }
         }
 
@@ -69,7 +71,7 @@ module.exports = function (BaseFrame){
     */
 
     function findOneModel(Model, id, callback, callbackParams = {}){
-        Model.findOne({_id: id}, 'tags', {lean: true}, function (err, model){
+        Model.findOne({_id: id}, 'tags projectId', {lean: true}, function (err, model){
             if(err){
                 console.log(err);
                 if(!res.headersSent){
@@ -78,7 +80,7 @@ module.exports = function (BaseFrame){
             }
             callbackParams[Model.modelName] = model || {tags: []};
             callback(callbackParams);
-        })
+        });
     }
 
     function cosineSimilarity(nodesJson){
@@ -86,24 +88,30 @@ module.exports = function (BaseFrame){
         var sum_bug = 0;
         var sum_dev = 0;
 
-        for(let nodeJson of nodesJson){
-            var node = JSON.parse(nodeJson);
+        for(let i in nodesJson){
+            var node = nodesJson[i];
+            if(typeof(node) === 'string'){
+                var node = JSON.parse(node);
+            }
 
-            num += (node.issueCount * node.userCount);
-            sum_bug += (node.issueCount * node.issueCount);
-            sum_dev += (node.userCount * node.userCount);
+
+            num += (node.issueCount * node.userCount) || 0;
+            sum_bug += (node.issueCount * node.issueCount) || 0;
+            sum_dev += (node.userCount * node.userCount) || 0;
         }
 
         var similarity = num/(Math.sqrt(sum_bug) * Math.sqrt(sum_dev));
-
-        return similarity
+        return similarity || 0;
     }
 
     function jaccardSimilarity(nodesJson){
         var numerator = 0;
         var denominator = 0;
-        for(let nodeJson of nodesJson){
-            var node = JSON.parse(nodeJson);
+        for(let i in nodesJson){
+            var node = nodesJson[i];
+            if(typeof(node) === 'string'){
+                var node = JSON.parse(node);
+            }
 
             var issueWeight = 0;
             var userWeight = 0;
@@ -137,7 +145,9 @@ module.exports = function (BaseFrame){
             var ids = req.query;
 
             var formatCallback = function (params){
-                res.send(params);
+                if(!res.headersSent){
+                    res.send(params);
+                }
             };
 
             var mergeCallback = function (params){
@@ -185,8 +195,41 @@ module.exports = function (BaseFrame){
         },
 
         findMatches: function (req, res) {
-            console.log(req.query);
-            res.sendStatus(200);
+
+            var similarities = {};
+
+            var mergeCallback = function (params){
+                var value = 0;
+                switch (req.params.similarity) {
+                    case 'jaccard':
+                        value = jaccardSimilarity(params.tags);
+                        break;
+                    default:
+                        value = cosineSimilarity(params.tags);
+                }
+
+                if(similarities[value]){
+                    similarities[value].push(params.userId);
+                } else {
+                    similarities[value] = [params.userId];
+                }
+            }
+
+            var issueCallback = function (params){
+                SoUser.find({repositories: params.Issue.projectId}, 'tags', {lean: true}, function (err, users){
+
+                    for(var user of users){
+                        params.SoUser = user;
+                        mergeTags(params, mergeCallback, {userId: user._id});
+                    }
+
+                    delete similarities[0];
+                    res.json(similarities);
+                });
+            }
+
+            findOneModel(Issue, req.params.issueId, issueCallback);
+
         }
     }
 }

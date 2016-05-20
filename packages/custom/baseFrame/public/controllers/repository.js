@@ -125,12 +125,12 @@ function ($scope,  $http, $location, $resource) {
     * @param username - github username
     */
     $scope.selectUser = function (user){
-        showLoadingScreen();
         $scope.selectedUser = user;
 
         if(!user.soId){
-            alert("User is not in StackOverflow. Please, choose a Stack Overflow user");
+            alert("User is not in StackOverflow.");
         }
+        showLoadingScreen();
         sendToGraph();
         hideLoadingScreen();
     }
@@ -241,7 +241,11 @@ function ($scope,  $http, $location, $resource) {
     }
 
     function sendToTable(){
-        $scope.$broadcast('findMatches', $scope.selectedIssue);
+        var args = {};
+        if($scope.selectedIssue){
+            args.issueId = $scope.selectedIssue._id;
+        }
+        $scope.$broadcast('findMatches', args);
     }
 
     function sendToGraph(){

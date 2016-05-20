@@ -19,34 +19,47 @@ var controllerCallback = function ($scope,  $http, $resource) {
     };
 
     var fetchGraphData = function (event, params){
-        console.log("Receiving data");
         showLoadingScreen();
         var GraphData = $resource('api/baseFrame/:modeIssue/:modeUser/graphData');
-
         params.modeIssue = 'default';
         params.modeUser = 'default';
         GraphData.get(params).$promise.then(function (graphData){
             $scope.graphData.nodes = graphData.nodes;
             $scope.graphData.links = graphData.links;
             drawGraph(graphData);
-            $scope.applySimilarityOptions();
+            if(params.issueId && params.userId){
+                $scope.applySimilarityOptions();
+            } else {
+                $scope.similarity = undefined;
+                $scope.methods = undefined;
+            }
             hideLoadingScreen();
         });
     }
 
+    var findMatches = function (event, params) {
+        if(params.issueId){
+            showLoadingScreen();
+            console.log("Looking for matches");
+            var Match = $resource('api/baseFrame/find/:issueId/match/:similarity');
+            params.similarity = $scope.similarityOptions.type;
+
+            Match.get(params).$promise.then(function (matches){
+                console.log(matches);
+                hideLoadingScreen();
+            });
+        }
+    }
+
     $scope.$on('fetchGraphData', fetchGraphData);
 
-    $scope.$on('findMatches', function (event, params){
-        console.log($scope.graphData);
-    });
+    $scope.$on('findMatches', findMatches);
 
     $scope.applyGraphOptions = function (){
-        console.log("Test");
     }
 
     $scope.applySimilarityOptions = function (){
         showLoadingScreen();
-        console.log("Calculating similarity");
         var Similarity = $resource('api/baseFrame/calculate/:similarity');
 
         var params = {
