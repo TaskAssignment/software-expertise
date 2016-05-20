@@ -227,7 +227,21 @@ module.exports = function (BaseFrame){
                     var amount = users.length - similarities[0].length;
                     delete similarities[0];
 
-                    res.json({similarities: similarities, amount: amount});
+                    var keys = Object.keys(similarities);
+
+                    // Descending order
+                    keys.sort(function (a, b) { return a < b });
+
+                    var matches = [];
+                    for(var key of keys){
+                        var match = {
+                            value: key,
+                            matches: similarities[key]
+                        };
+                        matches.push(match);
+                    }
+
+                    res.json({similarities: matches, amount: amount});
                 });
             }
 

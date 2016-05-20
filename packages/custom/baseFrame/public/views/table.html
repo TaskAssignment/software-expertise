@@ -3,12 +3,11 @@
         <h3> {{ selectedIssue.title }} </h3>
         <hr>
 
-        <h4> Calculated using: {{ similarityOptions.type }} </h4>
+        <h4> Using <b>{{ similarityOptions.type }}</b> we found {{ similaritiesAmount }} users that have a similarity with this issue. </p> </h4>
 
-        <p>We found {{ similaritiesAmount }} that have a similarity with this issue. </p>
-        <div ng-repeat="(key, value) in bestUsers">
-            <div ng-repeat="match in value">
-                <b>{{ match }}</b> has similarity of {{ key }}
+        <div ng-repeat="item in bestUsers">
+            <div ng-repeat="match in item.matches">
+                <b>{{ match }}</b> has similarity of {{ item.value }}
             </div>
         </div>
     </div>
