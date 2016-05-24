@@ -372,6 +372,7 @@ module.exports = function (BaseFrame){
                     console.log('Next Page: ' + nextPage);
                     return new_url;
                 } else {
+                    console.log('********* Done! ***********');
                     return null;
                 }
             }
