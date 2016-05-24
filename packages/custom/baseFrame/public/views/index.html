@@ -30,12 +30,12 @@
             </div>
 
             <div class="row">
-                <div ng-if="selectedUser">
-                    <b> Similarity User-Issue: </b> {{ similarity }}
-                    <b> Using method: </b> {{ methods }}
-                </div>
                 <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
                 <div role="tabpanel" class="tab-pane tabGraph" id="expertiseGraph">
+                    <div ng-if="selectedUser">
+                        <b> Similarity User-Issue: </b> {{ similarity }}
+                        <b> Using method: </b> {{ methods }}
+                    </div>
                 </div>
                 <ng-include src="'baseFrame/views/table.html'"></ng-include>
                 <ng-include src="'baseFrame/views/repo_admin.html'"></ng-include>

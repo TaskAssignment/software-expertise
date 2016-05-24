@@ -94,7 +94,6 @@ function ($scope,  $http, $location, $resource) {
             $scope.repos = repos;
             hideLoadingScreen();
         }, function (response){
-            console.log(response);
             hideLoadingScreen();
         });
     }
@@ -251,7 +250,6 @@ function ($scope,  $http, $location, $resource) {
     }
 
     function sendToGraph(){
-        console.log("Sending to Graph");
         hideLoadingScreen();
         var ids = {};
         if($scope.selectedIssue){

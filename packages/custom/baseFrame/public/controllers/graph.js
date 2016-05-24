@@ -41,12 +41,10 @@ var controllerCallback = function ($scope,  $http, $resource) {
         if(params.issueId){
             $scope.issueId = params.issueId;
             showLoadingScreen();
-            console.log("Looking for matches");
             var Match = $resource('api/baseFrame/find/:issueId/match/:similarity');
             params.similarity = $scope.similarityOptions.type;
 
             Match.get(params).$promise.then(function (matches){
-                console.log(matches);
                 $scope.bestUsers = matches.similarities;
                 $scope.similaritiesAmount = matches.amount;
                 hideLoadingScreen();
