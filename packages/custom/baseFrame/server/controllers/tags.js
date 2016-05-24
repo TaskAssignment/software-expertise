@@ -24,7 +24,7 @@ module.exports = function (BaseFrame){
 
                 var title = issue.title.toLowerCase().split(' ');
                 var body = [];
-                if(issue.body){
+                if(issue.body){ //It may not have a body.
                     body = issue.body.toLowerCase().split(' ');
                 }
 
@@ -58,6 +58,7 @@ module.exports = function (BaseFrame){
                 for(var l in stopWords){
                     var word = stopWords[l];
 
+                    // If a stop word is in my all words, I remove it.
                     if(allWords[word]){
                         delete allWords[word];
                     }
