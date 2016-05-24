@@ -66,10 +66,8 @@ modules/public/
 modules/views/
 /public/build/
 /packages/**/**/public/assets/lib
-server.js
 packages/config/e2e/tests/results/e2e/junit
-output.json
-output1.json
+
 # --------------------
 # vim Files
 # --------------------

@@ -6,9 +6,12 @@
     "name": "mean scaffold"
   },
   "mean": "0.5.5",
-  "dependencies": {},
+  "dependencies": {
+    "fast-csv": "latest",
+    "mongoose-to-csv": "^0.1.0"
+  },
   "license": "MIT",
   "scripts": {
-    "postinstall" : "bower install"
+    "postinstall": "bower install"
   }
 }

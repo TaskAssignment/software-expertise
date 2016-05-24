@@ -7,23 +7,14 @@
   <meta name="fragment" content="!">
 
   <title>{{appName}} - {{title}}</title>
-  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-  <meta name="keywords" content="node.js, express, mongoose, mongodb, angularjs, swig">
-  <meta name="description" content="MEAN - A Modern Stack: MongoDB, ExpressJS, AngularJS, NodeJS. (BONUS: Passport User Support).">
-
-  <meta property="fb:app_id" content="APP_ID">
-  <meta property="og:title" content="{{appName}} - {{title}}">
-  <meta property="og:description" content="MEAN - A Modern Stack: MongoDB, ExpressJS, AngularJS, NodeJS. (BONUS: Passport User Support).">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="APP_URL">
-  <meta property="og:image" content="APP_LOGO">
-  <meta property="og:site_name" content="MEAN - A Modern Stack">
-  <meta property="fb:admins" content="APP_ADMIN">
 
   <link rel="manifest" href="/system/assets/static/manifest.json">
-  
+
   <!-- {{locals.config.cssFramework}} -->
   <link rel="stylesheet" href="/bower_components/bootstrap/dist/css/bootstrap.css">
+
+  <script src="https://use.fontawesome.com/0535994d7a.js"></script>
+  <link href='https://fonts.googleapis.com/css?family=Abel' rel='stylesheet' type='text/css'>
 
   {% for file in aggregatedassets.header.css %}
     <link rel="stylesheet" href="{{file}}">

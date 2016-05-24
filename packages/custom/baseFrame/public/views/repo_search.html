@@ -1,0 +1,28 @@
+<div id='repositorySearch'>
+    <div class='searchBoxInput'>
+        <p>Search for a repository:</p>
+        <form class='form-group form-horizontal' ng-submit=queryRepos()>
+            <input type='text' ng-model="$parent.repoUser" name='repoUser'
+              class='form-control col-md-3'
+              placeholder='User or Organization'>
+            <input type='text' ng-model="$parent.repositoryName"
+              name='repositoryName' class='form-control col-md-3'
+              placeholder='Repository name'>
+            <input type='text' ng-model="$parent.repoDescription"
+              name='repoDescription' class='form-control'
+              placeholder='Any phrase in the repo description'>
+            <input type='text' ng-model="$parent.repoReadme"
+              name='repoReadme' class='form-control'
+              placeholder='Any thing in the repository readme'>
+            <button class="btn btn-default"
+              ng-submit="queryRepos()"> Search </button>
+        </form>
+    </div>
+
+    <div id='repoSelection' class='scrollable' ng-if='repos'>
+        <button ng-repeat="repo in repos" class="list-group-item"
+          ng-click="$parent.saveProject(repo)">
+            {{ repo.name }}
+        </button>
+    </div>
+</div>

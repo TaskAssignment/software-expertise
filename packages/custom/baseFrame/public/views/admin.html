@@ -1,0 +1,35 @@
+<section ng-controller="AdminController">
+    <div class="row">
+        <a class="btn btn-default" ng-click="populate('SoTags')">
+        Populate SO Tags </a>
+    </div>
+    <div class="row">
+        <a class="btn btn-default" ng-click="populate('CoOccurrences')">
+        Populate Common Occurrences </a>
+    </div>
+    <div class="row">
+        <a class="btn btn-default" ng-click="populate('SoUsers')">
+        Populate Stack Overflow Users </a>
+    </div>
+    <div class="row">
+        <a class="btn btn-default" ng-click="populate('StopWords')">
+        Populate Stop Words</a>
+    </div>
+    <div class="row">
+        <a class="btn btn-default" ng-click="export('SoTags')">
+        Export SoTags </a>
+    </div>
+
+    <div class="row">
+        <a class="btn btn-default" ng-click="export('CoOccurrences')">
+        Export Common Occurrences</a>
+    </div>
+
+    <div class="row">
+        <a class="btn btn-default" ng-click="export('SoUsers')">
+        Export So Users</a>
+    </div>
+
+</section>
+
+<img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">

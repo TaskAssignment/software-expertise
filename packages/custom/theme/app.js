@@ -11,10 +11,10 @@ var Theme = new Module('theme');
  * All MEAN packages require registration
  * Dependency injection is used to define required modules
  */
-Theme.register(function(app, auth, database) {
+Theme.register(function(app, database) {
 
   //We enable routing. By default the Package Object is passed to the routes
-  Theme.routes(app, auth, database);
+  Theme.routes(app, database);
 
   //We are adding a link to the main menu for all authenticated users
 //  Theme.menus.add({
