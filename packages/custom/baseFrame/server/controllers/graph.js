@@ -260,8 +260,6 @@ module.exports = function (BaseFrame){
                         amount++;
                     }
 
-                    console.log(matches);
-
                     res.json({similarities: matches, amount: amount});
                 });
             }
