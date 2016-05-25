@@ -41,7 +41,7 @@ module.exports = function (BaseFrame){
         * @param res - Express response.
         */
         find: function(req, res){
-            Project.findOne(req.params, 'name', {lean: true}, function(err, project){
+            Project.findOne(req.params, 'name description languages', {lean: true}, function(err, project){
                 res.send(project);
             });
         },

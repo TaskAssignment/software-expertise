@@ -56,7 +56,8 @@ function ($scope,  $http, $location, $resource) {
         showLoadingScreen();
         var Resource = $resource('/api/baseFrame/:projectId/makeIssuesTags');
         var filter = {
-            projectId: $scope.selectedRepo._id
+            projectId: $scope.selectedRepo._id,
+            project: $scope.selectedRepo
         }
         Resource.get(filter).$promise.then(function (response){
             hideLoadingScreen();
@@ -154,7 +155,8 @@ function ($scope,  $http, $location, $resource) {
         if(!issue.parsed){
             var filter = {
                 projectId: $scope.selectedRepo._id,
-                _id: issue._id
+                _id: issue._id,
+                project: $scope.selectedRepo
             };
 
             var Issue = $resource('/api/baseFrame/:projectId/makeIssuesTags');
@@ -217,10 +219,9 @@ function ($scope,  $http, $location, $resource) {
         showLoadingScreen();
         var Resource = $resource('/api/baseFrame/:projectId/' + resource);
         var filter = {
-            projectId: $scope.selectedRepo._id,
+            projectId: $scope.selectedRepo._id
         };
         Resource.query(filter).$promise.then(function(resources){
-console.log(resources.length);
             if(resources.length == 0){
                 $scope.selectedRepo['empty' + resource] = true;
             }
