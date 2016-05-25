@@ -11,7 +11,7 @@ var pullAll = require('lodash.pullall');
 
 module.exports = function (BaseFrame){
 
-    function getIssues(stopWords, filter, res) {
+    function getIssues(stopWords, filter, res, project) {
         Issue.find(filter, '_id body title', {lean: true}, function (err, issues){
             if(err){
                 console.log(err.message);
@@ -22,13 +22,23 @@ module.exports = function (BaseFrame){
             for(var i in issues){
                 var issue = issues[i];
 
-                var title = issue.title.toLowerCase().split(' ');
+                var title = issue.title + ' ' + project.description;
+                title = title.toLowerCase().split(' ');
+
                 var body = [];
-                if(issue.body){
+                if(issue.body){ //It may not have a body.
                     body = issue.body.toLowerCase().split(' ');
                 }
 
                 var allWords = {};
+
+                if(project.languages){
+                    for(var l in project.languages){
+                        var lang = project.languages[l];
+                        allWords[lang._id] = 1;
+                    }
+                }
+
                 for(var j in title) {
                     var word = title[j];
                     if(word.indexOf('_') >= 0){
@@ -58,6 +68,7 @@ module.exports = function (BaseFrame){
                 for(var l in stopWords){
                     var word = stopWords[l];
 
+                    // If a stop word is in my all words, I remove it.
                     if(allWords[word]){
                         delete allWords[word];
                     }
@@ -118,6 +129,8 @@ module.exports = function (BaseFrame){
                     _id: req.query._id
                 };
             }
+
+            var project = JSON.parse(req.query.project);
             filter.parsed = false;
 
             StopWord.find({}, '_id', {lean: true}, function (err, words){
@@ -129,7 +142,7 @@ module.exports = function (BaseFrame){
                         stopWords.push(words[index]._id);
                     }
 
-                    getIssues(stopWords, filter, res);
+                    getIssues(stopWords, filter, res, project);
                 }
             });
         }

@@ -2,6 +2,14 @@
 /**
  * Class that handles drawing of the expertise graph
  */
+
+function showLoadingScreen(){
+    angular.element('#loadingImage').css('display','block');
+}
+
+function hideLoadingScreen(){
+    angular.element('#loadingImage').css('display','none');
+}
 var controllerCallback = function ($scope,  $http, $resource) {
     $scope.graphData = {
         nodes: [],
@@ -133,16 +141,12 @@ function drawGraph(graphData){
         .text(function(d) { return d._id });
 
     node.append("circle")
-        .attr('r', function(d) { return calculateCircleRatio(d.soCount); })
-        .style('fill', function(d) { return 'yellow'; });
-
-    node.append("circle")
         .attr('r', function(d) { return calculateCircleRatio(d.userCount); })
-        .style('fill', function(d) { return 'blue'; });
+        .style('fill', function(d) { return 'navy'; });
 
     node.append("circle")
         .attr('r', function(d) { return calculateCircleRatio(d.issueCount); })
-        .style('fill', function(d) { return 'green'; });
+        .style('fill', function(d) { return 'maroon'; });
 
 
     function tick() {
@@ -190,6 +194,7 @@ var calculateCircleRatio = function (counter){
     if(sqrt != 0){
         result = 1/sqrt;
     }
-    var MAX_RATIO = 9; //Add max ratio because 1 is too small to see
-    return (1 - result) * MAX_RATIO;
+    var MAX_RATIO = 20; //Add max ratio because 1 is too small to see
+    var MIN_RATIO = 1;
+    return (1 - result) * MAX_RATIO || MIN_RATIO;
 }

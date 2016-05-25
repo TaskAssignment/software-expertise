@@ -24,7 +24,7 @@ module.exports = function (BaseFrame, app, database) {
         .get(projects.populateCommitsComments);
 
     var issues = require(controllers + 'issues')(BaseFrame);
-    app.route(base + ':projectId/issues/')
+    app.route(base + ':projectId/issues')
         .get(issues.find);
 
     var users = require(controllers + 'users')(BaseFrame);

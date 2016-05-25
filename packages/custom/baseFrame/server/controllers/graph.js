@@ -70,8 +70,8 @@ module.exports = function (BaseFrame){
     /** Fetches user tags from database.
     */
 
-    function findOneModel(Model, id, callback, callbackParams = {}){
-        Model.findOne({_id: id}, 'tags projectId', {lean: true}, function (err, model){
+    function findOneModel(Model, id, callback, callbackParams = {}, selectItems = 'tags'){
+        Model.findOne({_id: id}, selectItems, {lean: true}, function (err, model){
             if(err){
                 console.log(err);
                 if(!res.headersSent){
@@ -197,6 +197,7 @@ module.exports = function (BaseFrame){
         findMatches: function (req, res) {
 
             var similarities = {};
+            var assignee = undefined;
 
             var mergeCallback = function (params){
                 var value = 0;
@@ -209,19 +210,33 @@ module.exports = function (BaseFrame){
                 }
 
                 if(similarities[value]){
-                    similarities[value].push(params.userId);
+                    similarities[value].push(params.user);
                 } else {
-                    similarities[value] = [params.userId];
+                    similarities[value] = [params.user];
                 }
 
+                if(params.assignee == params.user.id && value == 0){
+                    assignee = {
+                        value: value,
+                        matches: [params.user]
+                    };
+                }
             }
 
             var issueCallback = function (params){
-                SoUser.find({repositories: params.Issue.projectId}, 'tags', {lean: true}, function (err, users){
+                SoUser.find({repositories: params.Issue.projectId}, 'tags soId', {lean: true}, function (err, users){
 
+                    assignee = undefined;
                     for(var user of users){
                         params.SoUser = user;
-                        mergeTags(params, mergeCallback, {userId: user._id});
+                        var callbackParams = {
+                            user: {
+                                id: user._id,
+                                soId: user.soId},
+                            assignee: params.Issue.assigneeId
+                        };
+
+                        mergeTags(params, mergeCallback, callbackParams);
                     }
 
                     var amount = users.length - similarities[0].length;
@@ -240,12 +255,16 @@ module.exports = function (BaseFrame){
                         };
                         matches.push(match);
                     }
+                    if(assignee){
+                        matches.push(assignee);
+                        amount++;
+                    }
 
                     res.json({similarities: matches, amount: amount});
                 });
             }
 
-            findOneModel(Issue, req.params.issueId, issueCallback);
+            findOneModel(Issue, req.params.issueId, issueCallback, {}, 'tags projectId assigneeId');
 
         }
     }

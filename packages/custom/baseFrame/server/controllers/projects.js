@@ -41,7 +41,7 @@ module.exports = function (BaseFrame){
         * @param res - Express response.
         */
         find: function(req, res){
-            Project.findOne(req.params, 'name', {lean: true}, function(err, project){
+            Project.findOne(req.params, 'name description languages', {lean: true}, function(err, project){
                 res.send(project);
             });
         },
@@ -180,7 +180,7 @@ module.exports = function (BaseFrame){
                 var keys = Object.keys(results);
                 keys.forEach(function(key, index, array){
                     var language = {
-                        _id: key,
+                        _id: key.toLowerCase(),
                         amount: results[key]
                     };
                     languages.push(language);
@@ -198,7 +198,7 @@ module.exports = function (BaseFrame){
                     }
                 }
 
-                Project.update(filter, updateFields, function(err){
+                Project.update(filter, updateFields, {upsert: true}, function(err){
                     if(err){
                         console.log(err);
                     }
@@ -369,8 +369,10 @@ module.exports = function (BaseFrame){
 
                 var nextPage = new_url.split('=').pop();
                 if(nextPage != 1){
+                    console.log('Next Page: ' + nextPage);
                     return new_url;
                 } else {
+                    console.log('********* Done! ***********');
                     return null;
                 }
             }

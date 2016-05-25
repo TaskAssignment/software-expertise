@@ -7,7 +7,6 @@ function showLoadingScreen(){
 function hideLoadingScreen(){
     angular.element('#loadingImage').css('display','none');
 }
-
 var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('RepositoryController',
 ['$scope', '$http', '$location', '$resource',
@@ -39,7 +38,8 @@ function ($scope,  $http, $location, $resource) {
             'commits/comments',
         ]
 
-        for(var item of items){
+        for(var i in items){
+            var item = items[i];
             showLoadingScreen();
             var Resource = $resource('/api/baseFrame/:projectId/populate/' +
                 item);
@@ -56,7 +56,8 @@ function ($scope,  $http, $location, $resource) {
         showLoadingScreen();
         var Resource = $resource('/api/baseFrame/:projectId/makeIssuesTags');
         var filter = {
-            projectId: $scope.selectedRepo._id
+            projectId: $scope.selectedRepo._id,
+            project: $scope.selectedRepo
         }
         Resource.get(filter).$promise.then(function (response){
             hideLoadingScreen();
@@ -82,7 +83,8 @@ function ($scope,  $http, $location, $resource) {
             var results = response.data.items;
 
             var repos = [];
-            for (var result of results) {
+            for (var i in results) {
+                var result = results[i];
                 var repo = {
                     name: result.full_name,
                     _id: result.id,
@@ -116,7 +118,7 @@ function ($scope,  $http, $location, $resource) {
             $scope.selectedRepo['empty' + resource] = false;
             hideLoadingScreen();
             getRepoInformation($scope.selectedRepo);
-        });
+        }, function(response){console.log(response);});
     }
 
     /**
@@ -153,7 +155,8 @@ function ($scope,  $http, $location, $resource) {
         if(!issue.parsed){
             var filter = {
                 projectId: $scope.selectedRepo._id,
-                _id: issue._id
+                _id: issue._id,
+                project: $scope.selectedRepo
             };
 
             var Issue = $resource('/api/baseFrame/:projectId/makeIssuesTags');
@@ -212,22 +215,19 @@ function ($scope,  $http, $location, $resource) {
     *
     * @param resource - The desired resource for this repository (issues, users)
     */
-    function getRepoResources(resource, id = 0, order = '$gt'){
+    function getRepoResources(resource){
         showLoadingScreen();
         var Resource = $resource('/api/baseFrame/:projectId/' + resource);
         var filter = {
-            projectId: $scope.selectedRepo._id,
-            order: order,
-            id: id
+            projectId: $scope.selectedRepo._id
         };
         Resource.query(filter).$promise.then(function(resources){
             if(resources.length == 0){
                 $scope.selectedRepo['empty' + resource] = true;
             }
-
             $scope[resource] = resources;
             hideLoadingScreen();
-        });
+        }, function(response){console.log(response)});
     }
 
     function findProject(){

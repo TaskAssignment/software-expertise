@@ -5,10 +5,33 @@
 
         <h4> Using <b>{{ similarityOptions.type }}</b> we found {{ similaritiesAmount }} users that have a similarity with this issue. </p> </h4>
 
-        <div ng-repeat="item in bestUsers">
-            <div ng-repeat="match in item.matches">
-                <b>{{ match }}</b> has similarity of {{ item.value }}
-            </div>
-        </div>
+
+        <table class="table table-bordered" ng-if="similaritiesAmount > 0">
+            <thead>
+                <tr>
+                    <th>Assignee</th>
+                    <th>SO User</th>
+                    <th>Username</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody ng-repeat="item in bestUsers">
+                <tr ng-repeat="match in item.matches">
+                    <td>
+                        <i ng-if="match.id == selectedIssue.assigneeId" class="fa fa-check" aria-hidden="true"></i>
+                    </td>
+                    <td>
+                        <i ng-if="match.soId" class="fa fa-check" aria-hidden="true"></i>
+                    </td>
+                    <td>
+                        {{match.id}}
+                    </td>
+                    <td>
+                        {{item.value}}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
     </div>
 </div>
