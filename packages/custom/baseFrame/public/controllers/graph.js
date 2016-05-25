@@ -2,6 +2,14 @@
 /**
  * Class that handles drawing of the expertise graph
  */
+
+function showLoadingScreen(){
+    angular.element('#loadingImage').css('display','block');
+}
+
+function hideLoadingScreen(){
+    angular.element('#loadingImage').css('display','none');
+}
 var controllerCallback = function ($scope,  $http, $resource) {
     $scope.graphData = {
         nodes: [],
