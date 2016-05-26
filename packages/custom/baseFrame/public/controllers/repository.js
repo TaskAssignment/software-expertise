@@ -54,6 +54,16 @@ function ($scope,  $http, $location, $resource) {
         }
     }
 
+    $scope.getAllSOData = function (){
+        console.log($scope.users);
+        for(let i in $scope.users){
+            var user = $scope.users[i];
+            if(user.soId && !user.soPopulated) {
+                populateSOData(user.soId);
+            }
+        }
+    }
+
     $scope.makeIssuesTags = function (){
         showLoadingScreen();
         var Resource = $resource('/api/baseFrame/:projectId/makeIssuesTags');
@@ -135,7 +145,7 @@ function ($scope,  $http, $location, $resource) {
         if(!user.soId){
             alert("User is not in StackOverflow.");
         } else if(!user.soPopulated) {
-            populateSOData()
+            populateSOData(user.soId)
         }
         showLoadingScreen();
         sendToGraph();
@@ -170,10 +180,10 @@ function ($scope,  $http, $location, $resource) {
         sendToTable();
     }
 
-    function populateSOData() {
+    function populateSOData(soId) {
         showLoadingScreen();
         var filter = {
-            soId: $scope.selectedUser.soId,
+            soId: soId,
         }
         var url = '/api/baseFrame/user/:soId/populate/';
         var Resource = $resource(url + 'answers');

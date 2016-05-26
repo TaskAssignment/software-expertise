@@ -114,6 +114,7 @@ function readFile(file, res, MongooseModel){
     csv.fromStream(readable, {ignoreEmpty: true})
     .on("data", function(data){
         var model = createModel(data, MongooseModel.modelName);
+        //This is waaay to slow. I have to find a solution for it
         MongooseModel.create(model, function(err){
             if(err){
                 console.log(err.message);
@@ -123,7 +124,7 @@ function readFile(file, res, MongooseModel){
         });
     })
     .on("end", function(){
-        console.log("done");
+        console.log("******************* DONE *******************");
     });
     res.sendStatus(200);
 }

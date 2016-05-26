@@ -150,7 +150,7 @@ module.exports = function (BaseFrame){
     */
     function stackOverflowRequest(specificUrl, ids, res, callback){
         var url = 'https://api.stackexchange.com/2.2/users/' + ids.soId +
-            specificUrl;
+            specificUrl + '&key=unaHxXqTCHJ5Ve6AfnIJGg((';
 
         /* StackOverflow requests are compressed, if this is not set, the data
         * won't be readable.
