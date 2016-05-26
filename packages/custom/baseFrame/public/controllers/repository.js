@@ -32,6 +32,8 @@ function ($scope,  $http, $location, $resource) {
 
     $scope.fullPopulateRepo = function(){
         var items = [
+            'issues',
+            'users',
             'languages',
             'commits',
             'issues/comments',
@@ -233,9 +235,7 @@ function ($scope,  $http, $location, $resource) {
         };
         console.log(filter);
         Resource.query(filter).$promise.then(function(resources){
-            if(resources.length == 0){
-                $scope.selectedRepo['empty' + resource] = true;
-            }
+            $scope.selectedRepo['empty' + resource] = false;
             $scope[resource] = resources;
             hideLoadingScreen();
         }, function(response){console.log(response)});

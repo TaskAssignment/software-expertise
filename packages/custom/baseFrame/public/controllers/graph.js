@@ -142,11 +142,11 @@ function drawGraph(graphData){
 
     node.append("circle")
         .attr('r', function(d) { return calculateCircleRatio(d.userCount); })
-        .style('fill', function(d) { return 'navy'; });
+        .style('fill', 'lightblue');
 
     node.append("circle")
         .attr('r', function(d) { return calculateCircleRatio(d.issueCount); })
-        .style('fill', function(d) { return 'maroon'; });
+        .style('fill', 'lightsalmon');
 
 
     function tick() {

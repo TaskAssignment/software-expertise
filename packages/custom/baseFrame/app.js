@@ -18,20 +18,7 @@ BaseFrame.register(function(app, database,system) {
   //We enable routing. By default the Package Object is passed to the routes
   BaseFrame.routes(app, database);
 
-  //We are adding a link to the main menu for all authenticated users
-  BaseFrame.menus.add({
-    title: 'Register an Administrator',
-    link: 'auth.register',
-    roles: ['authenticated'],
-    menu: 'basemenu',
-  });
-
-   BaseFrame.menus.add({
-    title: 'Upload/Download Data',
-    link: 'tsv page',
-    roles: ['authenticated'],
-    menu: 'basemenu',
-  });
+  BaseFrame.aggregateAsset('css', 'theme.css');
 
   BaseFrame.angularDependencies(['mean.system']);
 
