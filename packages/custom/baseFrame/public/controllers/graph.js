@@ -92,6 +92,24 @@ function drawGraph(graphData){
     var width = $('#expertiseGraph').innerWidth();
     var height = $('#leftSelectionPanel').innerHeight();
 
+    var MAX_DISTANCE = Math.min(width, height) - 50;
+    var MIN_DISTANCE = MAX_DISTANCE/3;
+
+    var calculateDistance = function (edge){
+        var num = 2 * edge.occurrences;
+        var den = edge.source.issueCount + edge.target.issueCount;
+
+        if(den == 0){
+            den = edge.source.userCount + edge.target.userCount;
+            if(den == 0){
+                return 0;
+            }
+        }
+
+        var distance = num/den;
+        return Math.min(MAX_DISTANCE, distance + MIN_DISTANCE);
+    }
+
     var force = d3.layout.force()
         .size([width, height])
         .charge(-400)
@@ -169,22 +187,6 @@ function drawGraph(graphData){
     }
 }
 
-var calculateDistance =  function (link){
-    var num = 2 * link.occurrences;
-    var den = link.source.issueCount + link.target.issueCount;
-
-    if(den == 0){
-        den = link.source.userCount + link.target.userCount;
-        if(den == 0){
-            return 0;
-        }
-    }
-
-    var distance = num/den;
-    var MAX_DISTANCE = 500;
-    return Math.min(MAX_DISTANCE, distance);
-}
-
 var calculateCircleRatio = function (counter){
     if(counter < 1){
         return 0;
@@ -194,7 +196,7 @@ var calculateCircleRatio = function (counter){
     if(sqrt != 0){
         result = 1/sqrt;
     }
-    var MAX_RATIO = 20; //Add max ratio because 1 is too small to see
-    var MIN_RATIO = 1;
+    var MAX_RATIO = 15; //Add max ratio because 1 is too small to see
+    var MIN_RATIO = 5;
     return (1 - result) * MAX_RATIO || MIN_RATIO;
 }

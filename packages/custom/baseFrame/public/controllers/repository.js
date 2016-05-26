@@ -134,6 +134,8 @@ function ($scope,  $http, $location, $resource) {
 
         if(!user.soId){
             alert("User is not in StackOverflow.");
+        } else if(!user.soPopulated) {
+            populateSOData()
         }
         showLoadingScreen();
         sendToGraph();
@@ -168,7 +170,7 @@ function ($scope,  $http, $location, $resource) {
         sendToTable();
     }
 
-    $scope.populateSOData = function() {
+    function populateSOData() {
         showLoadingScreen();
         var filter = {
             soId: $scope.selectedUser.soId,
@@ -233,7 +235,6 @@ function ($scope,  $http, $location, $resource) {
             assigned:  $scope.issueFilter.assigned,
             soUser: $scope.devFilter.soUser //Change this to send the entire filter or use two functions
         };
-        console.log(filter);
         Resource.query(filter).$promise.then(function(resources){
             $scope.selectedRepo['empty' + resource] = false;
             $scope[resource] = resources;

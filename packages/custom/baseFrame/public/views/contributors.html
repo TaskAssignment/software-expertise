@@ -17,12 +17,13 @@
 
     <div id='userSelection' class='scrollable list-group'>
         <button ng-repeat="user in users"
-         class='list-group-item'
+         class='list-group-item' ng-class="{active: selectedUser._id == user._id}"
           ng-click="selectUser(user)">
             {{ user._id }}
             <span ng-if="user.soId" class="badge">SO User</span>
             <span ng-if="selectedIssue.reporterId == user._id" class="badge">Reporter</span>
             <span ng-if="selectedIssue.assigneeId == user._id" class="badge">Assignee</span>
+            <span ng-if="user.soPopulated" class="badge">SO Data</span>
         </button>
     </div>
     <a class="btn btn-default" ng-if="selectedRepo.emptyusers" ng-click=populateRepoResources('users')> Get All Developers</a>
