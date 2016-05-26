@@ -1,10 +1,11 @@
+<div class="col-lg-6">
 <h3>Issues: </h3>
 
 <!-- Showing only 500 issues for now. But all of them are saved! -->
 <div id='issueSelection' class='scrollable list-group'>
     <button ng-repeat="issue in issues" class="list-group-item"
-      ng-click="selectIssue(issue)">
-        {{ issue.title }}
+      ng-click="selectIssue(issue)"><p>
+        {{ issue.title }}</p>
         <span class="badge"> {{ issue.state }}</span>
         <span class="badge" ng-if="issue.pull_request">
             PR </span>
@@ -22,3 +23,4 @@
 
 <a class="btn btn-default" ng-if="selectedRepo.emptyissues" ng-click=populateRepoResources('issues')> Get All Issues</a>
 <a class="btn btn-default" ng-click=populateRepoResources('issues')> Get New Issues</a>
+</div>

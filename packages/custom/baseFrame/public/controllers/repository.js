@@ -101,6 +101,7 @@ function ($scope,  $http, $location, $resource) {
     }
 
     $scope.saveProject = function(repo){
+        $scope.search = false;
         var Project = $resource('/api/baseFrame/project/new/');
         Project.get(repo).$promise.then(function(project){
             getRepoInformation(repo);

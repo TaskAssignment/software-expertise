@@ -1,23 +1,21 @@
+<h2> {{ selectedRepo.name }}: </h2>
+<hr>
 <div id="selected" ng-if="selectedIssue || selectedUser">
-    <h4> Selected Items: </h4>
-    <hr>
-    <dl class="dl-horizontal" ng-if="selectedIssue">
+    <div ng-if="selectedIssue">
         <button type="button" class="close" ng-click="deselect('Issue')" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <dt> Issue: </dt>
-        <dd> {{ selectedIssue.title }} </dd>
-        <dt> Reporter: </dt>
-        <dd> {{ selectedIssue.reporterId }} </dd>
-        <dt> Assignee: </dt>
-        <dd> {{ selectedIssue.assigneeId }} <dd>
-    </dl>
-    <hr>
-    <dl class="dl-horizontal" ng-if="selectedUser">
+        <p><b> Issue: </b> {{ selectedIssue.title }} </p>
+        <p><b> Reporter: </b> {{ selectedIssue.reporterId }} </p>
+        <p><b> Assignee: </b> {{ selectedIssue.assigneeId }} </p>
+        <hr>
+    </div>
+    <div ng-if="selectedUser">
         <button type="button" class="close" ng-click="deselect('User')" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <dt> User: </dt>
-        <dd> {{ selectedUser._id }} </dd>
-        <dd ng-if="selectedUser.soId"> <span class="badge">SO User</span> </dd>
-        <dd ng-if="selectedIssue.assigneeId == selectedUser._id"> <span class="badge">Assignee</span> </dd>
+        <p><b> User: </b> {{ selectedUser._id }} </>
+        <span ng-if="selectedUser.soId" class="badge">SO User</span>
+        <span ng-if="selectedIssue.assigneeId == selectedUser._id" class="badge">Assignee</span>
         <p ng-if="selectedUser.soId && selectedUser.soPopulated == false">
             It looks like we don't have any StackOverflow data for this user. Try to <a ng-click="populateSOData()" >populate</a></p>
-    </dl>
+        </p>
+        <hr>
+    </div>
 </div>
