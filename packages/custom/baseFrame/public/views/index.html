@@ -1,6 +1,5 @@
-<!-- Css is in theme package!! -->
-
 <section ng-controller="RepositoryController" class="row">
+    <div ng-controller="GraphController">
     <div id='leftSelectionPanel' class='col-md-5 col-lg-4'>
         <div class="row">
             <ng-include src="'baseFrame/views/repo_search.html'"></ng-include>
@@ -15,7 +14,7 @@
             <ng-include src="'baseFrame/views/contributors.html'"></ng-include>
         </div>
     </div>
-    <div id="rightPanel" ng-controller="GraphController">
+    <div id="rightPanel">
         <div class="col-md-6 col-lg-7">
             <div class="row">
                 <ul class="nav nav-tabs">
@@ -44,6 +43,7 @@
             </div>
         </div>
         <ng-include class="col-md-1 col-lg-1" src="'baseFrame/views/graph_options.html'"></ng-include>
+    </div>
     </div>
 </section>
 

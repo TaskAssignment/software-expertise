@@ -8,7 +8,7 @@ var CoOccurrence = mongoose.model('CoOccurrence');
 /** This will provide the data for the graph */
 
 module.exports = function (BaseFrame){
-
+    // TODO: REMAKE THIS DOCUMENTATION!!!
     /**
     * This will format the tags and links to what is expected to render the graph
     *
@@ -242,19 +242,23 @@ module.exports = function (BaseFrame){
                     var amount = users.length - similarities[0].length;
                     delete similarities[0];
 
-                    var keys = Object.keys(similarities);
+                    var keys = Object.keys(similarities).map(Number);
 
                     // Descending order
-                    keys.sort(function (a, b) { return a < b });
+                    keys.sort();
+                    keys.reverse();
 
                     var matches = [];
-                    for(var key of keys){
+                    var MAX_RESULTS = 10;
+                    for(let i = 0; i < MAX_RESULTS; i++){
+                        var key = keys[i];
                         var match = {
                             value: key,
                             matches: similarities[key]
                         };
                         matches.push(match);
                     }
+
                     if(assignee){
                         matches.push(assignee);
                         amount++;

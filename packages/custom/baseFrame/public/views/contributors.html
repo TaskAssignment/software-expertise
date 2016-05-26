@@ -23,7 +23,6 @@
             <span ng-if="user.soId" class="badge">SO User</span>
             <span ng-if="selectedIssue.reporterId == user._id" class="badge">Reporter</span>
             <span ng-if="selectedIssue.assigneeId == user._id" class="badge">Assignee</span>
-            <span ng-if="user.soPopulated" class="badge">SO Data</span>
         </button>
     </div>
     <a class="btn btn-default" ng-if="selectedRepo.emptyusers" ng-click=populateRepoResources('users')> Get All Developers</a>
