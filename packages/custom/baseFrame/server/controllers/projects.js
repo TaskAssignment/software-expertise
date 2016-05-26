@@ -94,7 +94,7 @@ module.exports = function (BaseFrame){
         */
         populateIssues: function(req, res){
             Issue.findOne(req.params, '-_id updatedAt', {sort: '-updatedAt', lean:true},function (err, lastUpdate){
-                var url = '/issues?state=all&sort=updated'
+                var url = '/issues?state=all&sort=created&direction=asc'
 
                 if(lastUpdate){
                     url += '&since=' + lastUpdate.updatedAt.toISOString();
@@ -112,6 +112,8 @@ module.exports = function (BaseFrame){
                             state: result.state,
                             projectId: projectId,
                             parsed: false,
+                            createdAt: result.created_at,
+                            updatedAt: result.updated_at,
                             reporterId: result.user.login
                         }
 

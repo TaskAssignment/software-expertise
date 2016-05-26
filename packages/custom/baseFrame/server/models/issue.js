@@ -36,10 +36,10 @@ var IssueSchema = new Schema({
     },
     state: String,
     parsed: Boolean,
+    createdAt: Date,
+    updatedAt: Date,
     tags: [TagSchema],
     comments: [CommentSchema]
-}, {
-    timestamps: true
 });
 
 mongoose.model('Issue', IssueSchema);
