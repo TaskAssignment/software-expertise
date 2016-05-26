@@ -13,9 +13,16 @@ module.exports = function (BaseFrame){
         * @param res - Express response
         */
         find: function (req, res){
-            var repo = {repositories: req.params.projectId};
+            var filter = {
+                repositories: req.params.projectId
+            };
 
-            SoUser.find(repo, 'soId _id soPopulated', {sort: '-soId -updatedAt'}, function(err, users){
+            var soUser = JSON.parse(req.query.soUser);
+            if(soUser){
+                filter.soId = { $exists: soUser };
+            }
+
+            SoUser.find(filter, 'soId _id soPopulated', {sort: '-soId -updatedAt'}, function(err, users){
                 res.send(users);
             });
         },

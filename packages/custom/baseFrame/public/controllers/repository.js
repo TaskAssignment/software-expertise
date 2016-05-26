@@ -205,6 +205,10 @@ function ($scope,  $http, $location, $resource) {
             assigned: 'true'
         };
 
+        $scope.devFilter = {
+            soUser: 'true'
+        };
+
         $location.search('repoName', repo.name);
 
         showLoadingScreen();
@@ -224,9 +228,10 @@ function ($scope,  $http, $location, $resource) {
         var Resource = $resource('/api/baseFrame/:projectId/' + resource);
         var filter = {
             projectId: $scope.selectedRepo._id,
-            assigned:  $scope.issueFilter.assigned
+            assigned:  $scope.issueFilter.assigned,
+            soUser: $scope.devFilter.soUser //Change this to send the entire filter or use two functions
         };
-        assigneeId: $scope.issueFilter.assigned
+        console.log(filter);
         Resource.query(filter).$promise.then(function(resources){
             if(resources.length == 0){
                 $scope.selectedRepo['empty' + resource] = true;
