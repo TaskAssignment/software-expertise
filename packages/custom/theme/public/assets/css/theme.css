@@ -11,7 +11,7 @@ circle {
 }
 
 .scrollable {
-  height: 200px; // Set this height to the appropriate size
+  height: 35em; // Set this height to the appropriate size
   position: fixed;
   overflow-y: scroll;
 }
