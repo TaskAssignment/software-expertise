@@ -101,7 +101,6 @@ function ($scope,  $http, $location, $resource) {
     }
 
     $scope.saveProject = function(repo){
-        $scope.search = false;
         var Project = $resource('/api/baseFrame/project/new/');
         Project.get(repo).$promise.then(function(project){
             getRepoInformation(repo);
@@ -196,17 +195,21 @@ function ($scope,  $http, $location, $resource) {
     */
     function getRepoInformation(repo) {
         $scope.selectedRepo = repo;
+        $scope.search = false;
         $scope.repos = undefined;
         $scope.users = [];
         $scope.issues = [];
         $scope.selectedUser = undefined;
         $scope.selectedIssue = undefined;
+        $scope.issueFilter = {
+            assigned: 'true'
+        };
 
         $location.search('repoName', repo.name);
 
         showLoadingScreen();
-        getRepoResources('issues');
-        getRepoResources('users');
+        $scope.getRepoResources('issues');
+        $scope.getRepoResources('users');
         hideLoadingScreen();
     }
 
@@ -216,12 +219,14 @@ function ($scope,  $http, $location, $resource) {
     *
     * @param resource - The desired resource for this repository (issues, users)
     */
-    function getRepoResources(resource){
+    $scope.getRepoResources = function (resource){
         showLoadingScreen();
         var Resource = $resource('/api/baseFrame/:projectId/' + resource);
         var filter = {
-            projectId: $scope.selectedRepo._id
+            projectId: $scope.selectedRepo._id,
+            assigned:  $scope.issueFilter.assigned
         };
+        assigneeId: $scope.issueFilter.assigned
         Resource.query(filter).$promise.then(function(resources){
             if(resources.length == 0){
                 $scope.selectedRepo['empty' + resource] = true;
@@ -232,6 +237,7 @@ function ($scope,  $http, $location, $resource) {
     }
 
     function findProject(){
+        $scope.search = true;
         var Project = $resource('/api/baseFrame/project/find/:name');
         var repoName = $location.search().repoName;
         if(repoName){

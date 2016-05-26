@@ -26,7 +26,10 @@ var IssueSchema = new Schema({
     },
     //These are both GitHub logins that are SoUser._id
     reporterId: String,
-    assigneeId: String,
+    assigneeId: {
+        type: String,
+        default: undefined
+    },
     number: String,
     body: String,
     title: String,

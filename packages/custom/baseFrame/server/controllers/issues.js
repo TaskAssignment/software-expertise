@@ -13,7 +13,17 @@ module.exports = function (BaseFrame){
         * @param res - Express response
         */
         find: function (req, res){
-            Issue.find(req.params, '_id state title parsed reporterId assigneeId pull_request', {sort: '-state pull_request', lean: true, limit: 500}, function(err, issues){
+            var filter = {
+                projectId: req.params.projectId,
+                pull_request: false
+            };
+
+            var assigned = JSON.parse(req.query.assigned);
+            if(assigned){
+                filter.assigneeId = { $exists: assigned };
+            }
+
+            Issue.find(filter, '_id state title parsed reporterId assigneeId pull_request', {sort: '-state -updatedAt', lean: true, limit: 500}, function(err, issues){
 
                 res.send(issues);
             });

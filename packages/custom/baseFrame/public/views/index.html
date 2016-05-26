@@ -2,14 +2,12 @@
 
 <section ng-controller="RepositoryController" class="row">
     <div id='leftSelectionPanel' class='col-md-offset-1 col-lg-offset-1 col-md-4 col-lg-3'>
-
         <div class="row">
             <ng-include src="'baseFrame/views/repo_search.html'"></ng-include>
         </div>
 
         <div class="row" id='repositoyInfoDisplay' ng-if="selectedRepo.name">
             <ng-include src="'baseFrame/views/selected_resources.html'"></ng-include>
-
             <ng-include src="'baseFrame/views/issues.html'"></ng-include>
             <ng-include src="'baseFrame/views/contributors.html'"></ng-include>
         </div>

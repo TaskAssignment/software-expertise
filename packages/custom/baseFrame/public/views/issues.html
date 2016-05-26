@@ -1,26 +1,40 @@
 <div class="col-lg-6">
-<h3>Issues: </h3>
+    <h3>Issues: </h3>
 
-<!-- Showing only 500 issues for now. But all of them are saved! -->
-<div id='issueSelection' class='scrollable list-group'>
-    <button ng-repeat="issue in issues" class="list-group-item"
-      ng-click="selectIssue(issue)"><p>
-        {{ issue.title }}</p>
-        <span class="badge"> {{ issue.state }}</span>
-        <span class="badge" ng-if="issue.pull_request">
-            PR </span>
-    </button>
-</div>
+    <div class="radio">
+        <label>
+            <input ng-click="getRepoResources('issues')" type="radio"
+             ng-model="$parent.issueFilter.assigned"
+             value="true"> Assigned
+         </label>
+    </div>
+    <div class="radio">
+         <label>
+            <input ng-click="getRepoResources('issues')" type="radio"
+             ng-model="$parent.issueFilter.assigned"
+              value="false"> All
+        </label>
+    </div>
 
-<!-- TODO: Add pagination here. It take too long to load all the issues!!!
-<nav>
-    <ul class="pager">
-        <li><a ng-click="populateRepoResources('issues', $scope.lastissues, '$lt')">Previous</a></li>
-        <li><a ng-click="populateRepoResources('issues', $scope.lastissues)">Next</a></li>
-    </ul>
-</nav>
--->
+    <!-- Showing only 500 issues for now. But all of them are saved! -->
+    <div id='issueSelection' class='scrollable list-group'>
+        <button ng-repeat="issue in issues" class="list-group-item"
+          ng-click="selectIssue(issue)"><p>
+            {{ issue.title }}</p>
+            <span class="badge"> {{ issue.state }}</span>
+        </button>
+    </div>
 
-<a class="btn btn-default" ng-if="selectedRepo.emptyissues" ng-click=populateRepoResources('issues')> Get All Issues</a>
-<a class="btn btn-default" ng-click=populateRepoResources('issues')> Get New Issues</a>
+    <a class="btn btn-default" ng-if="selectedRepo.emptyissues" ng-click=populateRepoResources('issues')> Get All Issues</a>
+    <a class="btn btn-default" ng-click=populateRepoResources('issues')> Get New Issues</a>
+
+    <!-- TODO: Add pagination here. It takes too long to load all the issues!!!
+    <nav>
+        <ul class="pager">
+            <li><a ng-click="populateRepoResources('issues', $scope.lastissues, '$lt')">Previous</a></li>
+            <li><a ng-click="populateRepoResources('issues', $scope.lastissues)">Next</a></li>
+        </ul>
+    </nav>
+    -->
+
 </div>
