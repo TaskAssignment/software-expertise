@@ -2,7 +2,6 @@
 
 var mongoose = require('mongoose');
 var Issue = mongoose.model('Issue');
-var SoProfile = mongoose.model('SoProfile');
 var CoOccurrence = mongoose.model('CoOccurrence');
 
 /** This will provide the data for the graph **/

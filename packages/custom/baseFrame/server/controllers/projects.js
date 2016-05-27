@@ -4,7 +4,6 @@ var mongoose = require('mongoose');
 var Project  = mongoose.model('Project');
 var Issue = mongoose.model('Issue');
 var Commit = mongoose.model('Commit');
-var SoProfile = mongoose.model('SoProfile');
 
 var request = require('request');
 
@@ -18,8 +17,7 @@ module.exports = function (BaseFrame){
         * @param res - Express response.
         **/
         save: function(req, res){
-            Project.findOne(req.query,
-            function (err, result){
+            Project.findOne(req.query, function (err, result){
                 if(result){
                     res.send(result);
                 }else{
@@ -149,19 +147,40 @@ module.exports = function (BaseFrame){
         populateContributors: function(req, res){
             var url = '/contributors';
 
+            var Developer = mongoose.model('Developer');
+
+            function updateOrCreateDev(ghResult, projectId){
+                Developer.findById(ghResult.login, function (err, dev){
+                    if(err){
+                        console.log(err.message);
+                        return null;
+                    }
+                    if(dev){
+                        dev.ghProfile.repositories.push(projectId);
+                    } else {
+                        dev = new Developer({
+                            _id: ghResult.login,
+                            ghProfile: {
+                                _id: ghResult.login,
+                                repositories: [projectId]
+                            }
+                        });
+                    }
+                    dev.save(function (err){
+                        if(err){
+                            console.log(err.message);
+                        } else {
+                            console.log(ghResult.login + " updated!");
+                        }
+                    });
+                });
+            }
+
+
             var buildModels = function(results, projectId){
                 for (var i in results) {
                     var result = results[i];
-                    var user = {
-                        gitHubId: result.id,
-                        $addToSet: {repositories: projectId}
-                    };
-
-                    SoProfile.update({_id: result.login}, user, {upsert: true}, function(err){
-                        if(err){
-                            console.log(err);
-                        }
-                    });
+                    updateOrCreateDev(result, projectId);
                 }
             }
 

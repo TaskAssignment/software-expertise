@@ -3,7 +3,6 @@
 // Database connections
 var mongoose = require('mongoose');
 
-
 var fs = require('fs');
 var csv = require('fast-csv');
 
@@ -57,18 +56,26 @@ module.exports = function (BaseFrame){
         **/
         populateSoProfiles: function (req, res){
             var Developer = mongoose.model('Developer');
-            var SoProfile = mongoose.model('SoProfile');
-            var GitHubProfile = mongoose.model('GitHubProfile');
 
             var readFileCallback = function (line){
-                var dev = new Developer({name: line[1]});
-                dev.save(function(err, dev){
-                    var soProfile = new SoProfile({_id: line[0], developer: dev._id});
-                    var ghProfile = new GitHubProfile({_id: line[1], email: line[2], developer: dev._id});
 
-                    soProfile.save(errorCallback);
-                    ghProfile.save(errorCallback);
-                });
+                var options = {
+                    upsert: true,
+                    setDefaultsOnInsert: true
+                };
+
+                var update = {
+                    soProfile: {
+                        _id: line[0]
+                    },
+                    ghProfile: {
+                        _id: line[1],
+                        email: line[2]
+                    }
+                };
+
+                Developer.findByIdAndUpdate(line[1], update, options,
+                    errorCallback);
             }
             res.sendStatus(200);
 
@@ -179,6 +186,7 @@ function readFile(path, callback){
     //Using readStream to avoid memory explosion
     var readable = fs.createReadStream(path, {encoding: 'utf8'});
 
+    console.log("** Reading file! **")
     csv.fromStream(readable, {ignoreEmpty: true})
     .on("data", function(data){
         callback(data);
