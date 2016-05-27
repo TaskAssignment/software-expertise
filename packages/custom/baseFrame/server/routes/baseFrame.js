@@ -46,14 +46,14 @@ module.exports = function (BaseFrame, app, database) {
         .get(admin.populateSoTags);
     app.route(base + 'populate/CoOccurrences')
         .get(admin.populateCoOccurrences);
-    app.route(base + 'populate/SoUsers')
-        .get(admin.populateSoUsers);
+    app.route(base + 'populate/SoProfiles')
+        .get(admin.populateSoProfiles);
     app.route(base + 'export/SoTags')
         .get(admin.exportSoTags);
     app.route(base + 'export/CoOccurrences')
         .get(admin.exportCoOccurrences);
-    app.route(base + 'export/SoUsers')
-        .get(admin.exportSoUsers);
+    app.route(base + 'export/SoProfiles')
+        .get(admin.exportSoProfiles);
 
     var stopwords = require(controllers + 'stopWords')(BaseFrame);
     app.route(base + 'populate/StopWords')

@@ -24,7 +24,7 @@ var IssueSchema = new Schema({
         type: String,
         ref: 'Project',
     },
-    //These are both GitHub logins that are SoUser._id
+    //These are both GitHub logins that are SoProfile._id
     reporterId: String,
     assigneeId: {
         type: String,

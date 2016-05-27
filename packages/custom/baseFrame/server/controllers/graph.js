@@ -2,7 +2,7 @@
 
 var mongoose = require('mongoose');
 var Issue = mongoose.model('Issue');
-var SoUser = mongoose.model('SoUser');
+var SoProfile = mongoose.model('SoProfile');
 var CoOccurrence = mongoose.model('CoOccurrence');
 
 /** This will provide the data for the graph **/
@@ -178,7 +178,7 @@ module.exports = function (BaseFrame){
             };
 
             var issueCallback = function(params){
-                findOneModel(SoUser, ids.userId, userCallback, params);
+                findOneModel(SoProfile, ids.userId, userCallback, params);
             };
 
             findOneModel(Issue, ids.issueId, issueCallback);
@@ -232,11 +232,11 @@ module.exports = function (BaseFrame){
             }
 
             var issueCallback = function (params){
-                SoUser.find({$or: [{repositories: params.Issue.projectId, soId: {$exists: true}}, {_id: params.Issue.assigneeId}]}, 'tags soId', {lean: true}, function (err, users){
+                SoProfile.find({$or: [{repositories: params.Issue.projectId, soId: {$exists: true}}, {_id: params.Issue.assigneeId}]}, 'tags soId', {lean: true}, function (err, users){
 
                     assignee = undefined;
                     for(var user of users){
-                        params.SoUser = user;
+                        params.SoProfile = user;
                         var callbackParams = {
                             user: {
                                 id: user._id,

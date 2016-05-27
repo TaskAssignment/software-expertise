@@ -9,8 +9,6 @@ var QuestionSchema = new Schema({
     title: String,
     body: String,
     tags: [String],
-    up_vote_count: Number,
-    down_vote_count: Number,
     score: Number
 }, {
     timestamps: true
@@ -22,8 +20,6 @@ var AnswerSchema = new Schema({
     questionId: String,
     tags: [String],
     favorite_count: Number,
-    up_vote_count: Number,
-    down_vote_count: Number,
     score: Number
 }, {
     timestamps: true
@@ -34,35 +30,31 @@ var TagSchema = new Schema({
     count: Number
 });
 
-var SoUserSchema = new Schema({
-    _id: { //GitHub username
+var SoProfileSchema = new Schema({
+    _id: { //soId username
         type: String,
         required: true,
         unique: true
     },
-    gitHubId: String,
-    email: String,
+    display_name: String,
     emailHash: String,
-    soId: String,
-    repositories: [String],
-    soPopulated: {
-        type: Boolean,
-        default: false
-    },
     tags: [TagSchema],
     questions: [QuestionSchema],
-    answers: [AnswerSchema]
+    answers: [AnswerSchema],
+    developer: {
+        type: ObjectId,
+        ref: 'Developer'
+    }
 }, {
     timestamps: true
 });
 
-SoUserSchema.plugin(mongooseToCsv, {
+SoProfileSchema.plugin(mongooseToCsv, {
     headers: 'Username Email SoId',
     constraints: {
-        'Username': '_id',
-        'Email': 'email',
-        'SoId': 'soId'
+        'Username': 'display_name',
+        'SoId': '_id'
     }
 });
 
-mongoose.model('SoUser', SoUserSchema);
+mongoose.model('SoProfile', SoProfileSchema);

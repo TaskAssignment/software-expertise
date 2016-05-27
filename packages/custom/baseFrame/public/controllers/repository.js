@@ -229,7 +229,7 @@ function ($scope,  $http, $location, $resource) {
         };
 
         $scope.devFilter = {
-            soUser: 'true'
+            SoProfile: 'true'
         };
 
         $location.search('repoName', repo.name);
@@ -252,7 +252,7 @@ function ($scope,  $http, $location, $resource) {
         var filter = {
             projectId: $scope.selectedRepo._id,
             assigned:  $scope.issueFilter.assigned,
-            soUser: $scope.devFilter.soUser //Change this to send the entire filter or use two functions
+            SoProfile: $scope.devFilter.SoProfile //Change this to send the entire filter or use two functions
         };
         Resource.query(filter).$promise.then(function(resources){
             $scope.selectedRepo['empty' + resource] = false;

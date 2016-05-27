@@ -4,7 +4,7 @@ var mongoose = require('mongoose');
 var Project  = mongoose.model('Project');
 var Issue = mongoose.model('Issue');
 var Commit = mongoose.model('Commit');
-var SoUser = mongoose.model('SoUser');
+var SoProfile = mongoose.model('SoProfile');
 
 var request = require('request');
 
@@ -157,7 +157,7 @@ module.exports = function (BaseFrame){
                         $addToSet: {repositories: projectId}
                     };
 
-                    SoUser.update({_id: result.login}, user, {upsert: true}, function(err){
+                    SoProfile.update({_id: result.login}, user, {upsert: true}, function(err){
                         if(err){
                             console.log(err);
                         }

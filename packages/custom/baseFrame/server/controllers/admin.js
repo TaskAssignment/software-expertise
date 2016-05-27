@@ -3,7 +3,7 @@
 // Database connections
 var mongoose = require('mongoose');
 var Tag = mongoose.model('Tag');
-var SoUser = mongoose.model('SoUser');
+var SoProfile = mongoose.model('SoProfile');
 var CoOccurrence = mongoose.model('CoOccurrence');
 
 var fs = require('fs');
@@ -34,8 +34,8 @@ module.exports = function (BaseFrame){
         * @param req - Express request.
         * @param res - Express respnse.
         **/
-        populateSoUsers: function (req, res){
-            readFile('files/commonUsers.csv', res, SoUser);
+        populateSoProfiles: function (req, res){
+            readFile('files/commonUsers.csv', res, SoProfile);
         },
 
         /** Exports the SO Tags to a file.
@@ -61,8 +61,8 @@ module.exports = function (BaseFrame){
         * @param req - Express request.
         * @param res - Express respnse.
         **/
-        exportSoUsers: function (req, res){
-            writeFile('files/SoUsers.tsv', '_id gitHubId email', res, SoUser);
+        exportSoProfiles: function (req, res){
+            writeFile('files/SoProfiles.tsv', '_id gitHubId email', res, SoProfile);
         },
     }
 }
@@ -144,7 +144,7 @@ function createModel(line, modelName){
             model['_id'] = line[1];
             model['soTotalCount'] = line[2];
             break;
-        case 'SoUser':
+        case 'SoProfile':
             model['soId'] = line[0];
             model['_id'] = line[1];
             model['email'] = line[2];
