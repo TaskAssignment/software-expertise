@@ -191,12 +191,13 @@ var calculateCircleRatio = function (counter){
     if(counter < 1){
         return 0;
     }
-    var sqrt = Math.sqrt(counter);
+    var log = Math.log10(counter);
     var result = 0;
-    if(sqrt != 0){
-        result = 1/sqrt;
+    if(log != 0){
+        result = 1/log;
     }
     var MAX_RATIO = 15; //Add max ratio because 1 is too small to see
     var MIN_RATIO = 5;
-    return (1 - result) * MAX_RATIO || MIN_RATIO;
+    return result + MIN_RATIO;
+    // return (1 - result) * MAX_RATIO || MIN_RATIO;
 }

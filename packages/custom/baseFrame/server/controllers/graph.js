@@ -116,11 +116,19 @@ module.exports = function (BaseFrame){
             var issueWeight = 0;
             var userWeight = 0;
             if(node.issueCount) {
-                issueWeight = 1/Math.sqrt(node.issueCount);
+                if(node.issueCount < 10){
+                    issueWeight = 1;
+                } else {
+                    issueWeight = 1/Math.log10(node.issueCount);
+                }
             }
 
             if(node.userCount){
-                userWeight = 1/Math.sqrt(node.userCount);
+                if(node.issueCount < 10){
+                    userWeight = 1;
+                } else {
+                    userWeight = 1/Math.log10(node.issueCount);
+                }
             }
 
             numerator += Math.min(issueWeight, userWeight);
@@ -215,7 +223,7 @@ module.exports = function (BaseFrame){
                     similarities[value] = [params.user];
                 }
 
-                if(params.assignee == params.user.id && value == 0){
+                if(params.assignee == params.user.id){
                     assignee = {
                         value: value,
                         matches: [params.user]
@@ -224,7 +232,7 @@ module.exports = function (BaseFrame){
             }
 
             var issueCallback = function (params){
-                SoUser.find({repositories: params.Issue.projectId}, 'tags soId', {lean: true}, function (err, users){
+                SoUser.find({$or: [{repositories: params.Issue.projectId, soId: {$exists: true}}, {_id: params.Issue.assigneeId}]}, 'tags soId', {lean: true}, function (err, users){
 
                     assignee = undefined;
                     for(var user of users){
@@ -249,7 +257,7 @@ module.exports = function (BaseFrame){
                     keys.reverse();
 
                     var matches = [];
-                    var MAX_RESULTS = 10;
+                    var MAX_RESULTS = Math.min(10, keys.length);
                     for(let i = 0; i < MAX_RESULTS; i++){
                         var key = keys[i];
                         var match = {
