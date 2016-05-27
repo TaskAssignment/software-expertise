@@ -62,7 +62,7 @@ module.exports = function (BaseFrame, app, database) {
     /** My idea here is to be able to fetch data from different places.
     * The modes, for now, will be 'default' and 'default' to fetch data from our
     * database (populated from github/SO).
-    */
+    **/
     var graph = require(controllers + 'graph')(BaseFrame);
     app.route(base + ':modeIssue/:modeUser/graphData')
         .get(graph.getDataForGraph);

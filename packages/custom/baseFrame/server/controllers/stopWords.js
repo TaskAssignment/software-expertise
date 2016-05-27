@@ -11,7 +11,7 @@ module.exports = function (BaseFrame) {
         *
         * @param req - Express request.
         * @param res - Express response.
-        */
+        **/
         populateStopWords: function(req, res){
             var folder = 'files/stopwords/';
             fs.readdir(folder, function (err, files){

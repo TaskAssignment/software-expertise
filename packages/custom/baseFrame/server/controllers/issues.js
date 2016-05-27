@@ -11,7 +11,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request
         * @param res - Express response
-        */
+        **/
         find: function (req, res){
             var filter = {
                 projectId: req.params.projectId,

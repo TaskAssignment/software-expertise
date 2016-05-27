@@ -20,7 +20,7 @@ function ($scope,  $http, $location, $resource) {
 
     findProject();
 
-    // *************** SCOPE FUNCTIONS **************//
+    // *************** SCOPE FUNCTIONS ***************//
 
     //Change this to another controller
     $scope.selectTab = function (tab){
@@ -84,7 +84,7 @@ function ($scope,  $http, $location, $resource) {
     }
 
     /** Looks for repositories with the given filters
-     */
+     **/
     $scope.queryRepos = function () {
         console.log($scope.repoSearch);
         var search = $scope.repoSearch;
@@ -147,7 +147,7 @@ function ($scope,  $http, $location, $resource) {
     * user tags.
     *
     * @param username - github username
-    */
+    **/
     $scope.selectUser = function (user){
         $scope.selectedUser = user;
 
@@ -170,7 +170,7 @@ function ($scope,  $http, $location, $resource) {
     * display information based on issues
     *
     * @param issue - Dictionary with id, title and body from github issue
-    */
+    **/
     $scope.selectIssue = function (issue) {
         showLoadingScreen();
         $scope.selectedIssue = issue;
@@ -209,13 +209,13 @@ function ($scope,  $http, $location, $resource) {
         });
     }
 
-    // *************** HELPER FUNCTIONS **************//
+    // *************** HELPER FUNCTIONS ***************//
 
     /**
     * Gets the users and issues from the selected repository
     *
     * @param repo - The selected repository (id,name,language,description)
-    */
+    **/
     function getRepoInformation(repo) {
         $scope.selectedRepo = repo;
         $scope.search = false;
@@ -245,7 +245,7 @@ function ($scope,  $http, $location, $resource) {
     * database.
     *
     * @param resource - The desired resource for this repository (issues, users)
-    */
+    **/
     $scope.getRepoResources = function (resource){
         showLoadingScreen();
         var Resource = $resource('/api/baseFrame/:projectId/' + resource);

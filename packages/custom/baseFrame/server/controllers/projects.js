@@ -16,7 +16,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request.
         * @param res - Express response.
-        */
+        **/
         save: function(req, res){
             Project.findOne(req.query,
             function (err, result){
@@ -39,7 +39,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request.
         * @param res - Express response.
-        */
+        **/
         find: function(req, res){
             Project.findOne(req.params, 'name description languages', {lean: true}, function(err, project){
                 res.send(project);
@@ -50,7 +50,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request
         * @param res - Express response
-        */
+        **/
         populateCommits: function(req, res){
             Commit.findOne(req.params, '-_id updatedAt', {sort: '-updatedAt', lean:true},function (err, lastUpdate){
                 var url = '/commits';
@@ -91,7 +91,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request
         * @param res - Express response
-        */
+        **/
         populateIssues: function(req, res){
             Issue.findOne(req.params, '-_id updatedAt', {sort: '-updatedAt', lean:true},function (err, lastUpdate){
                 var url = '/issues?state=all&sort=created&direction=asc'
@@ -145,7 +145,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request
         * @param res - Express response
-        */
+        **/
         populateContributors: function(req, res){
             var url = '/contributors';
 
@@ -172,7 +172,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request
         * @param res - Express response
-        */
+        **/
         populateLanguages: function(req, res){
             var url = '/languages';
 
@@ -214,7 +214,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request
         * @param res - Express response
-        */
+        **/
         populateIssuesComments: function(req, res){
             Issue.findOne(req.params, '-_id updatedAt', {sort: '-updatedAt', lean:true},function (err, lastUpdate){
                 var url = '/issues/comments';
@@ -261,7 +261,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request
         * @param res - Express response
-        */
+        **/
         populateCommitsComments: function(req, res){
             var url = '/comments';
 
@@ -308,11 +308,11 @@ module.exports = function (BaseFrame){
     * @param callback - A callback to build the models. Because every model has
         different items and saving methods, this should be built in the Express
         function that calls this request.
-    */
+    **/
     function gitHubRequest(specificUrl, projectId, res, callback){
         /* StackOverflow requests are compressed, if this is not set, the data
         * won't be readable.
-        */
+        **/
         var url = 'https://api.github.com/repositories/' + projectId +
             specificUrl;
         if(specificUrl.lastIndexOf('?') < 0){
@@ -357,7 +357,7 @@ module.exports = function (BaseFrame){
         * is the first one)
         *
         * @param link - Value of headers['link'] of the response
-        */
+        **/
         function nextPageUrl(link){
             if(link){
                 //The first entry of the links array is the next page

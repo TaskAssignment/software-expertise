@@ -11,7 +11,7 @@
 * Another important concept of Angular is a service and it will help to keep the
 * controller as clean as possible
 * See https://docs.angularjs.org/guide/services for instructions.
-*/
+**/
 
 angular.module('mean.baseFrame').factory('BaseFrame', [
     function() {

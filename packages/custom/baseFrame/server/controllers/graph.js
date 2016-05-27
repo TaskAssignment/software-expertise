@@ -5,14 +5,14 @@ var Issue = mongoose.model('Issue');
 var SoUser = mongoose.model('SoUser');
 var CoOccurrence = mongoose.model('CoOccurrence');
 
-/** This will provide the data for the graph */
+/** This will provide the data for the graph **/
 
 module.exports = function (BaseFrame){
     // TODO: REMAKE THIS DOCUMENTATION!!!
     /**
     * This will format the tags and links to what is expected to render the graph
     *
-    */
+    **/
     function formatDataToGraph(links, allTags, callback, callbackParams = {}){
         for(var link of links){
             // Adds the values of these occurences to the tags counter
@@ -39,7 +39,7 @@ module.exports = function (BaseFrame){
     /**
     * This function will merge the issueTags with the userTags
     * Both issueTags and userTags have _id, count[, soCount].
-    */
+    **/
     function mergeTags(modelsTags, callback, callbackParams = {}){
         callbackParams.tags = {};
         var index = 0;
@@ -68,7 +68,7 @@ module.exports = function (BaseFrame){
     }
 
     /** Fetches user tags from database.
-    */
+    **/
 
     function findOneModel(Model, id, callback, callbackParams = {}, selectItems = 'tags'){
         Model.findOne({_id: id}, selectItems, {lean: true}, function (err, model){
@@ -139,7 +139,7 @@ module.exports = function (BaseFrame){
         * @param req.params.modeUser - The mode to look for user. For now, just using 'default' (user data from SO).
         * @param req.query.issueId - The issueId when the mode is default. It will look for this issue in the local database.
         * @param req.query.userId - The userId when the mode is default. It will look for this user in the local database.
-        */
+        **/
         getDataForGraph: function(req, res){
             //For now I'll treat all the requests as default ones.
             var ids = req.query;

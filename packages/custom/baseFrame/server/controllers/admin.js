@@ -15,7 +15,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request.
         * @param res - Express respnse.
-        */
+        **/
         populateSoTags: function (req, res){
             readFile('files/tags.csv', res, Tag);
         },
@@ -24,7 +24,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request.
         * @param res - Express respnse.
-        */
+        **/
         populateCoOccurrences: function (req, res){
             readFile('files/coOccurrences.csv', res, CoOccurrence);
         },
@@ -33,7 +33,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request.
         * @param res - Express respnse.
-        */
+        **/
         populateSoUsers: function (req, res){
             readFile('files/commonUsers.csv', res, SoUser);
         },
@@ -42,7 +42,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request.
         * @param res - Express respnse.
-        */
+        **/
         exportSoTags: function (req, res){
             writeFile('files/tags2.tsv', '_id soTotalCount',res, Tag);
         },
@@ -51,7 +51,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request.
         * @param res - Express respnse.
-        */
+        **/
         exportCoOccurrences: function (req, res){
             writeFile('files/CoOccurrences.tsv', '-_id source target occurrences', res, CoOccurrence);
         },
@@ -60,7 +60,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request.
         * @param res - Express respnse.
-        */
+        **/
         exportSoUsers: function (req, res){
             writeFile('files/SoUsers.tsv', '_id gitHubId email', res, SoUser);
         },
@@ -76,7 +76,7 @@ module.exports = function (BaseFrame){
 * @param items - The items that will be selected from the Schema.
 * @param res - Express response.
 * @param MongooseModel - The Model that represents a Schema.
-*/
+**/
 function writeFile(file, items,  res, MongooseModel){
     console.log("Writing File!");
     var stream = fs.createWriteStream(file);
@@ -105,7 +105,7 @@ function writeFile(file, items,  res, MongooseModel){
   folder instead of from the baseFrame package!
 * @param res - The response to be sent.
 * @param MongooseModel - The MongooseModel to be used to save to the database.
-*/
+**/
 
 function readFile(file, res, MongooseModel){
     //Using readStream to avoid memory explosion
@@ -134,7 +134,7 @@ function readFile(file, res, MongooseModel){
 * @param line - Array with the words in that line
 * @param modelName - The name of model that will be created.
 * @return model to be saved in the database.
-*/
+**/
 function createModel(line, modelName){
     var model = {};
 

@@ -1,7 +1,7 @@
 'use strict';
 /**
  * Class that handles drawing of the expertise graph
- */
+ **/
 
 function showLoadingScreen(){
     angular.element('#loadingImage').css('display','block');
@@ -133,7 +133,7 @@ function drawGraph(graphData){
     *
     * You must also pass an ARRAY of links. Each link must have a source
     * and a target, both are INDEXES of a node.
-    */
+    **/
 
     force
         .nodes(graphData.nodes)
@@ -146,7 +146,7 @@ function drawGraph(graphData){
 
     /* Force graphs don't accept a circle with any other data, like a label.
     * To show any other information, a 'g' tag is necessary (group)
-    */
+    **/
     node = svg.selectAll('.node')
         .data(graphData.nodes)
         .enter().append('g')
