@@ -11,6 +11,13 @@ var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('RepositoryController',
 ['$scope', '$http', '$location', '$resource',
 function ($scope,  $http, $location, $resource) {
+    $scope.repoSearch = {
+        name: '',
+        user: '',
+        description: '',
+        readme: ''
+    };
+
     findProject();
 
     // *************** SCOPE FUNCTIONS **************//
@@ -79,16 +86,18 @@ function ($scope,  $http, $location, $resource) {
     /** Looks for repositories with the given filters
      */
     $scope.queryRepos = function () {
+        console.log($scope.repoSearch);
+        var search = $scope.repoSearch;
         showLoadingScreen();
         var URL = 'https://api.github.com/search/repositories?q=';
-        if($scope.repositoryName)
-            URL += $scope.repositoryName + '+in:name';
-        if($scope.repoDescription)
-            URL += '+' + $scope.repoDescription + '+in:description';
-        if($scope.repoReadme)
-            URL += '+' + $scope.repoReadme + '+in:readme';
-        if($scope.repoUser)
-            URL += '+user:' + $scope.repoUser;
+        if(search.user)
+            URL += '+user:' + search.user;
+        if(search.name)
+            URL += search.name + '+in:name';
+        if(search.description)
+            URL += '+' + search.description + '+in:description';
+        if(search.readme)
+            URL += '+' + search.readme + '+in:readme';
         URL += '+fork:true&sort=stars&order=desc&per_page=100';
 
         $http.get(URL).then(function (response) {
