@@ -1,7 +1,7 @@
 'use strict';
 
 var mongoose = require('mongoose');
-var SoProfile = mongoose.model('SoProfile');
+var Developer = mongoose.model('Developer');
 
 var request = require('request');
 
@@ -14,15 +14,18 @@ module.exports = function (BaseFrame){
         **/
         find: function (req, res){
             var filter = {
-                repositories: req.params.projectId
+                'ghProfile.repositories': req.params.projectId
             };
 
-            var soUser = JSON.parse(req.query.soUser);
-            if(soUser){
-                filter.soId = { $exists: soUser };
+            var soProfileRequested = JSON.parse(req.query.SoProfile);
+            if(soProfileRequested){
+                filter.soProfile = { $exists: soProfileRequested };
             }
 
-            SoProfile.find(filter, 'soId _id soPopulated', {sort: '-soId -updatedAt'}, function(err, users){
+            console.log(req.query);
+            console.log(req.params);
+
+            Developer.find(filter, function (err, users){
                 res.send(users);
             });
         },
@@ -68,7 +71,7 @@ module.exports = function (BaseFrame){
         * @param res - Express response.
         **/
         populateAnswers: function (req, res){
-            var url = '/answers?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!b0OfNaTQkaCT1X';
+            var url = '/answers?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!bJjknYIYt0F-kE';
 
             var buildModels = function(items){
                 var answers = [];
@@ -77,9 +80,7 @@ module.exports = function (BaseFrame){
                     var question = {
                         _id: result.answer_id,
                         questionId: result.question_id,
-                        body: result.body,
-                        up_vote_count: result.up_vote_count,
-                        down_vote_count: result.down_vote_count,
+                        body: result.body_markdown,
                         score: result.score,
                         tags: result.tags
                     };
@@ -104,7 +105,7 @@ module.exports = function (BaseFrame){
         populateQuestions: function (req, res){
             var ids = req.params;
 
-            var url = '/questions?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!-*f(6pXDgxE9';
+            var url = '/questions?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!4(Yr)(WQUnLoVCneu';
 
             var buildModels = function(items){
                 var questions = [];
@@ -113,10 +114,7 @@ module.exports = function (BaseFrame){
                     var question = {
                         _id: result.question_id,
                         title: result.title,
-                        body: result.body,
-                        up_vote_count: result.up_vote_count,
-                        down_vote_count: result.down_vote_count,
-                        favorite_count: result.favorite_count,
+                        body: result.body_markdown,
                         score: result.score,
                         tags: result.tags
                     };
@@ -149,6 +147,7 @@ module.exports = function (BaseFrame){
         function that calls this request.
     **/
     function stackOverflowRequest(specificUrl, ids, res, callback){
+        //TODO: Change this ids to soId only!!
         var url = 'https://api.stackexchange.com/2.2/users/' + ids.soId +
             specificUrl + '&key=unaHxXqTCHJ5Ve6AfnIJGg((';
 
@@ -170,17 +169,24 @@ module.exports = function (BaseFrame){
 
                 var build = callback(results.items);
 
-                SoProfile.findOne(ids, '_id soId tags', function(err, user){
+                Developer.findOne({'soProfile._id': ids.soId}, '_id soProfile', function(err, user){
                     if(err){
                         console.log(err.message);
                     }else{
-                        user[build.dataSet] = build.models;
-                        user.soPopulated = true;
-                        user.save(function (new_err){
-                            if(!res.headersSent){
-                                res.sendStatus(200);
+                        var soProfile = user.soProfile;
+                        soProfile[build.dataSet] = build.models;
+                        soProfile.soPopulated = true;
+
+                        user.soProfile = soProfile;
+                        user.save(function (newErr){
+                            if(newErr){
+                                console.log(newErr.message)
+                            } else {
+                                if(!res.headersSent){
+                                    res.sendStatus(200);
+                                }
+                                console.log('User updated successfully!');
                             }
-                            console.log('User updated successfully!');
                         });
                     }
                 });

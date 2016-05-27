@@ -3,6 +3,7 @@
 var mongoose = require('mongoose');
 var Issue = mongoose.model('Issue');
 var CoOccurrence = mongoose.model('CoOccurrence');
+var Developer = mongoose.model('Developer');
 
 /** This will provide the data for the graph **/
 
@@ -173,11 +174,16 @@ module.exports = function (BaseFrame){
             };
 
             var userCallback = function (params){
+                if(params.Developer.soProfile){
+                    params.Developer = {
+                        tags: params.Developer.soProfile.tags
+                    }
+                }
                 mergeTags(params, mergeCallback);
             };
 
             var issueCallback = function(params){
-                findOneModel(SoProfile, ids.userId, userCallback, params);
+                findOneModel(Developer, ids.userId, userCallback, params, 'soProfile');
             };
 
             findOneModel(Issue, ids.issueId, issueCallback);
@@ -275,7 +281,9 @@ module.exports = function (BaseFrame){
                 });
             }
 
-            findOneModel(Issue, req.params.issueId, issueCallback, {}, 'tags projectId assigneeId');
+            //TODO: Remove this!!
+            res.sendStatus(200);
+            // findOneModel(Issue, req.params.issueId, issueCallback, {}, 'tags projectId assigneeId');
 
         }
     }
