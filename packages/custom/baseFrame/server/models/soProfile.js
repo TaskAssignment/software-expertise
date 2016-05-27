@@ -37,12 +37,15 @@ var SoProfileSchema = new Schema({
         unique: true
     },
     display_name: String,
-    emailHash: String,
+    soPopulated: {
+        type: Boolean,
+        default: false
+    },
     tags: [TagSchema],
     questions: [QuestionSchema],
     answers: [AnswerSchema],
     developer: {
-        type: ObjectId,
+        type: Schema.ObjectId,
         ref: 'Developer'
     }
 }, {

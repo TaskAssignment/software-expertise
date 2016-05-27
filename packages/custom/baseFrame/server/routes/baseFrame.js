@@ -54,10 +54,8 @@ module.exports = function (BaseFrame, app, database) {
         .get(admin.exportCoOccurrences);
     app.route(base + 'export/SoProfiles')
         .get(admin.exportSoProfiles);
-
-    var stopwords = require(controllers + 'stopWords')(BaseFrame);
     app.route(base + 'populate/StopWords')
-        .post(stopwords.populateStopWords);
+        .get(admin.populateStopWords);
 
     /** My idea here is to be able to fetch data from different places.
     * The modes, for now, will be 'default' and 'default' to fetch data from our

@@ -4,24 +4,23 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var mongooseToCsv = require('mongoose-to-csv');
 
-var GibHubProfileSchema = new Schema({
+var GitHubProfileSchema = new Schema({
     _id: { //GitHub username
         type: String,
         required: true,
         unique: true
     },
-    gitHubId: String,
-    email: [String],
+    email: String,
     repositories: [String],
     developer: {
-        type: ObjectId,
+        type: Schema.ObjectId,
         ref: 'Developer'
     }
 }, {
     timestamps: true
 });
 
-GibHubProfileSchema.plugin(mongooseToCsv, {
+GitHubProfileSchema.plugin(mongooseToCsv, {
     headers: 'Username Email Repositories',
     constraints: {
         'Username': '_id',
@@ -30,4 +29,4 @@ GibHubProfileSchema.plugin(mongooseToCsv, {
     }
 });
 
-mongoose.model('GibHubProfile', GibHubProfileSchema);
+mongoose.model('GitHubProfile', GitHubProfileSchema);
