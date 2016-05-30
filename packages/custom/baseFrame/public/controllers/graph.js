@@ -159,34 +159,16 @@ function drawGraph(graphData){
         .text(function(d) { return d._id });
 
     node.append("circle")
-        .attr('r', function(d) { return calculateCircleRatio(d.commonCount); })
-        .style('fill', 'purple');
-
-    node.append("circle")
-        .attr('r', function(d) {
-            var a = 0;
-            var origin = 'none';
-            if(d.userCount > d.issueCount){
-                d.fill = 'lightblue';
-                a = calculateCircleRatio(d.userCount);
-                var origin = 'user';
-
-            } else if(d.userCount == d.issueCount) {
-                d.fill = '';
-                a = 0;//return 0;
-                var origin = 'equals';
-
-            } else {
-                d.fill = 'lightsalmon';
-                a = calculateCircleRatio(d.issueCount);
-                var origin = 'issue';
-
-            }
-            console.log(d._id, d.userCount, d.issueCount, a, origin);
-            return a;
-        })
+        .attr('r', function(d) { return calculateCircleRatio(d.soCount); })
         .style('fill', function (d) {
-            return d.fill;
+            console.log(d._id, d.soCount);
+            if(d.commonCount > 0){
+                return 'purple';
+            } else if(d.userCount > 0){
+                return 'lightblue';
+            } else {
+                return 'lightsalmon';
+            }
         });
 
     function tick() {
@@ -210,15 +192,13 @@ function drawGraph(graphData){
 }
 
 var calculateCircleRatio = function (counter){
-    var MIN_RATIO = 5;
-    var result = 0;
+    var MAX_RATIO = 15;
+    var result = 1;
     if(counter > 10){
         var log = Math.log10(counter);
         if(log != 0){
             result = 1/log;
         }
     }
-    // var MAX_RATIO = 15; //Add max ratio because 1 is too small to see
-    return result + MIN_RATIO;
-    // return (1 - result) * MAX_RATIO || MIN_RATIO;
+    return result * MAX_RATIO;
 }

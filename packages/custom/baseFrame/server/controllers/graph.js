@@ -121,20 +121,24 @@ module.exports = function (BaseFrame){
                 if(node.issueCount < 10){
                     issueWeight = 1;
                 } else {
-                    issueWeight = 1/Math.log10(node.issueCount);
+                    issueWeight = 1/Math.log10(node.soCount);
                 }
             }
 
             if(node.userCount){
-                if(node.issueCount < 10){
+                if(node.userCount < 10){
                     userWeight = 1;
                 } else {
-                    userWeight = 1/Math.log10(node.issueCount);
+                    userWeight = 1/Math.log10(node.soCount);
                 }
             }
 
             numerator += Math.min(issueWeight, userWeight);
             denominator += issueWeight;
+        }
+
+        if(denominator == 0){
+            return 0;
         }
 
         return numerator/denominator;
