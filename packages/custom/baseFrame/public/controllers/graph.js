@@ -159,13 +159,35 @@ function drawGraph(graphData){
         .text(function(d) { return d._id });
 
     node.append("circle")
-        .attr('r', function(d) { return calculateCircleRatio(d.userCount); })
-        .style('fill', 'lightblue');
+        .attr('r', function(d) { return calculateCircleRatio(d.commonCount); })
+        .style('fill', 'purple');
 
     node.append("circle")
-        .attr('r', function(d) { return calculateCircleRatio(d.issueCount); })
-        .style('fill', 'lightsalmon');
+        .attr('r', function(d) {
+            var a = 0;
+            var origin = 'none';
+            if(d.userCount > d.issueCount){
+                d.fill = 'lightblue';
+                a = calculateCircleRatio(d.userCount);
+                var origin = 'user';
 
+            } else if(d.userCount == d.issueCount) {
+                d.fill = '';
+                a = 0;//return 0;
+                var origin = 'equals';
+
+            } else {
+                d.fill = 'lightsalmon';
+                a = calculateCircleRatio(d.issueCount);
+                var origin = 'issue';
+
+            }
+            console.log(d._id, d.userCount, d.issueCount, a, origin);
+            return a;
+        })
+        .style('fill', function (d) {
+            return d.fill;
+        });
 
     function tick() {
         link.attr("x1", function(d) { return d.source.x; })
@@ -188,16 +210,15 @@ function drawGraph(graphData){
 }
 
 var calculateCircleRatio = function (counter){
-    if(counter < 1){
-        return 0;
-    }
-    var log = Math.log10(counter);
-    var result = 0;
-    if(log != 0){
-        result = 1/log;
-    }
-    var MAX_RATIO = 15; //Add max ratio because 1 is too small to see
     var MIN_RATIO = 5;
+    var result = 0;
+    if(counter > 10){
+        var log = Math.log10(counter);
+        if(log != 0){
+            result = 1/log;
+        }
+    }
+    // var MAX_RATIO = 15; //Add max ratio because 1 is too small to see
     return result + MIN_RATIO;
     // return (1 - result) * MAX_RATIO || MIN_RATIO;
 }

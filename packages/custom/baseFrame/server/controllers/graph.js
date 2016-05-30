@@ -52,6 +52,7 @@ module.exports = function (BaseFrame){
                     tag.userCount = (tag.count || 0);
                     tag.issueCount = (tag.issueCount || 0);
                     tag.soCount = (tag.soCount || 0);
+                    tag.commonCount = Math.min(tag.userCount, tag.issueCount);
                     index++;
                     callbackParams.tags[tag._id] = tag;
                 } else {
@@ -59,7 +60,8 @@ module.exports = function (BaseFrame){
                     new_tag.userCount += (tag.count || 0);
                     new_tag.issueCount += (tag.issueCount || 0);
                     new_tag.soCount += (tag.soCount || 0);
-                    tag.index = callbackParams.tags[tag._id].index;
+                    new_tag.commonCount = Math.min(new_tag.userCount, new_tag.issueCount);
+                    // tag.index = callbackParams.tags[tag._id].index;
                 }
             }
         }
