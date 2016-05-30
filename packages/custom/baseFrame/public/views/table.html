@@ -9,21 +9,25 @@
             <table class="table table-bordered" ng-if="similaritiesAmount > 0">
                 <thead>
                     <tr>
+                        <th class="col-lg-1 col-md-1">Position</th>
                         <th class="col-lg-1 col-md-1">SO User</th>
                         <th class="col-lg-5 col-md-5">Username</th>
                         <th class="col-lg-5 col-md-5">Score</th>
                     </tr>
                 </thead>
-                <tbody ng-repeat="item in bestUsers">
-                    <tr ng-repeat="match in item.matches" ng-class="{success: match.id == selectedIssue.assigneeId}">
+                <tbody>
+                    <tr ng-repeat="item in bestUsers" ng-class="{success: item.match.id == selectedIssue.assigneeId}">
                         <td>
-                            <i ng-if="match.soUser" class="fa fa-check" aria-hidden="true"></i>
+                            {{$index + 1}}
                         </td>
                         <td>
-                            {{match.id}}
+                            <i ng-if="item.match.soUser" class="fa fa-check" aria-hidden="true"></i>
                         </td>
                         <td>
-                            {{item.value}}
+                            {{item.match.id}}
+                        </td>
+                        <td>
+                            {{item.score}}
                         </td>
                     </tr>
                 </tbody>

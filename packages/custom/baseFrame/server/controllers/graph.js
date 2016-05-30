@@ -236,8 +236,8 @@ module.exports = function (BaseFrame){
 
                 if(params.assignee == params.user.id){
                     assignee = {
-                        value: value,
-                        matches: [params.user]
+                        score: value,
+                        match: params.user
                     };
                 }
             }
@@ -276,14 +276,17 @@ module.exports = function (BaseFrame){
                     var MAX_RESULTS = keys.length;
                     for(let i = 0; i < MAX_RESULTS; i++){
                         var key = keys[i];
-                        var match = {
-                            value: key,
-                            matches: similarities[key]
-                        };
-                        matches.push(match);
+                        for(let j = 0; j < similarities[key].length; j++){
+                            var user = similarities[key][j];
+                            var match = {
+                                score: key,
+                                match: user
+                            };
+                            matches.push(match);
+                        }
                     }
 
-                    if(assignee && assignee.value == 0){
+                    if(assignee && assignee.score == 0){
                         matches.push(assignee);
                         amount++;
                     }
