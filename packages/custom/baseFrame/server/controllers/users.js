@@ -17,15 +17,15 @@ module.exports = function (BaseFrame){
                 'ghProfile.repositories': req.params.projectId
             };
 
-            var soProfileRequested = JSON.parse(req.query.SoProfile);
-            if(soProfileRequested){
-                filter.soProfile = { $exists: soProfileRequested };
+            var soAssigned = JSON.parse(req.query.soAssigned);
+            if(soAssigned){
+                filter.soProfile = { $exists: true };
             }
 
             console.log(req.query);
             console.log(req.params);
 
-            Developer.find(filter, function (err, users){
+            Developer.find(filter).sort('-updatedAt').exec(function (err, users){
                 res.send(users);
             });
         },

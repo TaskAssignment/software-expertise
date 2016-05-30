@@ -9,17 +9,13 @@
             <table class="table table-bordered" ng-if="similaritiesAmount > 0">
                 <thead>
                     <tr>
-                        <th>Assignee</th>
-                        <th>SO User</th>
-                        <th>Username</th>
-                        <th>Score</th>
+                        <th class="col-lg-1 col-md-1">SO User</th>
+                        <th class="col-lg-5 col-md-5">Username</th>
+                        <th class="col-lg-5 col-md-5">Score</th>
                     </tr>
                 </thead>
                 <tbody ng-repeat="item in bestUsers">
-                    <tr ng-repeat="match in item.matches">
-                        <td>
-                            <i ng-if="match.id == selectedIssue.assigneeId" class="fa fa-check" aria-hidden="true"></i>
-                        </td>
+                    <tr ng-repeat="match in item.matches" ng-class="{success: match.id == selectedIssue.assigneeId}">
                         <td>
                             <i ng-if="match.soUser" class="fa fa-check" aria-hidden="true"></i>
                         </td>
@@ -33,5 +29,9 @@
                 </tbody>
             </table>
         </div>
+
+        <small>
+            Green row = Assignnee
+        </small>
     </div>
 </div>

@@ -228,20 +228,20 @@ function ($scope,  $http, $location, $resource) {
         $scope.issues = [];
         $scope.selectedUser = undefined;
         $scope.selectedIssue = undefined;
-        $scope.issueFilter = {
-            assigned: 'true'
-        };
-
-        $scope.devFilter = {
-            SoProfile: 'true'
-        };
+        $scope.soAssigned = true;
 
         $location.search('repoName', repo.name);
 
         showLoadingScreen();
-        $scope.getRepoResources('issues');
-        $scope.getRepoResources('users');
+        getRepoResources('issues');
+        getRepoResources('users');
         hideLoadingScreen();
+    }
+
+    $scope.getRepoUsersAndIssues = function (assigned){
+        $scope.soAssigned = assigned;
+        getRepoResources('issues');
+        getRepoResources('users');
     }
 
     /**
@@ -250,13 +250,12 @@ function ($scope,  $http, $location, $resource) {
     *
     * @param resource - The desired resource for this repository (issues, users)
     **/
-    $scope.getRepoResources = function (resource){
+    function getRepoResources (resource){
         showLoadingScreen();
         var Resource = $resource('/api/baseFrame/:projectId/' + resource);
         var filter = {
             projectId: $scope.selectedRepo._id,
-            assigned:  $scope.issueFilter.assigned,
-            SoProfile: $scope.devFilter.SoProfile //Change this to send the entire filter or use two functions
+            soAssigned: $scope.soAssigned
         };
         Resource.query(filter).$promise.then(function(resources){
             $scope.selectedRepo['empty' + resource] = false;
