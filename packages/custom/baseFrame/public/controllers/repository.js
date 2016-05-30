@@ -153,10 +153,12 @@ function ($scope,  $http, $location, $resource) {
     $scope.selectUser = function (user){
         $scope.selectedUser = user;
 
-        if(!user.soId){
+        if(user.soProfile){
+            if(!user.soPopulated){
+                populateSOData(user.soProfile._id);
+            }
+        } else {
             alert("User is not in StackOverflow.");
-        } else if(!user.soPopulated) {
-            populateSOData(user.soId)
         }
         showLoadingScreen();
         sendToGraph();

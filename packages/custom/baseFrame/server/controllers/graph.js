@@ -237,17 +237,22 @@ module.exports = function (BaseFrame){
             }
 
             var issueCallback = function (params){
-                SoProfile.find({$or: [{repositories: params.Issue.projectId, soId: {$exists: true}}, {_id: params.Issue.assigneeId}]}, 'tags soId', {lean: true}, function (err, users){
+                Developer.find({$or: [{'ghProfile.repositories': params.Issue.projectId, soProfile: {$exists: true}}, {_id: params.Issue.assigneeId}]}, 'soProfile.tags', {lean: true}, function (err, users){
 
                     assignee = undefined;
+
                     for(var user of users){
-                        params.SoProfile = user;
                         var callbackParams = {
-                            user: {
-                                id: user._id,
-                                soId: user.soId},
+                            user: { id: user._id },
                             assignee: params.Issue.assigneeId
                         };
+
+                        if(user.soProfile){
+                            params.Developer = {tags: user.soProfile.tags};
+                            callbackParams.user.soUser = true;
+                        } else {
+                            params.Developer = {tags: []};
+                        }
 
                         mergeTags(params, mergeCallback, callbackParams);
                     }
@@ -262,7 +267,7 @@ module.exports = function (BaseFrame){
                     keys.reverse();
 
                     var matches = [];
-                    var MAX_RESULTS = Math.min(10, keys.length);
+                    var MAX_RESULTS = keys.length;
                     for(let i = 0; i < MAX_RESULTS; i++){
                         var key = keys[i];
                         var match = {
@@ -272,7 +277,7 @@ module.exports = function (BaseFrame){
                         matches.push(match);
                     }
 
-                    if(assignee){
+                    if(assignee && assignee.value == 0){
                         matches.push(assignee);
                         amount++;
                     }
@@ -281,9 +286,7 @@ module.exports = function (BaseFrame){
                 });
             }
 
-            //TODO: Remove this!!
-            res.sendStatus(200);
-            // findOneModel(Issue, req.params.issueId, issueCallback, {}, 'tags projectId assigneeId');
+            findOneModel(Issue, req.params.issueId, issueCallback, {}, 'tags projectId assigneeId');
 
         }
     }
