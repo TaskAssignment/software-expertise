@@ -11,12 +11,13 @@ function hideLoadingScreen(){
     angular.element('#loadingImage').css('display','none');
 }
 var controllerCallback = function ($scope, $resource) {
+    $scope.assigneePosition = undefined
+
     var findMatches = function (event, params) {
         if(params.issueId){
             $scope.issueId = params.issueId;
             showLoadingScreen();
             var Match = $resource('api/baseFrame/find/:issueId/matches');
-            params.similarity = $scope.similarityOptions.type;
 
             Match.get(params).$promise.then(function (matches){
                 $scope.bestUsers = matches.similarities;
@@ -26,6 +27,12 @@ var controllerCallback = function ($scope, $resource) {
         }
     }
 
+    $scope.checkAssignee = function(isAssignee, index){
+        if(isAssignee){
+            $scope.assigneePosition = index + 1;
+        }
+        return isAssignee;
+    }
     $scope.parameter = '-cosine';
 
     $scope.sort = function(item){

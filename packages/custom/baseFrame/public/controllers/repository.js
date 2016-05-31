@@ -236,6 +236,8 @@ function ($scope,  $http, $location, $resource) {
 
     $scope.getRepoUsersAndIssues = function (assigned){
         $scope.soAssigned = assigned;
+        $scope.selectedUser = undefined;
+        $scope.selectedIssue = undefined;
         getRepoResources('issues');
         getRepoResources('users');
     }

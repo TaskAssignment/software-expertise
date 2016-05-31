@@ -2,8 +2,9 @@
     <h3> {{ selectedIssue.title }} </h3>
     <hr>
 
-    <h4> Assignee is on position {{ assignee.index }}</p> </h4>
-
+    <h4 ng-if="selectedIssue && selectedIssue.assigneeId">
+        Assignee: <b>{{ selectedIssue.assigneeId }}</b> is on position {{ assigneePosition }}
+    </h4>
 
     <div class="scrollable">
         <table class="table table-bordered">
@@ -29,7 +30,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="item in bestUsers | orderBy: parameter" ng-class="{success: item.assignee}">
+                <tr ng-repeat="item in bestUsers | orderBy: [parameter, 'username']" ng-class="{success: checkAssignee(item.assignee, $index)}">
                     <td>
                         {{ $index + 1 }}
                     </td>
@@ -51,6 +52,6 @@
     </div>
 
     <small>
-        Green row = Assignnee
+        Green row = Assignee
     </small>
 </div>
