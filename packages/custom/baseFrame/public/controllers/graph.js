@@ -161,7 +161,6 @@ function drawGraph(graphData){
     node.append("circle")
         .attr('r', function(d) { return calculateCircleRatio(d.soCount); })
         .style('fill', function (d) {
-            console.log(d._id, d.soCount);
             if(d.commonCount > 0){
                 return 'purple';
             } else if(d.userCount > 0){

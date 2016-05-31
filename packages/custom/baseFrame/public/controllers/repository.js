@@ -65,10 +65,7 @@ function ($scope,  $http, $location, $resource) {
     $scope.getAllSOData = function (){
         for(var i in $scope.users){
             var user = $scope.users[i];
-            console.log(user);
-            console.log(user.soProfile);
             if(user.soProfile && !user.soProfile.soPopulated) {
-                console.log("Entrou");
                 populateSOData(user.soProfile._id);
             }
         }
