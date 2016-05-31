@@ -17,13 +17,12 @@ function ($scope,  $http, $location, $resource) {
         description: '',
         readme: ''
     };
-    $scope.selectedTab = '.tabGraph';
-
+    $scope.selectedTab = '.tabTable';
     findProject();
 
     // *************** SCOPE FUNCTIONS ***************//
 
-    //Change this to another controller
+    //TODO: Change this to another controller
     $scope.selectTab = function (tab){
         angular.element('.tab').removeClass('active');
         angular.element('.tab-pane').addClass('hidden');

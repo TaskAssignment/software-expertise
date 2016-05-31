@@ -32,7 +32,7 @@
     <div id="rightPanel" class="col-md-6 col-lg-7">
             <div class="row">
                 <ul class="nav nav-tabs">
-                    <li role="presentation" class="tab tabGraph active">
+                    <li role="presentation" class="tab tabGraph">
                         <a href="" ng-click="selectTab('.tabGraph')">Graph</a>
                     </li>
                     <li role="presentation" class="tab tabTable">
@@ -47,13 +47,17 @@
             <div class="row">
                 <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
                 <div role="tabpanel" class="tab-pane tabGraph" id="expertiseGraph">
-                    <div ng-if="selectedUser">
+                    <div ng-if="selectedUser && selectedIssue">
                         <b> Similarity User-Issue: </b> {{ similarity }}
                         <b> Using method: </b> {{ methods }}
                     </div>
                 </div>
-                <ng-include src="'baseFrame/views/table.html'"></ng-include>
-                <ng-include src="'baseFrame/views/repo_admin.html'"></ng-include>
+                <div role="tabpanel" class="tab-pane hidden tabTable"
+                    id="expertiseTable"
+                    ng-include="'baseFrame/views/table.html'" ng-controller="TableController"></div>
+                <div role="tabpanel" class="tab-pane hidden tabAdmin"
+                    id='populate'
+                    ng-include="'baseFrame/views/repo_admin.html'"></div>
             </div>
         </div>
         <ng-include class="col-md-1 col-lg-1" src="'baseFrame/views/graph_options.html'"></ng-include>

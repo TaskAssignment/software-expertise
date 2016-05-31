@@ -10,7 +10,7 @@ function showLoadingScreen(){
 function hideLoadingScreen(){
     angular.element('#loadingImage').css('display','none');
 }
-var controllerCallback = function ($scope,  $http, $resource) {
+var controllerCallback = function ($scope, $resource) {
     $scope.graphData = {
         nodes: [],
         links: []
@@ -45,24 +45,7 @@ var controllerCallback = function ($scope,  $http, $resource) {
         });
     }
 
-    var findMatches = function (event, params) {
-        if(params.issueId){
-            $scope.issueId = params.issueId;
-            showLoadingScreen();
-            var Match = $resource('api/baseFrame/find/:issueId/match/:similarity');
-            params.similarity = $scope.similarityOptions.type;
-
-            Match.get(params).$promise.then(function (matches){
-                $scope.bestUsers = matches.similarities;
-                $scope.assignee = matches.assignee;
-                hideLoadingScreen();
-            });
-        }
-    }
-
     $scope.$on('fetchGraphData', fetchGraphData);
-
-    $scope.$on('findMatches', findMatches);
 
     $scope.applyGraphOptions = function (){
     }
@@ -86,7 +69,7 @@ var controllerCallback = function ($scope,  $http, $resource) {
 }
 
 var baseFrame = angular.module('mean.baseFrame');
-baseFrame.controller('GraphController', ['$scope', '$http', '$resource', controllerCallback]);
+baseFrame.controller('GraphController', ['$scope', '$resource', controllerCallback]);
 
 function drawGraph(graphData){
     var width = $('#expertiseGraph').innerWidth();

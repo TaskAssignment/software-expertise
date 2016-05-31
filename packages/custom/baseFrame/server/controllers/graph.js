@@ -144,6 +144,11 @@ module.exports = function (BaseFrame){
         return numerator/denominator;
     }
 
+    //TODO: Change this!!! Add real formula
+    function ssaZSimilarity(){
+        return 0;
+    }
+
     return {
         /** Gets and formats the graph data.
         *
@@ -215,37 +220,28 @@ module.exports = function (BaseFrame){
 
         findMatches: function (req, res) {
 
-            var similarities = {};
+            var similarities = [];
             var assignee = undefined;
 
             var mergeCallback = function (params){
-                var value = 0;
-                switch (req.params.similarity) {
-                    case 'jaccard':
-                        value = jaccardSimilarity(params.tags);
-                        break;
-                    default:
-                        value = cosineSimilarity(params.tags);
-                }
+                var user = {};
 
-                if(similarities[value]){
-                    similarities[value].push(params.user);
+                user.username = params.user.id;
+                user.jaccard = jaccardSimilarity(params.tags);
+                user.cosine = cosineSimilarity(params.tags);
+                user.ssaZScore = ssaZSimilarity();
+
+                if(params.assignee == user.username){
+                    user.assignee = true;
                 } else {
-                    similarities[value] = [params.user];
+                    user.assignee = false;
                 }
 
-                if(params.assignee == params.user.id){
-                    assignee = {
-                        score: value,
-                        match: params.user
-                    };
-                }
+                similarities.push(user);
             }
 
             var issueCallback = function (params){
                 Developer.find({$or: [{'ghProfile.repositories': params.Issue.projectId, soProfile: {$exists: true}}, {_id: params.Issue.assigneeId}]}, 'soProfile.tags', {lean: true}, function (err, users){
-
-                    assignee = undefined;
 
                     for(var user of users){
                         var callbackParams = {
@@ -263,37 +259,7 @@ module.exports = function (BaseFrame){
                         mergeTags(params, mergeCallback, callbackParams);
                     }
 
-                    delete similarities[0];
-
-                    var keys = Object.keys(similarities).map(Number);
-
-                    // Descending order
-                    keys.sort();
-                    keys.reverse();
-
-                    var matches = [];
-                    var MAX_RESULTS = keys.length;
-                    for(let i = 0; i < MAX_RESULTS; i++){
-                        var key = keys[i];
-                        for(let j = 0; j < similarities[key].length; j++){
-                            var user = similarities[key][j];
-                            var match = {
-                                score: key,
-                                match: user,
-                            };
-                            matches.push(match);
-                            if(match.match.id == assignee.match.id){
-                                assignee.index = matches.length;
-                            }
-                        }
-                    }
-
-                    if(assignee && assignee.score == 0){
-                        matches.push(assignee);
-                        assignee.index = matches.length;
-                    }
-
-                    res.json({similarities: matches, assignee: assignee});
+                    res.json({similarities: similarities});
                 });
             }
 
