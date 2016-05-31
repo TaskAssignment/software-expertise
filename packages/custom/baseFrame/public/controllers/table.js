@@ -15,7 +15,7 @@ var controllerCallback = function ($scope, $resource) {
         if(params.issueId){
             $scope.issueId = params.issueId;
             showLoadingScreen();
-            var Match = $resource('api/baseFrame/find/:issueId/match/:similarity');
+            var Match = $resource('api/baseFrame/find/:issueId/matches');
             params.similarity = $scope.similarityOptions.type;
 
             Match.get(params).$promise.then(function (matches){

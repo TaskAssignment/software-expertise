@@ -22,9 +22,6 @@ module.exports = function (BaseFrame){
                 filter.soProfile = { $exists: true };
             }
 
-            console.log(req.query);
-            console.log(req.params);
-
             Developer.find(filter).sort('-updatedAt').exec(function (err, users){
                 res.send(users);
             });
@@ -71,7 +68,7 @@ module.exports = function (BaseFrame){
         * @param res - Express response.
         **/
         populateAnswers: function (req, res){
-            var url = '/answers?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!bJjknYIYt0F-kE';
+            var url = '/answers?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!bJjknYIYt0EOC*';
 
             var buildModels = function(items){
                 var answers = [];
@@ -114,7 +111,7 @@ module.exports = function (BaseFrame){
                     var question = {
                         _id: result.question_id,
                         title: result.title,
-                        body: result.body_markdown,
+                        body: result.body,
                         score: result.score,
                         tags: result.tags
                     };
