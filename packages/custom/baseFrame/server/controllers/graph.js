@@ -263,7 +263,6 @@ module.exports = function (BaseFrame){
                         mergeTags(params, mergeCallback, callbackParams);
                     }
 
-                    var amount = users.length - similarities[0].length;
                     delete similarities[0];
 
                     var keys = Object.keys(similarities).map(Number);
@@ -280,18 +279,21 @@ module.exports = function (BaseFrame){
                             var user = similarities[key][j];
                             var match = {
                                 score: key,
-                                match: user
+                                match: user,
                             };
                             matches.push(match);
+                            if(match.match.id == assignee.match.id){
+                                assignee.index = matches.length;
+                            }
                         }
                     }
 
                     if(assignee && assignee.score == 0){
                         matches.push(assignee);
-                        amount++;
+                        assignee.index = matches.length;
                     }
 
-                    res.json({similarities: matches, amount: amount});
+                    res.json({similarities: matches, assignee: assignee});
                 });
             }
 

@@ -17,6 +17,7 @@ function ($scope,  $http, $location, $resource) {
         description: '',
         readme: ''
     };
+    $scope.selectedTab = '.tabGraph';
 
     findProject();
 
@@ -26,7 +27,7 @@ function ($scope,  $http, $location, $resource) {
     $scope.selectTab = function (tab){
         angular.element('.tab').removeClass('active');
         angular.element('.tab-pane').addClass('hidden');
-
+        $scope.selectedTab = tab;
         if(tab == '.tabTable'){
             sendToTable();
         } else if(tab == '.tabGraph'){
@@ -88,7 +89,6 @@ function ($scope,  $http, $location, $resource) {
     /** Looks for repositories with the given filters
      **/
     $scope.queryRepos = function () {
-        console.log($scope.repoSearch);
         var search = $scope.repoSearch;
         showLoadingScreen();
         var URL = 'https://api.github.com/search/repositories?q=';
@@ -277,22 +277,27 @@ function ($scope,  $http, $location, $resource) {
     }
 
     function sendToTable(){
-        var args = {};
-        if($scope.selectedIssue){
-            args.issueId = $scope.selectedIssue._id;
+        hideLoadingScreen();
+        if($scope.selectedTab == '.tabTable'){
+            var args = {};
+            if($scope.selectedIssue){
+                args.issueId = $scope.selectedIssue._id;
+            }
+            $scope.$broadcast('findMatches', args);
         }
-        $scope.$broadcast('findMatches', args);
     }
 
     function sendToGraph(){
         hideLoadingScreen();
-        var ids = {};
-        if($scope.selectedIssue){
-            ids.issueId = $scope.selectedIssue._id;
+        if($scope.selectedTab == '.tabGraph'){
+            var ids = {};
+            if($scope.selectedIssue){
+                ids.issueId = $scope.selectedIssue._id;
+            }
+            if($scope.selectedUser){
+                ids.userId = $scope.selectedUser._id;
+            }
+            $scope.$broadcast('fetchGraphData', ids);
         }
-        if($scope.selectedUser){
-            ids.userId = $scope.selectedUser._id;
-        }
-        $scope.$broadcast('fetchGraphData', ids);
     }
 }]);
