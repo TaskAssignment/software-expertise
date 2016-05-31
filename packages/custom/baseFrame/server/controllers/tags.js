@@ -130,8 +130,9 @@ module.exports = function (BaseFrame){
                 };
             }
 
-            var project = JSON.parse(req.query.project);
             filter.parsed = false;
+
+            var project = JSON.parse(req.query.project);
 
             StopWord.find({}, '_id', {lean: true}, function (err, words){
                 if(err) {

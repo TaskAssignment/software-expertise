@@ -35,7 +35,7 @@
                     <li role="presentation" class="tab tabGraph">
                         <a href="" ng-click="selectTab('.tabGraph')">Graph</a>
                     </li>
-                    <li role="presentation" class="tab tabTable">
+                    <li role="presentation" class="tab tabTable active">
                         <a href="" ng-click="selectTab('.tabTable')">Table</a>
                     </li>
                     <li role="presentation" class="tab tabAdmin">
@@ -46,13 +46,13 @@
 
             <div class="row">
                 <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
-                <div role="tabpanel" class="tab-pane tabGraph" id="expertiseGraph">
+                <div role="tabpanel" class="tab-pane hidden tabGraph" id="expertiseGraph">
                     <div ng-if="selectedUser && selectedIssue">
                         <b> Similarity User-Issue: </b> {{ similarity }}
                         <b> Using method: </b> {{ methods }}
                     </div>
                 </div>
-                <div role="tabpanel" class="tab-pane hidden tabTable"
+                <div role="tabpanel" class="tab-pane tabTable"
                     id="expertiseTable"
                     ng-include="'baseFrame/views/table.html'" ng-controller="TableController"></div>
                 <div role="tabpanel" class="tab-pane hidden tabAdmin"
