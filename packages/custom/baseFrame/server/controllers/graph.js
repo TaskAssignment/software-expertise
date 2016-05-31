@@ -21,7 +21,6 @@ module.exports = function (BaseFrame){
 
             link.source = allTags[link.source].index;
             link.target = allTags[link.target].index;
-
         }
 
         var nodes = [];
@@ -61,7 +60,6 @@ module.exports = function (BaseFrame){
                     new_tag.issueCount += (tag.issueCount || 0);
                     new_tag.soCount += (tag.soCount || 0);
                     new_tag.commonCount = Math.min(new_tag.userCount, new_tag.issueCount);
-                    // tag.index = callbackParams.tags[tag._id].index;
                 }
             }
         }
@@ -145,8 +143,30 @@ module.exports = function (BaseFrame){
     }
 
     //TODO: Change this!!! Add real formula
-    function ssaZSimilarity(){
-        return 0;
+    function ssaZSimilarity(user, issueTags){
+        var _ = require('lodash');
+
+        var aScore = 0;
+        var qScore = 0;
+
+        for(var answer of user.answers){
+            let matchTagsA = _.intersection(answer.tags, issueTags);
+            aScore += ((answer.score + 1) * matchTagsA.length);
+        }
+
+        for(var question of user.questions){
+            let matchTagsQ = _.intersection(question.tags, issueTags);
+            let den = (question.score + 1) || 1;
+            qScore += (matchTagsQ.length/den);
+        }
+
+        var MU = 1;
+        qScore *= MU;
+
+        let numerator = aScore - qScore;
+        let denominator = Math.sqrt(aScore + qScore) || 1; //Avoid division by 0
+
+        return numerator/denominator;
     }
 
     return {
@@ -229,7 +249,7 @@ module.exports = function (BaseFrame){
                 user.username = params.user.id;
                 user.jaccard = jaccardSimilarity(params.tags);
                 user.cosine = cosineSimilarity(params.tags);
-                user.ssaZScore = ssaZSimilarity();
+                user.ssaZScore = ssaZSimilarity(params.user, params.issueTags);
 
                 if(params.assignee == user.username){
                     user.assignee = true;
@@ -241,17 +261,33 @@ module.exports = function (BaseFrame){
             }
 
             var issueCallback = function (params){
-                Developer.find({$or: [{'ghProfile.repositories': params.Issue.projectId, soProfile: {$exists: true}}, {_id: params.Issue.assigneeId}]}, 'soProfile.tags', {lean: true}, function (err, users){
+                var filter = {
+                    $or: [
+                        {
+                            'ghProfile.repositories': params.Issue.projectId,
+                            soProfile: { $exists: true }
+                        },{
+                            _id: params.Issue.assigneeId
+                        }
+                    ]
+                };
 
+                var tag_array = params.Issue.tags.map(function (tag){
+                    return tag._id;
+                })
+
+                Developer.find(filter, 'soProfile', {lean: true}, function (err, users){
                     for(var user of users){
                         var callbackParams = {
                             user: { id: user._id },
-                            assignee: params.Issue.assigneeId
+                            assignee: params.Issue.assigneeId,
+                            issueTags: tag_array
                         };
 
                         if(user.soProfile){
                             params.Developer = {tags: user.soProfile.tags};
-                            callbackParams.user.soUser = true;
+                            callbackParams.user.questions = user.soProfile.questions;
+                            callbackParams.user.answers = user.soProfile.answers;
                         } else {
                             params.Developer = {tags: []};
                         }
