@@ -62,7 +62,6 @@ var controllerCallback = function ($scope, $resource) {
         Similarity.get(params).$promise.then(function (response){
             $scope.similarity = response.similarity;
             $scope.methods = response.args;
-            findMatches(null, {issueId: $scope.issueId});
         });
         hideLoadingScreen();
     }

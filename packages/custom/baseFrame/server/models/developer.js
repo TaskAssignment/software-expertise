@@ -29,15 +29,12 @@ var AnswerSchema = new Schema({
 
 var TagSchema = new Schema({
     _id: String,
-    count: Number
+    count: Number,
+    soCount: Number
 });
 
 var SoProfileSchema = new Schema({
-    _id: { //soId
-        type: String,
-        required: true,
-        unique: true
-    },
+    _id: String,
     displayName: String,
     soPopulated: {
         type: Boolean,

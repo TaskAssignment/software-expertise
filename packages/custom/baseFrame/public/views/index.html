@@ -1,66 +1,67 @@
 <section ng-controller="RepositoryController" class="row">
     <div ng-controller="GraphController" ng-cloak>
-    <div id='leftSelectionPanel' class='col-md-5 col-lg-4'>
-        <div class="row">
-            <ng-include src="'baseFrame/views/repo_search.html'"></ng-include>
-        </div>
-
-        <div class="row" id='repositoyInfoDisplay' ng-if="selectedRepo.name">
-            <div class="col-lg-12">
-                <h2> {{ selectedRepo.name }}: </h2>
-                <hr>
-
-                <div class="radio">
-                    <label>
-                        <input ng-click="getRepoUsersAndIssues('true')"
-                        type="radio" ng-model="soAssigned" ng-value=true>
-                        SO & GH developers and issues assigned to them
-                    </label>
-                </div>
-                <div class="radio">
-                    <label>
-                        <input ng-click="getRepoUsersAndIssues('false')"
-                        type="radio" ng-model="soAssigned" ng-value=false> All Developers/Users
-                    </label>
-                </div>
+        <div id='leftSelectionPanel' class='col-md-5 col-lg-4'>
+            <div class="row">
+                <ng-include src="'baseFrame/views/repo_search.html'"></ng-include>
             </div>
 
-            <ng-include src="'baseFrame/views/issues.html'"></ng-include>
-            <ng-include src="'baseFrame/views/contributors.html'"></ng-include>
-        </div>
-    </div>
-    <div id="rightPanel" class="col-md-6 col-lg-7">
-            <div class="row">
-                <ul class="nav nav-tabs">
-                    <li role="presentation" class="tab tabGraph">
-                        <a href="" ng-click="selectTab('.tabGraph')">Graph</a>
-                    </li>
-                    <li role="presentation" class="tab tabTable active">
-                        <a href="" ng-click="selectTab('.tabTable')">Table</a>
-                    </li>
-                    <li role="presentation" class="tab tabAdmin">
-                        <a href="" ng-click="selectTab('.tabAdmin')">Admin</a>
-                    </li>
-                </ul>
-            </div>
+            <div class="row" id='repositoyInfoDisplay' ng-if="selectedRepo.name">
+                <div class="col-lg-12">
+                    <h2> {{ selectedRepo.name }}: </h2>
+                    <hr>
 
-            <div class="row">
-                <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
-                <div role="tabpanel" class="tab-pane hidden tabGraph" id="expertiseGraph">
-                    <div ng-if="selectedUser && selectedIssue">
-                        <b> Similarity User-Issue: </b> {{ similarity }}
-                        <b> Using method: </b> {{ methods }}
+                    <div class="radio">
+                        <label>
+                            <input ng-click="getRepoUsersAndIssues('true')"
+                            type="radio" ng-model="soAssigned" ng-value=true>
+                            SO & GH developers and issues assigned to them
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input ng-click="getRepoUsersAndIssues('false')"
+                            type="radio" ng-model="soAssigned" ng-value=false> All Developers/Users
+                        </label>
                     </div>
                 </div>
-                <div role="tabpanel" class="tab-pane tabTable"
-                    id="expertiseTable"
-                    ng-include="'baseFrame/views/table.html'" ng-controller="TableController"></div>
-                <div role="tabpanel" class="tab-pane hidden tabAdmin"
-                    id='populate'
-                    ng-include="'baseFrame/views/repo_admin.html'"></div>
+
+                <ng-include src="'baseFrame/views/issues.html'"></ng-include>
+                <ng-include src="'baseFrame/views/contributors.html'"></ng-include>
             </div>
         </div>
-        <ng-include class="col-md-1 col-lg-1" src="'baseFrame/views/graph_options.html'"></ng-include>
+
+        <div id="rightPanel" class="col-md-7 col-lg-8">
+            <div class="row">
+                <div class="col-md-12 col-lg-12">
+                    <ul class="nav nav-tabs">
+                        <li role="presentation" class="tab tabGraph">
+                            <a href="" ng-click="selectTab('.tabGraph')">Graph</a>
+                        </li>
+                        <li role="presentation" class="tab tabTable active">
+                            <a href="" ng-click="selectTab('.tabTable')">Table</a>
+                        </li>
+                        <li role="presentation" class="tab tabAdmin">
+                            <a href="" ng-click="selectTab('.tabAdmin')">Admin</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 col-lg-12">
+                    <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
+                    <div role="tabpanel" class="tab-pane hidden tabGraph"
+                        ng-include="'baseFrame/views/graph_options.html'">
+                    </div>
+                    <div role="tabpanel" class="tab-pane tabTable"
+                        id="expertiseTable"
+                        ng-include="'baseFrame/views/table.html'" ng-controller="TableController"></div>
+                    <div role="tabpanel" class="tab-pane hidden tabAdmin"
+                        id='populate'
+                        ng-include="'baseFrame/views/repo_admin.html'"></div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 

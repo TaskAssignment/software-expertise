@@ -3,7 +3,7 @@
     <hr>
 
     <h4 ng-if="selectedIssue && selectedIssue.assigneeId">
-        Assignee: <b>{{ selectedIssue.assigneeId }}</b> is on position {{ assigneePosition }}
+        Assignee: <strong>{{ selectedIssue.assigneeId }}</strong> is on position {{ assigneePosition }}
     </h4>
 
     <div class="scrollable">
@@ -35,16 +35,21 @@
                         {{ $index + 1 }}
                     </td>
                     <td>
-                        {{ item.username }}
+                        <p ng-if="selectedUser._id == item.username">
+                            <strong> {{ item.username }} </strong>
+                        </p>
+                        <p ng-if="selectedUser._id != item.username">
+                            {{ item.username }}
+                        </p>
                     </td>
                     <td>
-                        {{ item.cosine }}
+                        {{ item.cosine.toFixed(2) }}
                     </td>
                     <td>
-                        {{ item.jaccard }}
+                        {{ item.jaccard.toFixed(2) }}
                     </td>
                     <td>
-                        {{ item.ssaZScore }}
+                        {{ item.ssaZScore.toFixed(2) }}
                     </td>
                 </tr>
             </tbody>

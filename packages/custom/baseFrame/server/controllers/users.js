@@ -40,16 +40,29 @@ module.exports = function (BaseFrame){
             *https://api.stackexchange.com/docs/tags-on-users#pagesize=100&order=desc&sort=popular&ids=696885&filter=!4-J-dtwSuoIA.NOpA&site=stackoverflow
             **/
             var url = '/tags?pagesize=100&order=desc&sort=popular&site=stackoverflow&filter=!4-J-dtwSuoIA.NOpA';
+            var tags = [];
+            var Tag = mongoose.model('Tag');
+
+            var findTags = function (tag){
+                Tag.findOne({_id: tag._id}, function (err, dbTag){
+                    if(dbTag){
+                        tag.soCount = dbTag.soTotalCount;
+                    } else {
+                        //TODO: Change this to fetch the count from SO
+                        tag.soCount = tag.count;
+                    }
+                    tags.push(tag);
+                });
+            }
 
             var buildModels = function(items){
-                var tags = [];
                 for(var i in items){
                     var result = items[i];
                     var tag = {
                         _id: result.name,
                         count: result.count
                     };
-                    tags.push(tag);
+                    findTags(tag);
                 }
 
                 return {
