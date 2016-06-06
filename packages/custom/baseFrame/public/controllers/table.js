@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Class that handles drawing of the expertise graph
+ * Generates the expertise table
  **/
 
 function showLoadingScreen(){

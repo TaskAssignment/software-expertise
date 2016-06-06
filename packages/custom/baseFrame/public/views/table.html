@@ -2,15 +2,10 @@
     <h3> {{ selectedIssue.title }} </h3>
     <hr>
 
-    <h4 ng-if="selectedIssue && selectedIssue.assigneeId">
-        Assignee: <strong>{{ selectedIssue.assigneeId }}</strong> is on position {{ assigneePosition }}
-    </h4>
-
     <div class="scrollable">
         <table class="table table-bordered">
             <thead>
                 <tr>
-                    <th class="col-lg-1 col-md-1">Position</th>
                     <th class="col-lg-2 col-md-2">
                         <a href="" ng-click="sort('username')">Username</a>
                         <i ng-if="parameter === 'username'" class="fa fa-caret-down" aria-hidden="true"></i>
@@ -31,9 +26,6 @@
             </thead>
             <tbody>
                 <tr ng-repeat="item in bestUsers | orderBy: [parameter, 'username']" ng-class="{success: checkAssignee(item.assignee, $index)}">
-                    <td>
-                        {{ $index + 1 }}
-                    </td>
                     <td>
                         <p ng-if="selectedUser._id == item.username">
                             <strong> {{ item.username }} </strong>
