@@ -2,9 +2,6 @@
 
 // Database connections
 var mongoose = require('mongoose');
-var Tag = mongoose.model('Tag');
-var SoUser = mongoose.model('SoUser');
-var CoOccurrence = mongoose.model('CoOccurrence');
 
 var fs = require('fs');
 var csv = require('fast-csv');
@@ -15,34 +12,113 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request.
         * @param res - Express respnse.
-        */
+        **/
         populateSoTags: function (req, res){
-            readFile('files/tags.csv', res, Tag);
+            var Tag = mongoose.model('Tag');
+
+            var readFileCallback = function (line){
+                var model = {};
+                model._id = line[1];
+                model.soTotalCount = line[2];
+
+                Tag.create(model, errorCallback);
+            }
+            res.sendStatus(200);
+
+            readFile('files/tags.csv', readFileCallback);
         },
 
         /** Populates general StackOverflow coOccurrences from saved file.
         *
         * @param req - Express request.
         * @param res - Express respnse.
-        */
+        **/
         populateCoOccurrences: function (req, res){
-            readFile('files/coOccurrences.csv', res, CoOccurrence);
+            var CoOccurrence = mongoose.model('CoOccurrence');
+
+            var readFileCallback = function (line){
+                var model = {};
+                model.source = line[0];
+                model.target = line[1];
+                model.occurrences = line[2];
+
+                CoOccurrence.create(model, errorCallback);
+            }
+            res.sendStatus(200);
+
+            readFile('files/coOccurrences.csv', readFileCallback);
         },
 
         /** Populates StackOverflow users that have github accounts from saved file.
         *
         * @param req - Express request.
         * @param res - Express respnse.
-        */
-        populateSoUsers: function (req, res){
-            readFile('files/commonUsers.csv', res, SoUser);
+        **/
+        populateSoProfiles: function (req, res){
+            var Developer = mongoose.model('Developer');
+
+            var readFileCallback = function (line){
+
+                var options = {
+                    upsert: true,
+                    setDefaultsOnInsert: true
+                };
+
+                var update = {
+                    soProfile: {
+                        _id: line[0]
+                    },
+                    ghProfile: {
+                        _id: line[1],
+                        email: line[2]
+                    }
+                };
+
+                Developer.findByIdAndUpdate(line[1], update, options,
+                    errorCallback);
+            }
+            res.sendStatus(200);
+
+            readFile('files/commonUsers.csv', readFileCallback);
+        },
+
+        /** Read file and populate StopWords.
+        *
+        * @param req - Express request.
+        * @param res - Express response.
+        **/
+        populateStopWords: function(req, res){
+
+            var readFileCallback = function (words){
+                var StopWord = mongoose.model('StopWord');
+                var stopwords = [];
+
+                for(var j in words){
+                    var stopword = {}
+                    stopword._id = words[j];
+
+                    stopwords.push(stopword);
+                }
+
+                StopWord.create(stopwords, function(err){
+                    if(err){
+                        console.log(err.message);
+                    }else{
+                        console.log('Stop Words saved successfully!');
+                    }
+                });
+            }
+
+            res.sendStatus(200);
+
+            readFile('files/stopWords.csv', readFileCallback);
         },
 
         /** Exports the SO Tags to a file.
         *
         * @param req - Express request.
         * @param res - Express respnse.
-        */
+        **/
         exportSoTags: function (req, res){
             writeFile('files/tags2.tsv', '_id soTotalCount',res, Tag);
         },
@@ -51,7 +127,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request.
         * @param res - Express respnse.
-        */
+        **/
         exportCoOccurrences: function (req, res){
             writeFile('files/CoOccurrences.tsv', '-_id source target occurrences', res, CoOccurrence);
         },
@@ -60,9 +136,9 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request.
         * @param res - Express respnse.
-        */
-        exportSoUsers: function (req, res){
-            writeFile('files/SoUsers.tsv', '_id gitHubId email', res, SoUser);
+        **/
+        exportSoProfiles: function (req, res){
+            writeFile('files/SoProfiles.tsv', '_id gitHubId email', res, SoProfile);
         },
     }
 }
@@ -76,7 +152,7 @@ module.exports = function (BaseFrame){
 * @param items - The items that will be selected from the Schema.
 * @param res - Express response.
 * @param MongooseModel - The Model that represents a Schema.
-*/
+**/
 function writeFile(file, items,  res, MongooseModel){
     console.log("Writing File!");
     var stream = fs.createWriteStream(file);
@@ -101,59 +177,29 @@ function writeFile(file, items,  res, MongooseModel){
 
 /** Helper function to read the files
 *
-* @param file - The file address/name. The path given should be from the root
+* @param path - The file address/name. The path given should be from the root
   folder instead of from the baseFrame package!
-* @param res - The response to be sent.
-* @param MongooseModel - The MongooseModel to be used to save to the database.
-*/
+* @param callback - The callback to handle the read data.
+**/
 
-function readFile(file, res, MongooseModel){
+function readFile(path, callback){
     //Using readStream to avoid memory explosion
-    var readable = fs.createReadStream(file, {encoding: 'utf8'});
+    var readable = fs.createReadStream(path, {encoding: 'utf8'});
 
+    console.log("** Reading file! **")
     csv.fromStream(readable, {ignoreEmpty: true})
     .on("data", function(data){
-        var model = createModel(data, MongooseModel.modelName);
-        MongooseModel.create(model, function(err){
-            if(err){
-                console.log(err.message);
-            }else{
-                console.log(MongooseModel.modelName + ' saved successfully!');
-            }
-        });
+        callback(data);
     })
     .on("end", function(){
-        console.log("done");
+        console.log("******************* DONE *******************");
     });
-    res.sendStatus(200);
 }
 
-/** This receives a line of a file and returns the equivalent model for it.
-*
-* @param line - Array with the words in that line
-* @param modelName - The name of model that will be created.
-* @return model to be saved in the database.
-*/
-function createModel(line, modelName){
-    var model = {};
-
-    switch (modelName) {
-        case 'Tag':
-            //line[0] is an id that is not being used
-            model['_id'] = line[1];
-            model['soTotalCount'] = line[2];
-            break;
-        case 'SoUser':
-            model['soId'] = line[0];
-            model['_id'] = line[1];
-            model['email'] = line[2];
-            break;
-        case 'CoOccurrence':
-            model['source'] = line[0];
-            model['target'] = line[1];
-            model['occurrences'] = line[2];
-            break;
+/** This prints the error, if it exists
+**/
+var errorCallback = function (err){
+    if(err){
+        console.log(err);
     }
-
-    return model;
 }

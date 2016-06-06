@@ -24,9 +24,11 @@ var IssueSchema = new Schema({
         type: String,
         ref: 'Project',
     },
-    //These are both GitHub logins that are SoUser._id
     reporterId: String,
-    assigneeId: String,
+    assigneeId: {
+        type: String,
+        default: undefined
+    },
     number: String,
     body: String,
     title: String,
@@ -36,10 +38,10 @@ var IssueSchema = new Schema({
     },
     state: String,
     parsed: Boolean,
+    createdAt: Date,
+    updatedAt: Date,
     tags: [TagSchema],
     comments: [CommentSchema]
-}, {
-    timestamps: true
 });
 
 mongoose.model('Issue', IssueSchema);

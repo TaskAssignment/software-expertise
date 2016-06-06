@@ -1,91 +1,90 @@
-<div class="row" ng-model="config" ng-init="config = false" >
-    <a ng-click="config = !config" href="">
-        <i class="fa fa-cogs fa-2x" aria-hidden="true"></i>
-    </a>
+<div class="col-md-11 col-lg-11">
+    <div class="row" id="expertiseGraph">
+    </div>
+    <div class="row" ng-if="selectedUser && selectedIssue">
+        <strong> Similarity User-Issue: </strong> {{ similarity }}
+        <strong> Using method: </strong> {{ methods }}
+    </div>
 </div>
+<div class="col-md-1 col-lg-1">
+    <div class="row" ng-model="config" ng-init="config = false" >
+        <a ng-click="config = !config" href="" class="col-md-12">
+            <i class="fa fa-cogs fa-2x" aria-hidden="true"></i>
+        </a>
+    </div>
 
-<div id="graph-options" ng-show="config">
-    <form name="similarity-options">
-        <label>Similarity Method</label>
-        <div class="radio">
-            <label>
-                <input ng-click="applySimilarityOptions()" type="radio"
-                 ng-model="similarityOptions.type"
-                 value="cosine"> Cosine
-             </label>
-        </div>
-        <div class="radio">
-             <label>
-                <input ng-click="applySimilarityOptions()" type="radio"
-                 ng-model="similarityOptions.type"
-                  value="jaccard"> Jaccard
-            </label>
-        </div>
-    </form>
-    <br><br>
-    <form name="graph-options">
-        <label>SO occurrences</label>
-        <div class="radio">
-            <label>
-                <input ng-click="applyGraphOptions()" type="radio"
-                ng-model="graphOptions.occurrencesSo"
-                value="regular"> Regular Numbers
-            </label>
-        </div>
-        <div class="radio">
-            <label>
-                <input ng-click="applyGraphOptions()" type="radio"
-                ng-model="graphOptions.occurrencesSo"
-                value="sqrt"> Square Root
-            </label>
-        </div>
-        <div class="radio">
-            <label>
-                <input ng-click="applyGraphOptions()" type="radio"
-                ng-model="graphOptions.occurrencesSo"
-                value="log"> Log scaled (base 2)
-            </label>
-        </div>
+    <div class="row" id="graph-options" ng-show="config">
+        <form name="similarity-options" class="col-md-12">
+            <label>Similarity Method</label>
+            <div class="radio">
+                <label>
+                    <input ng-click="applySimilarityOptions()" type="radio"
+                     ng-model="similarityOptions.type"
+                     value="cosine"> Cosine
+                 </label>
+            </div>
+            <div class="radio">
+                 <label>
+                    <input ng-click="applySimilarityOptions()" type="radio"
+                     ng-model="similarityOptions.type"
+                      value="jaccard"> Jaccard
+                </label>
+            </div>
+        </form>
+        <br><br>
+        <form name="graph-options" class="col-md-12">
+            <hr>
+            <label>Text occurrences</label>
+            <div class="radio disabled">
+                <label>
+                    <input ng-click="applyGraphOptions()" type="radio"
+                    ng-model="graphOptions.tagText"
+                    disabled value="regular"> Regular Numbers
+                </label>
+            </div>
+            <div class="radio disabled">
+                <label>
+                    <input ng-click="applyGraphOptions()" type="radio"
+                    ng-model="graphOptions.tagText"
+                    disabled value="sqrt"> Square Root
+                </label>
+            </div>
+            <div class="radio disabled">
+                <label>
+                    <input ng-click="applyGraphOptions()" type="radio"
+                    ng-model="graphOptions.tagText"
+                    disabled value="log"> Log scaled (base 2)
+                </label>
+            </div>
 
-        <hr>
-        <label>Text occurrences</label>
-        <div class="radio">
-            <label>
-                <input ng-click="applyGraphOptions()" type="radio"
-                ng-model="graphOptions.tagText"
-                value="regular"> Regular Numbers
-            </label>
-        </div>
-        <div class="radio">
-            <label>
-                <input ng-click="applyGraphOptions()" type="radio"
-                ng-model="graphOptions.tagText"
-                value="sqrt"> Square Root
-            </label>
-        </div>
-        <div class="radio">
-            <label>
-                <input ng-click="applyGraphOptions()" type="radio"
-                ng-model="graphOptions.tagText"
-                value="log"> Log scaled (base 2)
-            </label>
-        </div>
+            <hr>
+            <label>Graph style</label>
+            <div class="radio disabled">
+                <label>
+                    <input ng-click="applyGraphOptions()" type="radio"
+                    ng-model="graphOptions.direction"
+                    value="directed" disabled=""> Directed
+                </label>
+            </div>
+            <div class="radio">
+                <label>
+                    <input ng-click="applyGraphOptions()" type="radio"
+                    ng-model="graphOptions.direction"
+                    value="undirected"> Undirected
+                </label>
+            </div>
+        </form>
+    </div>
 
-        <hr>
-        <label>Graph style</label>
-        <div class="radio">
-            <label>
-                <input ng-click="applyGraphOptions()" type="radio"
-                ng-model="graphOptions.direction"
-                value="directed"> Directed
-            </label>
+    <br>
+    <div class="row">
+        <div class="col-md-12">
+            <p>Graph Legend: </p>
+            <small><p>
+                Light Blue = User Tags <br>
+                Light Red = Issue Tags <br>
+                Purple = Intersection
+            </p></small>
         </div>
-        <div class="radio">
-            <label>
-                <input ng-click="applyGraphOptions()" type="radio"
-                ng-model="graphOptions.direction"
-                value="undirected"> Undirected
-            </label>
-        </div>
-    </form>
+    </div>
 </div>

@@ -1,24 +1,24 @@
-<h3>Issues: </h3>
+<div class="col-lg-6 col-md-6">
+    <h3>Issues: </h3>
 
-<!-- Showing only 500 issues for now. But all of them are saved! -->
-<div id='issueSelection' class='scrollable list-group'>
-    <button ng-repeat="issue in issues" class="list-group-item"
-      ng-click="selectIssue(issue)">
-        {{ issue.title }}
-        <span class="badge"> {{ issue.state }}</span>
-        <span class="badge" ng-if="issue.pull_request">
-            PR </span>
-    </button>
+    <!-- Showing only 500 issues for now. But all of them are saved! -->
+    <div id='issueSelection' class='scrollable list-group' ng-if="issues.length > 0">
+        <button ng-repeat="issue in issues" class="list-group-item"
+          ng-click="selectIssue(issue)" ng-class="{active: selectedIssue._id == issue._id}">
+            <p>{{ issue.title }}</p>
+        </button>
+    </div>
+
+    <a class="btn btn-default" ng-if="selectedRepo.emptyissues" ng-click=populateRepoResources('issues')> Get All Issues</a>
+    <a class="btn btn-default" ng-click=populateRepoResources('issues')> Get New Issues</a>
+
+    <!-- TODO: Add pagination here. It takes too long to load all the issues!!!
+    <nav>
+        <ul class="pager">
+            <li><a ng-click="populateRepoResources('issues', $scope.lastissues, '$lt')">Previous</a></li>
+            <li><a ng-click="populateRepoResources('issues', $scope.lastissues)">Next</a></li>
+        </ul>
+    </nav>
+    -->
+
 </div>
-
-<!-- TODO: Add pagination here. It take too long to load all the issues!!!
-<nav>
-    <ul class="pager">
-        <li><a ng-click="populateRepoResources('issues', $scope.lastissues, '$lt')">Previous</a></li>
-        <li><a ng-click="populateRepoResources('issues', $scope.lastissues)">Next</a></li>
-    </ul>
-</nav>
--->
-
-<a class="btn btn-default" ng-if="selectedRepo.emptyissues" ng-click=populateRepoResources('issues')> Get All Issues</a>
-<a class="btn btn-default" ng-click=populateRepoResources('issues')> Get New Issues</a>

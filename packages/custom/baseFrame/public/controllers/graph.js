@@ -1,7 +1,7 @@
 'use strict';
 /**
  * Class that handles drawing of the expertise graph
- */
+ **/
 
 function showLoadingScreen(){
     angular.element('#loadingImage').css('display','block');
@@ -10,7 +10,7 @@ function showLoadingScreen(){
 function hideLoadingScreen(){
     angular.element('#loadingImage').css('display','none');
 }
-var controllerCallback = function ($scope,  $http, $resource) {
+var controllerCallback = function ($scope, $resource) {
     $scope.graphData = {
         nodes: [],
         links: []
@@ -45,24 +45,7 @@ var controllerCallback = function ($scope,  $http, $resource) {
         });
     }
 
-    var findMatches = function (event, params) {
-        if(params.issueId){
-            $scope.issueId = params.issueId;
-            showLoadingScreen();
-            var Match = $resource('api/baseFrame/find/:issueId/match/:similarity');
-            params.similarity = $scope.similarityOptions.type;
-
-            Match.get(params).$promise.then(function (matches){
-                $scope.bestUsers = matches.similarities;
-                $scope.similaritiesAmount = matches.amount;
-                hideLoadingScreen();
-            });
-        }
-    }
-
     $scope.$on('fetchGraphData', fetchGraphData);
-
-    $scope.$on('findMatches', findMatches);
 
     $scope.applyGraphOptions = function (){
     }
@@ -79,18 +62,35 @@ var controllerCallback = function ($scope,  $http, $resource) {
         Similarity.get(params).$promise.then(function (response){
             $scope.similarity = response.similarity;
             $scope.methods = response.args;
-            findMatches(null, {issueId: $scope.issueId});
         });
         hideLoadingScreen();
     }
 }
 
 var baseFrame = angular.module('mean.baseFrame');
-baseFrame.controller('GraphController', ['$scope', '$http', '$resource', controllerCallback]);
+baseFrame.controller('GraphController', ['$scope', '$resource', controllerCallback]);
 
 function drawGraph(graphData){
     var width = $('#expertiseGraph').innerWidth();
     var height = $('#leftSelectionPanel').innerHeight();
+
+    var MAX_DISTANCE = Math.min(width, height) - 50;
+    var MIN_DISTANCE = MAX_DISTANCE/3;
+
+    var calculateDistance = function (edge){
+        var num = 2 * edge.occurrences;
+        var den = edge.source.issueCount + edge.target.issueCount;
+
+        if(den == 0){
+            den = edge.source.userCount + edge.target.userCount;
+            if(den == 0){
+                return 0;
+            }
+        }
+
+        var distance = num/den;
+        return Math.min(MAX_DISTANCE, distance + MIN_DISTANCE);
+    }
 
     var force = d3.layout.force()
         .size([width, height])
@@ -115,7 +115,7 @@ function drawGraph(graphData){
     *
     * You must also pass an ARRAY of links. Each link must have a source
     * and a target, both are INDEXES of a node.
-    */
+    **/
 
     force
         .nodes(graphData.nodes)
@@ -128,7 +128,7 @@ function drawGraph(graphData){
 
     /* Force graphs don't accept a circle with any other data, like a label.
     * To show any other information, a 'g' tag is necessary (group)
-    */
+    **/
     node = svg.selectAll('.node')
         .data(graphData.nodes)
         .enter().append('g')
@@ -141,13 +141,16 @@ function drawGraph(graphData){
         .text(function(d) { return d._id });
 
     node.append("circle")
-        .attr('r', function(d) { return calculateCircleRatio(d.userCount); })
-        .style('fill', function(d) { return 'navy'; });
-
-    node.append("circle")
-        .attr('r', function(d) { return calculateCircleRatio(d.issueCount); })
-        .style('fill', function(d) { return 'maroon'; });
-
+        .attr('r', function(d) { return calculateCircleRatio(d.soCount); })
+        .style('fill', function (d) {
+            if(d.commonCount > 0){
+                return 'purple';
+            } else if(d.userCount > 0){
+                return 'lightblue';
+            } else {
+                return 'lightsalmon';
+            }
+        });
 
     function tick() {
         link.attr("x1", function(d) { return d.source.x; })
@@ -169,32 +172,14 @@ function drawGraph(graphData){
     }
 }
 
-var calculateDistance =  function (link){
-    var num = 2 * link.occurrences;
-    var den = link.source.issueCount + link.target.issueCount;
-
-    if(den == 0){
-        den = link.source.userCount + link.target.userCount;
-        if(den == 0){
-            return 0;
+var calculateCircleRatio = function (counter){
+    var MAX_RATIO = 15;
+    var result = 1;
+    if(counter > 10){
+        var log = Math.log10(counter);
+        if(log != 0){
+            result = 1/log;
         }
     }
-
-    var distance = num/den;
-    var MAX_DISTANCE = 500;
-    return Math.min(MAX_DISTANCE, distance);
-}
-
-var calculateCircleRatio = function (counter){
-    if(counter < 1){
-        return 0;
-    }
-    var sqrt = Math.sqrt(counter);
-    var result = 0;
-    if(sqrt != 0){
-        result = 1/sqrt;
-    }
-    var MAX_RATIO = 20; //Add max ratio because 1 is too small to see
-    var MIN_RATIO = 1;
-    return (1 - result) * MAX_RATIO || MIN_RATIO;
+    return result * MAX_RATIO;
 }

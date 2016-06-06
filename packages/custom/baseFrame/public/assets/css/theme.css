@@ -1,19 +1,18 @@
 .link {
   fill: none;
-  stroke: #ddd;
+  stroke: #eee;
   stroke-width: 1.5px;
 }
 
 circle {
-  fill: blue;
   stroke: #000;
-  stroke-width: 1.5px;
+  stroke-width: 0.1px;
 }
 
 .scrollable {
-  height: 200px; // Set this height to the appropriate size
-  position: fixed;
   overflow-y: scroll;
+  /* Set this height to the appropriate size**/
+  height: 35em;
 }
 
 .node {

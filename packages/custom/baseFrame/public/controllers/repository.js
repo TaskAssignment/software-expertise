@@ -11,15 +11,22 @@ var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('RepositoryController',
 ['$scope', '$http', '$location', '$resource',
 function ($scope,  $http, $location, $resource) {
+    $scope.repoSearch = {
+        name: '',
+        user: '',
+        description: '',
+        readme: ''
+    };
+    $scope.selectedTab = '.tabTable';
     findProject();
 
-    // *************** SCOPE FUNCTIONS **************//
+    // *************** SCOPE FUNCTIONS ***************//
 
-    //Change this to another controller
+    //TODO: Change this to another controller
     $scope.selectTab = function (tab){
         angular.element('.tab').removeClass('active');
         angular.element('.tab-pane').addClass('hidden');
-
+        $scope.selectedTab = tab;
         if(tab == '.tabTable'){
             sendToTable();
         } else if(tab == '.tabGraph'){
@@ -32,6 +39,8 @@ function ($scope,  $http, $location, $resource) {
 
     $scope.fullPopulateRepo = function(){
         var items = [
+            'issues',
+            'users',
             'languages',
             'commits',
             'issues/comments',
@@ -52,6 +61,15 @@ function ($scope,  $http, $location, $resource) {
         }
     }
 
+    $scope.getAllSOData = function (){
+        for(var i in $scope.users){
+            var user = $scope.users[i];
+            if(user.soProfile && !user.soProfile.soPopulated) {
+                populateSOData(user.soProfile._id);
+            }
+        }
+    }
+
     $scope.makeIssuesTags = function (){
         showLoadingScreen();
         var Resource = $resource('/api/baseFrame/:projectId/makeIssuesTags');
@@ -65,18 +83,19 @@ function ($scope,  $http, $location, $resource) {
     }
 
     /** Looks for repositories with the given filters
-     */
+     **/
     $scope.queryRepos = function () {
+        var search = $scope.repoSearch;
         showLoadingScreen();
         var URL = 'https://api.github.com/search/repositories?q=';
-        if($scope.repositoryName)
-            URL += $scope.repositoryName + '+in:name';
-        if($scope.repoDescription)
-            URL += '+' + $scope.repoDescription + '+in:description';
-        if($scope.repoReadme)
-            URL += '+' + $scope.repoReadme + '+in:readme';
-        if($scope.repoUser)
-            URL += '+user:' + $scope.repoUser;
+        if(search.user)
+            URL += '+user:' + search.user;
+        if(search.name)
+            URL += search.name + '+in:name';
+        if(search.description)
+            URL += '+' + search.description + '+in:description';
+        if(search.readme)
+            URL += '+' + search.readme + '+in:readme';
         URL += '+fork:true&sort=stars&order=desc&per_page=100';
 
         $http.get(URL).then(function (response) {
@@ -126,11 +145,15 @@ function ($scope,  $http, $location, $resource) {
     * user tags.
     *
     * @param username - github username
-    */
+    **/
     $scope.selectUser = function (user){
         $scope.selectedUser = user;
 
-        if(!user.soId){
+        if(user.soProfile){
+            if(!user.soPopulated){
+                populateSOData(user.soProfile._id);
+            }
+        } else {
             alert("User is not in StackOverflow.");
         }
         showLoadingScreen();
@@ -147,7 +170,7 @@ function ($scope,  $http, $location, $resource) {
     * display information based on issues
     *
     * @param issue - Dictionary with id, title and body from github issue
-    */
+    **/
     $scope.selectIssue = function (issue) {
         showLoadingScreen();
         $scope.selectedIssue = issue;
@@ -166,10 +189,10 @@ function ($scope,  $http, $location, $resource) {
         sendToTable();
     }
 
-    $scope.populateSOData = function() {
+    function populateSOData(soId) {
         showLoadingScreen();
         var filter = {
-            soId: $scope.selectedUser.soId,
+            soId: soId,
         }
         var url = '/api/baseFrame/user/:soId/populate/';
         var Resource = $resource(url + 'answers');
@@ -186,20 +209,22 @@ function ($scope,  $http, $location, $resource) {
         });
     }
 
-    // *************** HELPER FUNCTIONS **************//
+    // *************** HELPER FUNCTIONS ***************//
 
     /**
     * Gets the users and issues from the selected repository
     *
     * @param repo - The selected repository (id,name,language,description)
-    */
+    **/
     function getRepoInformation(repo) {
         $scope.selectedRepo = repo;
+        $scope.search = false;
         $scope.repos = undefined;
         $scope.users = [];
         $scope.issues = [];
         $scope.selectedUser = undefined;
         $scope.selectedIssue = undefined;
+        $scope.soAssigned = true;
 
         $location.search('repoName', repo.name);
 
@@ -209,28 +234,36 @@ function ($scope,  $http, $location, $resource) {
         hideLoadingScreen();
     }
 
+    $scope.getRepoUsersAndIssues = function (assigned){
+        $scope.soAssigned = assigned;
+        $scope.selectedUser = undefined;
+        $scope.selectedIssue = undefined;
+        getRepoResources('issues');
+        getRepoResources('users');
+    }
+
     /**
     * Gets the github resources of the selected repository stored on the
     * database.
     *
     * @param resource - The desired resource for this repository (issues, users)
-    */
-    function getRepoResources(resource){
+    **/
+    function getRepoResources (resource){
         showLoadingScreen();
         var Resource = $resource('/api/baseFrame/:projectId/' + resource);
         var filter = {
-            projectId: $scope.selectedRepo._id
+            projectId: $scope.selectedRepo._id,
+            soAssigned: $scope.soAssigned
         };
         Resource.query(filter).$promise.then(function(resources){
-            if(resources.length == 0){
-                $scope.selectedRepo['empty' + resource] = true;
-            }
+            $scope.selectedRepo['empty' + resource] = false;
             $scope[resource] = resources;
             hideLoadingScreen();
         }, function(response){console.log(response)});
     }
 
     function findProject(){
+        $scope.search = true;
         var Project = $resource('/api/baseFrame/project/find/:name');
         var repoName = $location.search().repoName;
         if(repoName){
@@ -242,22 +275,27 @@ function ($scope,  $http, $location, $resource) {
     }
 
     function sendToTable(){
-        var args = {};
-        if($scope.selectedIssue){
-            args.issueId = $scope.selectedIssue._id;
+        hideLoadingScreen();
+        if($scope.selectedTab == '.tabTable'){
+            var args = {};
+            if($scope.selectedIssue){
+                args.issueId = $scope.selectedIssue._id;
+            }
+            $scope.$broadcast('findMatches', args);
         }
-        $scope.$broadcast('findMatches', args);
     }
 
     function sendToGraph(){
         hideLoadingScreen();
-        var ids = {};
-        if($scope.selectedIssue){
-            ids.issueId = $scope.selectedIssue._id;
+        if($scope.selectedTab == '.tabGraph'){
+            var ids = {};
+            if($scope.selectedIssue){
+                ids.issueId = $scope.selectedIssue._id;
+            }
+            if($scope.selectedUser){
+                ids.userId = $scope.selectedUser._id;
+            }
+            $scope.$broadcast('fetchGraphData', ids);
         }
-        if($scope.selectedUser){
-            ids.userId = $scope.selectedUser._id;
-        }
-        $scope.$broadcast('fetchGraphData', ids);
     }
 }]);

@@ -1,37 +1,62 @@
-<div role="tabpanel" class="tab-pane hidden tabTable" id="expertiseTable">
-    <div ng-if="selectedIssue">
-        <h3> {{ selectedIssue.title }} </h3>
-        <hr>
+<div ng-if="selectedIssue">
+    <h3> {{ selectedIssue.title }} </h3>
+    <hr>
 
-        <h4> Using <b>{{ similarityOptions.type }}</b> we found {{ similaritiesAmount }} users that have a similarity with this issue. </p> </h4>
+    <h4 ng-if="selectedIssue && selectedIssue.assigneeId">
+        Assignee: <strong>{{ selectedIssue.assigneeId }}</strong> is on position {{ assigneePosition }}
+    </h4>
 
-
-        <table class="table table-bordered" ng-if="similaritiesAmount > 0">
+    <div class="scrollable">
+        <table class="table table-bordered">
             <thead>
                 <tr>
-                    <th>Assignee</th>
-                    <th>SO User</th>
-                    <th>Username</th>
-                    <th>Score</th>
+                    <th class="col-lg-1 col-md-1">Position</th>
+                    <th class="col-lg-2 col-md-2">
+                        <a href="" ng-click="sort('username')">Username</a>
+                        <i ng-if="parameter === 'username'" class="fa fa-caret-down" aria-hidden="true"></i>
+                    </th>
+                    <th class="col-lg-3 col-md-3">
+                        <a href="" ng-click="sort('-cosine')">Cosine Score</a>
+                        <i ng-if="parameter === '-cosine'" class="fa fa-caret-down" aria-hidden="true"></i>
+                    </th>
+                    <th class="col-lg-3 col-md-3">
+                        <a href="" ng-click="sort('-jaccard')">Jaccard Score</a>
+                        <i ng-if="parameter === '-jaccard'" class="fa fa-caret-down" aria-hidden="true"></i>
+                    </th>
+                    <th class="col-lg-3 col-md-3">
+                        <a href="" ng-click="sort('-ssaZScore')">SSA Z Score</a>
+                        <i ng-if="parameter === '-ssaZScore'" class="fa fa-caret-down" aria-hidden="true"></i>
+                    </th>
                 </tr>
             </thead>
-            <tbody ng-repeat="item in bestUsers">
-                <tr ng-repeat="match in item.matches">
+            <tbody>
+                <tr ng-repeat="item in bestUsers | orderBy: [parameter, 'username']" ng-class="{success: checkAssignee(item.assignee, $index)}">
                     <td>
-                        <i ng-if="match.id == selectedIssue.assigneeId" class="fa fa-check" aria-hidden="true"></i>
+                        {{ $index + 1 }}
                     </td>
                     <td>
-                        <i ng-if="match.soId" class="fa fa-check" aria-hidden="true"></i>
+                        <p ng-if="selectedUser._id == item.username">
+                            <strong> {{ item.username }} </strong>
+                        </p>
+                        <p ng-if="selectedUser._id != item.username">
+                            {{ item.username }}
+                        </p>
                     </td>
                     <td>
-                        {{match.id}}
+                        {{ item.cosine.toFixed(2) }}
                     </td>
                     <td>
-                        {{item.value}}
+                        {{ item.jaccard.toFixed(2) }}
+                    </td>
+                    <td>
+                        {{ item.ssaZScore.toFixed(2) }}
                     </td>
                 </tr>
             </tbody>
         </table>
-
     </div>
+
+    <small>
+        Green row = Assignee
+    </small>
 </div>

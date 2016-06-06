@@ -2,17 +2,17 @@
 
 var mongoose = require('mongoose');
 var Issue = mongoose.model('Issue');
-var SoUser = mongoose.model('SoUser');
 var CoOccurrence = mongoose.model('CoOccurrence');
+var Developer = mongoose.model('Developer');
 
-/** This will provide the data for the graph */
+/** This will provide the data for the graph **/
 
 module.exports = function (BaseFrame){
-
+    // TODO: REMAKE THIS DOCUMENTATION!!!
     /**
     * This will format the tags and links to what is expected to render the graph
     *
-    */
+    **/
     function formatDataToGraph(links, allTags, callback, callbackParams = {}){
         for(var link of links){
             // Adds the values of these occurences to the tags counter
@@ -21,7 +21,6 @@ module.exports = function (BaseFrame){
 
             link.source = allTags[link.source].index;
             link.target = allTags[link.target].index;
-
         }
 
         var nodes = [];
@@ -39,7 +38,7 @@ module.exports = function (BaseFrame){
     /**
     * This function will merge the issueTags with the userTags
     * Both issueTags and userTags have _id, count[, soCount].
-    */
+    **/
     function mergeTags(modelsTags, callback, callbackParams = {}){
         callbackParams.tags = {};
         var index = 0;
@@ -52,6 +51,7 @@ module.exports = function (BaseFrame){
                     tag.userCount = (tag.count || 0);
                     tag.issueCount = (tag.issueCount || 0);
                     tag.soCount = (tag.soCount || 0);
+                    tag.commonCount = Math.min(tag.userCount, tag.issueCount);
                     index++;
                     callbackParams.tags[tag._id] = tag;
                 } else {
@@ -59,7 +59,7 @@ module.exports = function (BaseFrame){
                     new_tag.userCount += (tag.count || 0);
                     new_tag.issueCount += (tag.issueCount || 0);
                     new_tag.soCount += (tag.soCount || 0);
-                    tag.index = callbackParams.tags[tag._id].index;
+                    new_tag.commonCount = Math.min(new_tag.userCount, new_tag.issueCount);
                 }
             }
         }
@@ -68,7 +68,7 @@ module.exports = function (BaseFrame){
     }
 
     /** Fetches user tags from database.
-    */
+    **/
 
     function findOneModel(Model, id, callback, callbackParams = {}, selectItems = 'tags'){
         Model.findOne({_id: id}, selectItems, {lean: true}, function (err, model){
@@ -116,16 +116,55 @@ module.exports = function (BaseFrame){
             var issueWeight = 0;
             var userWeight = 0;
             if(node.issueCount) {
-                issueWeight = 1/Math.sqrt(node.issueCount);
+                if(node.issueCount < 10){
+                    issueWeight = 1;
+                } else {
+                    issueWeight = 1/Math.log10(node.soCount);
+                }
             }
 
             if(node.userCount){
-                userWeight = 1/Math.sqrt(node.userCount);
+                if(node.userCount < 10){
+                    userWeight = 1;
+                } else {
+                    userWeight = 1/Math.log10(node.soCount);
+                }
             }
 
             numerator += Math.min(issueWeight, userWeight);
             denominator += issueWeight;
         }
+
+        if(denominator == 0){
+            return 0;
+        }
+
+        return numerator/denominator;
+    }
+
+    //TODO: Change this!!! Add real formula
+    function ssaZSimilarity(user, issueTags){
+        var _ = require('lodash');
+
+        var aScore = 0;
+        var qScore = 0;
+
+        for(var answer of user.answers){
+            let matchTagsA = _.intersection(answer.tags, issueTags);
+            aScore += ((answer.score + 1) * matchTagsA.length);
+        }
+
+        for(var question of user.questions){
+            let matchTagsQ = _.intersection(question.tags, issueTags);
+            let den = (question.score + 1) || 1;
+            qScore += (matchTagsQ.length/den);
+        }
+
+        var MU = 1;
+        qScore *= MU;
+
+        let numerator = aScore - qScore;
+        let denominator = Math.sqrt(aScore + qScore) || 1; //Avoid division by 0
 
         return numerator/denominator;
     }
@@ -139,7 +178,7 @@ module.exports = function (BaseFrame){
         * @param req.params.modeUser - The mode to look for user. For now, just using 'default' (user data from SO).
         * @param req.query.issueId - The issueId when the mode is default. It will look for this issue in the local database.
         * @param req.query.userId - The userId when the mode is default. It will look for this user in the local database.
-        */
+        **/
         getDataForGraph: function(req, res){
             //For now I'll treat all the requests as default ones.
             var ids = req.query;
@@ -166,11 +205,16 @@ module.exports = function (BaseFrame){
             };
 
             var userCallback = function (params){
+                if(params.Developer.soProfile){
+                    params.Developer = {
+                        tags: params.Developer.soProfile.tags
+                    }
+                }
                 mergeTags(params, mergeCallback);
             };
 
             var issueCallback = function(params){
-                findOneModel(SoUser, ids.userId, userCallback, params);
+                findOneModel(Developer, ids.userId, userCallback, params, 'soProfile');
             };
 
             findOneModel(Issue, ids.issueId, issueCallback);
@@ -196,71 +240,62 @@ module.exports = function (BaseFrame){
 
         findMatches: function (req, res) {
 
-            var similarities = {};
+            var similarities = [];
             var assignee = undefined;
 
             var mergeCallback = function (params){
-                var value = 0;
-                switch (req.params.similarity) {
-                    case 'jaccard':
-                        value = jaccardSimilarity(params.tags);
-                        break;
-                    default:
-                        value = cosineSimilarity(params.tags);
-                }
+                var user = {};
 
-                if(similarities[value]){
-                    similarities[value].push(params.user);
+                user.username = params.user.id;
+                user.jaccard = jaccardSimilarity(params.tags);
+                user.cosine = cosineSimilarity(params.tags);
+                user.ssaZScore = ssaZSimilarity(params.user, params.issueTags);
+
+                if(params.assignee == user.username){
+                    user.assignee = true;
                 } else {
-                    similarities[value] = [params.user];
+                    user.assignee = false;
                 }
 
-                if(params.assignee == params.user.id && value == 0){
-                    assignee = {
-                        value: value,
-                        matches: [params.user]
-                    };
-                }
+                similarities.push(user);
             }
 
             var issueCallback = function (params){
-                SoUser.find({repositories: params.Issue.projectId}, 'tags soId', {lean: true}, function (err, users){
+                var filter = {
+                    $or: [
+                        {
+                            'ghProfile.repositories': params.Issue.projectId,
+                            soProfile: { $exists: true }
+                        },{
+                            _id: params.Issue.assigneeId
+                        }
+                    ]
+                };
 
-                    assignee = undefined;
+                var tag_array = params.Issue.tags.map(function (tag){
+                    return tag._id;
+                })
+
+                Developer.find(filter, 'soProfile', {lean: true}, function (err, users){
                     for(var user of users){
-                        params.SoUser = user;
                         var callbackParams = {
-                            user: {
-                                id: user._id,
-                                soId: user.soId},
-                            assignee: params.Issue.assigneeId
+                            user: { id: user._id },
+                            assignee: params.Issue.assigneeId,
+                            issueTags: tag_array
                         };
+
+                        if(user.soProfile){
+                            params.Developer = {tags: user.soProfile.tags};
+                            callbackParams.user.questions = user.soProfile.questions;
+                            callbackParams.user.answers = user.soProfile.answers;
+                        } else {
+                            params.Developer = {tags: []};
+                        }
 
                         mergeTags(params, mergeCallback, callbackParams);
                     }
 
-                    var amount = users.length - similarities[0].length;
-                    delete similarities[0];
-
-                    var keys = Object.keys(similarities);
-
-                    // Descending order
-                    keys.sort(function (a, b) { return a < b });
-
-                    var matches = [];
-                    for(var key of keys){
-                        var match = {
-                            value: key,
-                            matches: similarities[key]
-                        };
-                        matches.push(match);
-                    }
-                    if(assignee){
-                        matches.push(assignee);
-                        amount++;
-                    }
-
-                    res.json({similarities: matches, amount: amount});
+                    res.json({similarities: similarities});
                 });
             }
 

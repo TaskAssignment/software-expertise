@@ -4,7 +4,6 @@ var mongoose = require('mongoose');
 var Project  = mongoose.model('Project');
 var Issue = mongoose.model('Issue');
 var Commit = mongoose.model('Commit');
-var SoUser = mongoose.model('SoUser');
 
 var request = require('request');
 
@@ -16,10 +15,9 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request.
         * @param res - Express response.
-        */
+        **/
         save: function(req, res){
-            Project.findOne(req.query,
-            function (err, result){
+            Project.findOne(req.query, function (err, result){
                 if(result){
                     res.send(result);
                 }else{
@@ -39,7 +37,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request.
         * @param res - Express response.
-        */
+        **/
         find: function(req, res){
             Project.findOne(req.params, 'name description languages', {lean: true}, function(err, project){
                 res.send(project);
@@ -50,7 +48,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request
         * @param res - Express response
-        */
+        **/
         populateCommits: function(req, res){
             Commit.findOne(req.params, '-_id updatedAt', {sort: '-updatedAt', lean:true},function (err, lastUpdate){
                 var url = '/commits';
@@ -91,10 +89,10 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request
         * @param res - Express response
-        */
+        **/
         populateIssues: function(req, res){
             Issue.findOne(req.params, '-_id updatedAt', {sort: '-updatedAt', lean:true},function (err, lastUpdate){
-                var url = '/issues?state=all&sort=updated'
+                var url = '/issues?state=all&sort=created&direction=asc'
 
                 if(lastUpdate){
                     url += '&since=' + lastUpdate.updatedAt.toISOString();
@@ -112,6 +110,8 @@ module.exports = function (BaseFrame){
                             state: result.state,
                             projectId: projectId,
                             parsed: false,
+                            createdAt: result.created_at,
+                            updatedAt: result.updated_at,
                             reporterId: result.user.login
                         }
 
@@ -143,23 +143,44 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request
         * @param res - Express response
-        */
+        **/
         populateContributors: function(req, res){
             var url = '/contributors';
+
+            var Developer = mongoose.model('Developer');
+
+            function updateOrCreateDev(ghResult, projectId){
+                Developer.findById(ghResult.login, function (err, dev){
+                    if(err){
+                        console.log(err.message);
+                        return null;
+                    }
+                    if(dev){
+                        dev.ghProfile.repositories.push(projectId);
+                    } else {
+                        dev = new Developer({
+                            _id: ghResult.login,
+                            ghProfile: {
+                                _id: ghResult.login,
+                                repositories: [projectId]
+                            }
+                        });
+                    }
+                    dev.save(function (err){
+                        if(err){
+                            console.log(err.message);
+                        } else {
+                            console.log(ghResult.login + " updated!");
+                        }
+                    });
+                });
+            }
+
 
             var buildModels = function(results, projectId){
                 for (var i in results) {
                     var result = results[i];
-                    var user = {
-                        gitHubId: result.id,
-                        $addToSet: {repositories: projectId}
-                    };
-
-                    SoUser.update({_id: result.login}, user, {upsert: true}, function(err){
-                        if(err){
-                            console.log(err);
-                        }
-                    });
+                    updateOrCreateDev(result, projectId);
                 }
             }
 
@@ -170,7 +191,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request
         * @param res - Express response
-        */
+        **/
         populateLanguages: function(req, res){
             var url = '/languages';
 
@@ -212,7 +233,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request
         * @param res - Express response
-        */
+        **/
         populateIssuesComments: function(req, res){
             Issue.findOne(req.params, '-_id updatedAt', {sort: '-updatedAt', lean:true},function (err, lastUpdate){
                 var url = '/issues/comments';
@@ -259,7 +280,7 @@ module.exports = function (BaseFrame){
         *
         * @param req - Express request
         * @param res - Express response
-        */
+        **/
         populateCommitsComments: function(req, res){
             var url = '/comments';
 
@@ -306,11 +327,11 @@ module.exports = function (BaseFrame){
     * @param callback - A callback to build the models. Because every model has
         different items and saving methods, this should be built in the Express
         function that calls this request.
-    */
+    **/
     function gitHubRequest(specificUrl, projectId, res, callback){
         /* StackOverflow requests are compressed, if this is not set, the data
         * won't be readable.
-        */
+        **/
         var url = 'https://api.github.com/repositories/' + projectId +
             specificUrl;
         if(specificUrl.lastIndexOf('?') < 0){
@@ -355,7 +376,7 @@ module.exports = function (BaseFrame){
         * is the first one)
         *
         * @param link - Value of headers['link'] of the response
-        */
+        **/
         function nextPageUrl(link){
             if(link){
                 //The first entry of the links array is the next page
