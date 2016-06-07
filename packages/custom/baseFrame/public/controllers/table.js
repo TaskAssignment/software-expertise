@@ -21,18 +21,12 @@ var controllerCallback = function ($scope, $resource) {
 
             Match.get(params).$promise.then(function (matches){
                 $scope.bestUsers = matches.similarities;
-                $scope.assignee = matches.assignee;
+                $scope.assigneePosition = matches.assigneePosition;
                 hideLoadingScreen();
             });
         }
     }
 
-    $scope.checkAssignee = function(isAssignee, index){
-        if(isAssignee){
-            $scope.assigneePosition = index + 1;
-        }
-        return isAssignee;
-    }
     $scope.parameter = '-cosine';
 
     $scope.sort = function(item){

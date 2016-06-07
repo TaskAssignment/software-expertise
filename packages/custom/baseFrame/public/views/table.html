@@ -3,7 +3,7 @@
     <hr>
 
     <h4 ng-if="selectedIssue && selectedIssue.assigneeId">
-        Assignee: <strong>{{ selectedIssue.assigneeId }}</strong> is on position {{ assigneePosition }}
+        Assignee: {{ selectedIssue.assigneeId }}
     </h4>
 
     <div class="scrollable">
@@ -18,19 +18,29 @@
                     <th class="col-lg-3 col-md-3">
                         <a href="" ng-click="sort('-cosine')">Cosine Score</a>
                         <i ng-if="parameter === '-cosine'" class="fa fa-caret-down" aria-hidden="true"></i>
+                        <span class="pull-right">
+                            {{ assigneePosition.cosine + 1 }}/{{bestUsers.length}}
+                        </span>
                     </th>
                     <th class="col-lg-3 col-md-3">
                         <a href="" ng-click="sort('-jaccard')">Jaccard Score</a>
                         <i ng-if="parameter === '-jaccard'" class="fa fa-caret-down" aria-hidden="true"></i>
+                        <span class="pull-right">
+                            {{ assigneePosition.jaccard + 1 }}/{{bestUsers.length}}
+                        </span>
+
                     </th>
                     <th class="col-lg-3 col-md-3">
                         <a href="" ng-click="sort('-ssaZScore')">SSA Z Score</a>
                         <i ng-if="parameter === '-ssaZScore'" class="fa fa-caret-down" aria-hidden="true"></i>
+                        <span class="pull-right">
+                            {{ assigneePosition.ssaZ + 1}}/{{bestUsers.length}}
+                        </span>
                     </th>
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="item in bestUsers | orderBy: [parameter, 'username']" ng-class="{success: checkAssignee(item.assignee, $index)}">
+                <tr ng-repeat="item in bestUsers | orderBy: [parameter, 'username']" ng-class="{success: item.assignee}">
                     <td>
                         {{ $index + 1 }}
                     </td>

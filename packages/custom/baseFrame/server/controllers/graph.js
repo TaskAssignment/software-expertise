@@ -324,19 +324,21 @@ module.exports = function (BaseFrame){
                         return element.assignee;
                     }
 
+                    var position = {};
+
                     similarities.sort(sortCosine);
-                    var a = similarities.findIndex(findAssignee);
-                    console.log(a);
+                    position.cosine = similarities.findIndex(findAssignee);
 
                     similarities.sort(sortJaccard);
-                    a = similarities.findIndex(findAssignee);
-                    console.log(a);
+                    position.jaccard = similarities.findIndex(findAssignee);
 
                     similarities.sort(sortSsaZ);
-                    a = similarities.findIndex(findAssignee);
-                    console.log(a);
+                    position.ssaZ = similarities.findIndex(findAssignee);
 
-                    res.json({similarities: similarities});
+                    res.json({
+                        similarities: similarities,
+                        assigneePosition: position
+                    });
                 });
 
             }
