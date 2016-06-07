@@ -142,7 +142,6 @@ module.exports = function (BaseFrame){
         return numerator/denominator;
     }
 
-    //TODO: Change this!!! Add real formula
     function ssaZSimilarity(user, issueTags){
         var _ = require('lodash');
 
@@ -253,6 +252,7 @@ module.exports = function (BaseFrame){
 
                 if(params.assignee == user.username){
                     user.assignee = true;
+                    assignee = user;
                 } else {
                     user.assignee = false;
                 }
@@ -295,8 +295,50 @@ module.exports = function (BaseFrame){
                         mergeTags(params, mergeCallback, callbackParams);
                     }
 
+                    function sort(value1, value2, username1, username2){
+                        if(value1 == value2){
+                            if(username1 <  username2)
+                                return -1;
+                            else{
+                                return 1;
+                            }
+                        }
+                        //Desc order!
+                        return value2 - value1;
+                    }
+
+                    //Sort jaccard desc order.
+                    var sortJaccard = function (a, b){
+                        return sort(a.jaccard, b.jaccard, a.username.toLowerCase(), b.username.toLowerCase());
+                    }
+                    //Sort cosine desc order.
+                    var sortCosine = function (a, b){
+                        return sort(a.cosine, b.cosine, a.username.toLowerCase(), b.username.toLowerCase());
+                    }
+                    //Sort ssaZ desc order.
+                    var sortSsaZ = function (a, b){
+                        return sort(a.ssaZScore, b.ssaZScore, a.username.toLowerCase(), b.username.toLowerCase());
+                    }
+
+                    var findAssignee = function (element, index, array){
+                        return element.assignee;
+                    }
+
+                    similarities.sort(sortCosine);
+                    var a = similarities.findIndex(findAssignee);
+                    console.log(a);
+
+                    similarities.sort(sortJaccard);
+                    a = similarities.findIndex(findAssignee);
+                    console.log(a);
+
+                    similarities.sort(sortSsaZ);
+                    a = similarities.findIndex(findAssignee);
+                    console.log(a);
+
                     res.json({similarities: similarities});
                 });
+
             }
 
             findOneModel(Issue, req.params.issueId, issueCallback, {}, 'tags projectId assigneeId');
