@@ -5,6 +5,8 @@ var Issue = mongoose.model('Issue');
 var CoOccurrence = mongoose.model('CoOccurrence');
 var Developer = mongoose.model('Developer');
 
+var _ = require('lodash');
+
 /** This will provide the data for the graph **/
 
 module.exports = function (BaseFrame){
@@ -107,7 +109,6 @@ module.exports = function (BaseFrame){
                 var node = JSON.parse(node);
             }
 
-
             num += (node.issueCount * node.userCount) || 0;
             sum_bug += (node.issueCount * node.issueCount) || 0;
             sum_dev += (node.userCount * node.userCount) || 0;
@@ -156,8 +157,6 @@ module.exports = function (BaseFrame){
     }
 
     function ssaZSimilarity(user, issueTags){
-        var _ = require('lodash');
-
         var aScore = 0;
         var qScore = 0;
 
@@ -361,141 +360,113 @@ module.exports = function (BaseFrame){
         },
 
         findMatchAverage: function (req, res) {
-            //
-            // var similarities = [];
-            // var positions = [];
-            //
-            // var mergeCallback = function (params){
-            //     var user = {};
-            //
-            //     user.username = params.user.id;
-            //     user.jaccard = jaccardSimilarity(params.tags);
-            //     user.cosine = cosineSimilarity(params.tags);
-            //     user.ssaZScore = ssaZSimilarity(params.user, params.issueTags);
-            //
-            //     if(params.assignee == user.username){
-            //         user.assignee = true;
-            //     } else {
-            //         user.assignee = false;
-            //     }
-            //
-            //     similarities.push(user);
-            // }
-            //
+            var averages = {
+                jaccard: 0,
+                cosine: 0,
+                ssaZScore: 0
+            };
 
-            //
-            // var tag_array = params.Issue.tags.map(function (tag){
-            //     return tag._id;
-            // })
-            //
-            // Developer.find(filter, 'soProfile', {lean: true}, function (err, users){
+            var mergeCallback = function(params){
+                params.user.cosine = cosineSimilarity(params.tags);
+                params.user.jaccard = jaccardSimilarity(params.tags);
+            }
 
-            //
-            //         mergeTags(params, mergeCallback, callbackParams);
-            //     }
-            // });
-
-            var positions = [];
-            var devCallback = function(params){
-                console.log(params.issues.length);
-                console.log(params.Developer.length);
-                for(var issue of params.issues){
+            var issuesCallback = function(params){
+                for(var issue of params.Issue){
+                    var similarities = [];
+                    var tag_array = issue.tags.map(function (tag){
+                        return tag._id;
+                    });
                     for(var user of params.Developer){
-                        var callbackParams = {
-                            user: { id: user._id },
-                            assignee: issue.assigneeId
-                            // issueTags: tag_array
-                        };
+                        mergeTags({Issue: {tags: issue.tags}, Developer: {tags: user.soProfile.tags}}, mergeCallback, {user: user});
 
-                        if(user.soProfile){
-                            callbackParams.Developer = {tags: user.soProfile.tags};
-                            callbackParams.user.questions = user.soProfile.questions;
-                            callbackParams.user.answers = user.soProfile.answers;
+                        user.ssaZScore = ssaZSimilarity(user.soProfile || {answers: [], questions: []}, tag_array);
+
+                        if(issue.assigneeId == user._id){
+                            user.assignee = true;
                         } else {
-                            callbackParams.Developer = {tags: []};
+                            user.assignee = false;
                         }
-                        positions.push(1);
+
+                        similarities.push(user);
                     }
+
+                    function sort(value1, value2, username1, username2){
+                        if(value1 == value2){
+                            if(username1 <  username2){
+                                return -1;
+                            }else{
+                                return 1;
+                            }
+                        }
+                        //Desc order!
+                        return value2 - value1;
+                    }
+
+                    //Sort jaccard desc order.
+                    var sortJaccard = function (a, b){
+                        return sort(a.jaccard, b.jaccard, a._id.toLowerCase(), b._id.toLowerCase());
+                    }
+
+                    //Sort cosine desc order.
+                    var sortCosine = function (a, b){
+                        return sort(a.cosine, b.cosine, a._id.toLowerCase(), b._id.toLowerCase());
+                    }
+
+                    // Sort ssaZ desc order.
+                    var sortSsaZ = function (a, b){
+                        return sort(a.ssaZScore, b.ssaZScore, a._id.toLowerCase(), b._id.toLowerCase());
+                    }
+
+                    var findAssignee = function (element, index, array){
+                        return element.assignee;
+                    }
+
+                    similarities.sort(sortCosine);
+                    averages.cosine += similarities.findIndex(findAssignee);
+
+                    similarities.sort(sortJaccard);
+                    averages.jaccard += similarities.findIndex(findAssignee);
+
+                    similarities.sort(sortSsaZ);
+                    averages.ssaZScore += similarities.findIndex(findAssignee);
                 }
-                console.log(positions.length);
+
+                averages.jaccard /= params.Issue.length;
+                averages.cosine /= params.Issue.length;
+                averages.ssaZScore /= params.Issue.length;
+
+                console.log(averages);
+                res.send(averages);
             }
 
 
-            var issuesCallback = function(params){
-                var filter = {
-                    $or: [
-                        {
-                            'ghProfile.repositories': req.params.projectId,
-                            soProfile: { $exists: true }
-                        },{
-                            _id: params.Issue.assigneeId
-                        }
-                    ]
-                };
-
+            var devCallback = function(params){
                 var callbackParams = {
-                    issues: params.Issue
+                    Developer: params.Developer
                 };
 
-                findModel(Developer, filter, devCallback, callbackParams, 'soProfile');
+                var dev_ids = params.Developer.map(function (dev){
+                    return dev._id;
+                });
+
+                var filter = {
+                    projectId: req.params.projectId,
+                    pull_request: false,
+                    parsed: true,
+                    assigneeId: { $in: dev_ids }
+                };
+
+                findModel(Issue, filter, issuesCallback, callbackParams, 'tags assigneeId');
             }
 
             var filter = {
-                projectId: req.params.projectId,
-                pull_request: false,
-                parsed: true,
-                assigneeId: {$exists: true}
+                'ghProfile.repositories': req.params.projectId,
+                soProfile: { $exists: true }
             };
 
-            findModel(Issue, filter, issuesCallback, {}, 'tags assigneeId');
-            res.send({});
-            // var issueCallback = function (params){
-            //
-            //
-            //         function sort(value1, value2, username1, username2){
-            //             if(value1 == value2){
-            //                 if(username1 <  username2)
-            //                     return -1;
-            //                 else{
-            //                     return 1;
-            //                 }
-            //             }
-            //             //Desc order!
-            //             return value2 - value1;
-            //         }
-            //
-            //         //Sort jaccard desc order.
-            //         var sortJaccard = function (a, b){
-            //             return sort(a.jaccard, b.jaccard, a.username.toLowerCase(), b.username.toLowerCase());
-            //         }
-            //         //Sort cosine desc order.
-            //         var sortCosine = function (a, b){
-            //             return sort(a.cosine, b.cosine, a.username.toLowerCase(), b.username.toLowerCase());
-            //         }
-            //         //Sort ssaZ desc order.
-            //         var sortSsaZ = function (a, b){
-            //             return sort(a.ssaZScore, b.ssaZScore, a.username.toLowerCase(), b.username.toLowerCase());
-            //         }
-            //
-            //         var findAssignee = function (element, index, array){
-            //             return element.assignee;
-            //         }
-            //
-            //         var position = {};
-            //
-            //         similarities.sort(sortCosine);
-            //         position.cosine = similarities.findIndex(findAssignee);
-            //
-            //         similarities.sort(sortJaccard);
-            //         position.jaccard = similarities.findIndex(findAssignee);
-            //
-            //         similarities.sort(sortSsaZ);
-            //         position.ssaZ = similarities.findIndex(findAssignee);
-            //
-            //         positions.push(position);
-            //
-            // }
 
+            findModel(Developer, filter, devCallback, {}, 'soProfile');
         }
     }
 }
