@@ -83,6 +83,19 @@ module.exports = function (BaseFrame){
         });
     }
 
+    function findModel(Model, filter, callback, callbackParams = {}, selectItems = 'tags'){
+        Model.find(filter, selectItems, {lean: true}, function (err, models){
+            if(err){
+                console.log(err);
+                if(!res.headersSent){
+                    res.sendStatus(500);
+                }
+            }
+            callbackParams[Model.modelName] = models;
+            callback(callbackParams);
+        });
+    }
+
     function cosineSimilarity(nodesJson){
         var num = 0;
         var sum_bug = 0;
@@ -348,34 +361,71 @@ module.exports = function (BaseFrame){
         },
 
         findMatchAverage: function (req, res) {
+            //
+            // var similarities = [];
+            // var positions = [];
+            //
+            // var mergeCallback = function (params){
+            //     var user = {};
+            //
+            //     user.username = params.user.id;
+            //     user.jaccard = jaccardSimilarity(params.tags);
+            //     user.cosine = cosineSimilarity(params.tags);
+            //     user.ssaZScore = ssaZSimilarity(params.user, params.issueTags);
+            //
+            //     if(params.assignee == user.username){
+            //         user.assignee = true;
+            //     } else {
+            //         user.assignee = false;
+            //     }
+            //
+            //     similarities.push(user);
+            // }
+            //
 
-            var similarities = [];
+            //
+            // var tag_array = params.Issue.tags.map(function (tag){
+            //     return tag._id;
+            // })
+            //
+            // Developer.find(filter, 'soProfile', {lean: true}, function (err, users){
+
+            //
+            //         mergeTags(params, mergeCallback, callbackParams);
+            //     }
+            // });
+
             var positions = [];
-            var assignee = undefined;
+            var devCallback = function(params){
+                console.log(params.issues.length);
+                console.log(params.Developer.length);
+                for(var issue of params.issues){
+                    for(var user of params.Developer){
+                        var callbackParams = {
+                            user: { id: user._id },
+                            assignee: issue.assigneeId
+                            // issueTags: tag_array
+                        };
 
-            var mergeCallback = function (params){
-                var user = {};
-
-                user.username = params.user.id;
-                user.jaccard = jaccardSimilarity(params.tags);
-                user.cosine = cosineSimilarity(params.tags);
-                user.ssaZScore = ssaZSimilarity(params.user, params.issueTags);
-
-                if(params.assignee == user.username){
-                    user.assignee = true;
-                    assignee = user;
-                } else {
-                    user.assignee = false;
+                        if(user.soProfile){
+                            callbackParams.Developer = {tags: user.soProfile.tags};
+                            callbackParams.user.questions = user.soProfile.questions;
+                            callbackParams.user.answers = user.soProfile.answers;
+                        } else {
+                            callbackParams.Developer = {tags: []};
+                        }
+                        positions.push(1);
+                    }
                 }
-
-                similarities.push(user);
+                console.log(positions.length);
             }
 
-            var issueCallback = function (params){
+
+            var issuesCallback = function(params){
                 var filter = {
                     $or: [
                         {
-                            'ghProfile.repositories': params.Issue.projectId,
+                            'ghProfile.repositories': req.params.projectId,
                             soProfile: { $exists: true }
                         },{
                             _id: params.Issue.assigneeId
@@ -383,102 +433,69 @@ module.exports = function (BaseFrame){
                     ]
                 };
 
-                var tag_array = params.Issue.tags.map(function (tag){
-                    return tag._id;
-                })
+                var callbackParams = {
+                    issues: params.Issue
+                };
 
-                Developer.find(filter, 'soProfile', {lean: true}, function (err, users){
-                    for(var user of users){
-                        var callbackParams = {
-                            user: { id: user._id },
-                            assignee: params.Issue.assigneeId,
-                            issueTags: tag_array
-                        };
-
-                        if(user.soProfile){
-                            params.Developer = {tags: user.soProfile.tags};
-                            callbackParams.user.questions = user.soProfile.questions;
-                            callbackParams.user.answers = user.soProfile.answers;
-                        } else {
-                            params.Developer = {tags: []};
-                        }
-
-                        mergeTags(params, mergeCallback, callbackParams);
-                    }
-
-                    function sort(value1, value2, username1, username2){
-                        if(value1 == value2){
-                            if(username1 <  username2)
-                                return -1;
-                            else{
-                                return 1;
-                            }
-                        }
-                        //Desc order!
-                        return value2 - value1;
-                    }
-
-                    //Sort jaccard desc order.
-                    var sortJaccard = function (a, b){
-                        return sort(a.jaccard, b.jaccard, a.username.toLowerCase(), b.username.toLowerCase());
-                    }
-                    //Sort cosine desc order.
-                    var sortCosine = function (a, b){
-                        return sort(a.cosine, b.cosine, a.username.toLowerCase(), b.username.toLowerCase());
-                    }
-                    //Sort ssaZ desc order.
-                    var sortSsaZ = function (a, b){
-                        return sort(a.ssaZScore, b.ssaZScore, a.username.toLowerCase(), b.username.toLowerCase());
-                    }
-
-                    var findAssignee = function (element, index, array){
-                        return element.assignee;
-                    }
-
-                    var position = {};
-
-                    similarities.sort(sortCosine);
-                    position.cosine = similarities.findIndex(findAssignee);
-
-                    similarities.sort(sortJaccard);
-                    position.jaccard = similarities.findIndex(findAssignee);
-
-                    similarities.sort(sortSsaZ);
-                    position.ssaZ = similarities.findIndex(findAssignee);
-
-                    positions.push(position);
-                });
-
+                findModel(Developer, filter, devCallback, callbackParams, 'soProfile');
             }
 
             var filter = {
                 projectId: req.params.projectId,
                 pull_request: false,
-                parsed: true
+                parsed: true,
+                assigneeId: {$exists: true}
             };
 
-            var issuesCallback = function(issues){
-                for(var issue of issues){
-                    var callbackParams = {};
-                    callbackParams.Issue = issue;
-                    issueCallback(callbackParams);
-                }
-                console.log(issues.length);
-                console.log(positions);
-            }
+            findModel(Issue, filter, issuesCallback, {}, 'tags assigneeId');
+            res.send({});
+            // var issueCallback = function (params){
+            //
+            //
+            //         function sort(value1, value2, username1, username2){
+            //             if(value1 == value2){
+            //                 if(username1 <  username2)
+            //                     return -1;
+            //                 else{
+            //                     return 1;
+            //                 }
+            //             }
+            //             //Desc order!
+            //             return value2 - value1;
+            //         }
+            //
+            //         //Sort jaccard desc order.
+            //         var sortJaccard = function (a, b){
+            //             return sort(a.jaccard, b.jaccard, a.username.toLowerCase(), b.username.toLowerCase());
+            //         }
+            //         //Sort cosine desc order.
+            //         var sortCosine = function (a, b){
+            //             return sort(a.cosine, b.cosine, a.username.toLowerCase(), b.username.toLowerCase());
+            //         }
+            //         //Sort ssaZ desc order.
+            //         var sortSsaZ = function (a, b){
+            //             return sort(a.ssaZScore, b.ssaZScore, a.username.toLowerCase(), b.username.toLowerCase());
+            //         }
+            //
+            //         var findAssignee = function (element, index, array){
+            //             return element.assignee;
+            //         }
+            //
+            //         var position = {};
+            //
+            //         similarities.sort(sortCosine);
+            //         position.cosine = similarities.findIndex(findAssignee);
+            //
+            //         similarities.sort(sortJaccard);
+            //         position.jaccard = similarities.findIndex(findAssignee);
+            //
+            //         similarities.sort(sortSsaZ);
+            //         position.ssaZ = similarities.findIndex(findAssignee);
+            //
+            //         positions.push(position);
+            //
+            // }
 
-            Issue.find(filter, 'tags', {lean: true}, function (err, issues){
-                if(err){
-                    console.log(err);
-                    if(!res.headersSent){
-                        res.sendStatus(500);
-                    }
-                }
-
-                issuesCallback(issues);
-
-                res.json({ averages: {} });
-            });
         }
     }
 }
