@@ -27,6 +27,17 @@ var controllerCallback = function ($scope, $resource) {
         }
     }
 
+    $scope.calculateMatchAverages = function () {
+        showLoadingScreen();
+        var MatchAverage = $resource('api/baseFrame/:projectId/calculate/matches/averages');
+
+        MatchAverage.get({projectId: '8514'}).$promise.then(function (matches){
+            // $scope.bestUsers = matches.similarities;
+            // $scope.assigneePosition = matches.assigneePosition;
+            hideLoadingScreen();
+        });
+    }
+
     $scope.parameter = '-cosine';
 
     $scope.sort = function(item){

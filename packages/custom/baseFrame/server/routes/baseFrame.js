@@ -68,4 +68,6 @@ module.exports = function (BaseFrame, app, database) {
         .get(graph.calculateSimilarity);
     app.route(base + 'find/:issueId/matches')
         .get(graph.findMatches);
+    app.route(base + ':projectId/calculate/matches/averages')
+        .get(graph.findMatchAverage);
 };
