@@ -2,7 +2,7 @@
     <a href="" ng-click="calculateMatchAverages(selectedRepo._id)"
         class="btn btn-default" ng-if="averages.project !== selectedRepo._id">Averages</a>
 
-    <div class="col-md-11" ng-if="averages.project == selectedRepo._id">
+    <div class="col-md-11" ng-if="selectedRepo && averages.project == selectedRepo._id">
         <p>In this project, the assignee is, in average, on position {{ averages.cosine }} using cosine; on {{ averages.jaccard }} using jaccard; and on {{ averages.ssaZScore }} using ssaZScore.</p>
         <p>The average for MRR is {{ averages.MrrCosine }} for cosine, {{ averages.MrrJaccard }} for jaccard and {{ averages.MrrSsaZ }} for ssaZScore.</p>
     </div>
