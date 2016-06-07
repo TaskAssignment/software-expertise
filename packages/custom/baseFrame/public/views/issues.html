@@ -1,4 +1,4 @@
-<div class="col-lg-6 col-md-6">
+<div class="col-lg-12 col-md-12">
     <h3>Issues: </h3>
 
     <!-- Showing only 500 issues for now. But all of them are saved! -->
@@ -8,17 +8,4 @@
             <p>{{ issue.title }}</p>
         </button>
     </div>
-
-    <a class="btn btn-default" ng-if="selectedRepo.emptyissues" ng-click=populateRepoResources('issues')> Get All Issues</a>
-    <a class="btn btn-default" ng-click=populateRepoResources('issues')> Get New Issues</a>
-
-    <!-- TODO: Add pagination here. It takes too long to load all the issues!!!
-    <nav>
-        <ul class="pager">
-            <li><a ng-click="populateRepoResources('issues', $scope.lastissues, '$lt')">Previous</a></li>
-            <li><a ng-click="populateRepoResources('issues', $scope.lastissues)">Next</a></li>
-        </ul>
-    </nav>
-    -->
-
 </div>

@@ -24,17 +24,27 @@ var controllerCallback = function ($scope, $resource) {
                 $scope.assignee = matches.assignee;
                 hideLoadingScreen();
             });
+            $scope.selectedUsers = [];
         }
     }
 
-    $scope.checkAssignee = function(isAssignee, index){
-        if(isAssignee){
-            $scope.assigneePosition = index + 1;
-        }
-        return isAssignee;
-    }
     $scope.parameter = '-cosine';
 
+    $scope.selectedUsers = [];
+    $scope.selectUser = function (user){
+        user.selected = !user.selected;
+        if(user.selected){
+            $scope.selectedUsers.push(user);
+        } else {
+            var index = $scope.selectedUsers.indexOf(user);
+            $scope.selectedUsers.splice(index, 1);
+        }
+        console.log($scope.selectedUsers);
+    }
+
+    $scope.compare = function (){
+        $('#myModal').modal('show');
+    }
     $scope.sort = function(item){
         $scope.parameter = item;
     }

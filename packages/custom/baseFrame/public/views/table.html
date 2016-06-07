@@ -6,9 +6,11 @@
         <table class="table table-bordered">
             <thead>
                 <tr>
+                    <th class="col-lg-1 col-md-1">
+                        <a href="" ng-click="compare()" class="btn btn-default">Compare</a>
+                    </th>
                     <th class="col-lg-2 col-md-2">
-                        <a href="" ng-click="sort('username')">Username</a>
-                        <i ng-if="parameter === 'username'" class="fa fa-caret-down" aria-hidden="true"></i>
+                        Username
                     </th>
                     <th class="col-lg-3 col-md-3">
                         <a href="" ng-click="sort('-cosine')">Cosine Score</a>
@@ -25,23 +27,26 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="item in bestUsers | orderBy: [parameter, 'username']" ng-class="{success: checkAssignee(item.assignee, $index)}">
+                <tr ng-repeat="user in bestUsers | orderBy: [parameter, 'username']" ng-class="{success: user.assignee, 'bg-primary': user.selected}" ng-init="user.selected = false">
                     <td>
-                        <p ng-if="selectedUser._id == item.username">
-                            <strong> {{ item.username }} </strong>
+                        <input type="checkbox" ng-click="selectUser(user)">
+                    </td>
+                    <td>
+                        <p ng-if="selectedUser._id == user.username">
+                            <strong> {{ user.username }} </strong>
                         </p>
-                        <p ng-if="selectedUser._id != item.username">
-                            {{ item.username }}
+                        <p ng-if="selectedUser._id != user.username">
+                            {{ user.username }}
                         </p>
                     </td>
                     <td>
-                        {{ item.cosine.toFixed(2) }}
+                        {{ user.cosine.toFixed(2) }}
                     </td>
                     <td>
-                        {{ item.jaccard.toFixed(2) }}
+                        {{ user.jaccard.toFixed(2) }}
                     </td>
                     <td>
-                        {{ item.ssaZScore.toFixed(2) }}
+                        {{ user.ssaZScore.toFixed(2) }}
                     </td>
                 </tr>
             </tbody>
