@@ -27,16 +27,24 @@ var controllerCallback = function ($scope, $resource) {
         }
     }
 
-    $scope.calculateMatchAverages = function () {
-        showLoadingScreen();
-        var MatchAverage = $resource('api/baseFrame/:projectId/calculate/matches/averages');
+    $scope.calculateMatchAverages = function (projectId) {
+        if(projectId !== $scope.averages.project){
+            showLoadingScreen();
+            var MatchAverage = $resource('api/baseFrame/:projectId/calculate/matches/averages');
 
-        MatchAverage.get({projectId: '8514'}).$promise.then(function (matches){
-            // $scope.bestUsers = matches.similarities;
-            // $scope.assigneePosition = matches.assigneePosition;
-            hideLoadingScreen();
-        });
+            MatchAverage.get({projectId: projectId}).$promise.then(function (result){
+                $scope.averages = result.averages;
+                $scope.averages.project = projectId;
+                hideLoadingScreen();
+            });
+        } else {
+            alert("This project already has the averages");
+        }
     }
+
+    $scope.averages = {
+        project: undefined
+    };
 
     $scope.parameter = '-cosine';
 

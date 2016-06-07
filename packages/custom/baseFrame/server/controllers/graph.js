@@ -361,9 +361,12 @@ module.exports = function (BaseFrame){
 
         findMatchAverage: function (req, res) {
             var averages = {
-                jaccard: 0,
                 cosine: 0,
-                ssaZScore: 0
+                jaccard: 0,
+                ssaZScore: 0,
+                MrrCosine: 0,
+                MrrJaccard: 0,
+                MrrSsaZ: 0
             };
 
             var mergeCallback = function(params){
@@ -423,21 +426,31 @@ module.exports = function (BaseFrame){
                     }
 
                     similarities.sort(sortCosine);
-                    averages.cosine += similarities.findIndex(findAssignee);
+                    var position = similarities.findIndex(findAssignee) + 1
+                    averages.cosine += position;
+                    averages.MrrCosine += 1/position;
 
                     similarities.sort(sortJaccard);
-                    averages.jaccard += similarities.findIndex(findAssignee);
+                    position = similarities.findIndex(findAssignee) + 1
+                    averages.jaccard += position;
+                    averages.MrrJaccard += 1/position;
 
                     similarities.sort(sortSsaZ);
-                    averages.ssaZScore += similarities.findIndex(findAssignee);
+                    position = similarities.findIndex(findAssignee) + 1
+                    averages.ssaZScore += position;
+                    averages.MrrSsaZ += 1/position;
                 }
 
-                averages.jaccard /= params.Issue.length;
-                averages.cosine /= params.Issue.length;
-                averages.ssaZScore /= params.Issue.length;
+                for(var key in averages){
+                    averages[key] /= params.Issue.length;
+                    if(key.search('Mrr') >= 0){
+                        averages[key] = averages[key].toFixed(4);
+                    } else {
+                        averages[key] = Math.round(averages[key]);
+                    }
+                }
 
-                console.log(averages);
-                res.send(averages);
+                res.send({averages: averages});
             }
 
 
