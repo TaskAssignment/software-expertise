@@ -41,11 +41,18 @@ var controllerCallback = function ($scope, $resource, $uibModal) {
         }
     }
 
-    $scope.compare = function (value){
-        $scope.comparison = value;
-        if(!value){
-            $scope.selectedUsers = [];
-        }
+    $scope.compare = function (){
+        var modalInstance = $uibModal.open({
+            animation: true,
+            templateUrl: 'compare-table',
+            controller: 'ModalController',
+            size: 'lg',
+            resolve: {
+                users: function (){
+                    return $scope.selectedUsers;
+                }
+            }
+        });
     }
 
     $scope.sort = function(item){
@@ -54,6 +61,23 @@ var controllerCallback = function ($scope, $resource, $uibModal) {
 
     $scope.$on('findMatches', findMatches);
 }
+
+// Please note that $uibModalInstance represents a modal window (instance) dependency.
+// It is not the same as the $uibModal service used above.
+
+angular.module('mean.baseFrame')
+.controller('ModalController', function ($scope, $uibModalInstance, users) {
+    $scope.users = users;
+
+    $scope.ok = function () {
+        $uibModalInstance.close();
+    };
+
+    $scope.parameter = '-cosine';
+    $scope.sort = function(item){
+        $scope.parameter = item;
+    }
+});
 
 var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('TableController', controllerCallback);

@@ -3,7 +3,7 @@
     <hr>
 
     <div class="scrollable" ng-if="bestUsers">
-        <table class="table table-bordered" ng-if="!comparison">
+        <table class="table table-bordered">
             <thead>
                 <tr>
                     <th class="col-lg-1 col-md-1">
@@ -53,55 +53,62 @@
                 </tr>
             </tbody>
         </table>
-
-        <div ng-if="comparison">
-            <p>
-                Comparasion Table.
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close" ng-click="compare(false)"><span aria-hidden="true">&times;</span></button>
-                <!-- <a href="" ng-click="compare(false)" class="btn btn-default">x</a> -->
-            </p>
-
-            <table class="table table-bordered" >
-                <thead>
-                    <tr>
-                        <th class="col-lg-2 col-md-2">
-                            Username
-                        </th>
-                        <th class="col-lg-3 col-md-3">
-                            <a href="" ng-click="sort('-cosine')">Cosine Score</a>
-                            <i ng-if="parameter === '-cosine'" class="fa fa-caret-down" aria-hidden="true"></i>
-                        </th>
-                        <th class="col-lg-3 col-md-3">
-                            <a href="" ng-click="sort('-jaccard')">Jaccard Score</a>
-                            <i ng-if="parameter === '-jaccard'" class="fa fa-caret-down" aria-hidden="true"></i>
-                        </th>
-                        <th class="col-lg-3 col-md-3">
-                            <a href="" ng-click="sort('-ssaZScore')">SSA Z Score</a>
-                            <i ng-if="parameter === '-ssaZScore'" class="fa fa-caret-down" aria-hidden="true"></i>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr ng-repeat="user in selectedUsers | orderBy: [parameter, 'username']">
-                        <td>
-                            {{ user.username }}
-                        </td>
-                        <td>
-                            {{ user.cosine.toFixed(2) }}
-                        </td>
-                        <td>
-                            {{ user.jaccard.toFixed(2) }}
-                        </td>
-                        <td>
-                            {{ user.ssaZScore.toFixed(2) }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </div>
 
     <small>
         Green row = Assignee
     </small>
 </div>
+
+<script type="text/ng-template" id="compare-table">
+    <div class="modal-header">
+        <h3 class="modal-title">Comparison Table</h3>
+    </div>
+    <div class="modal-body">
+        <table class="table table-bordered" >
+            <thead>
+                <tr>
+                    <th class="col-lg-3 col-md-3">
+                        Username
+                    </th>
+                    <th class="col-lg-3 col-md-3">
+                        <a href="" ng-click="sort('-cosine')">Cosine Score</a>
+                        <i ng-if="parameter === '-cosine'" class="fa fa-caret-down" aria-hidden="true"></i>
+                    </th>
+                    <th class="col-lg-3 col-md-3">
+                        <a href="" ng-click="sort('-jaccard')">Jaccard Score</a>
+                        <i ng-if="parameter === '-jaccard'" class="fa fa-caret-down" aria-hidden="true"></i>
+                    </th>
+                    <th class="col-lg-3 col-md-3">
+                        <a href="" ng-click="sort('-ssaZScore')">SSA Z Score</a>
+                        <i ng-if="parameter === '-ssaZScore'" class="fa fa-caret-down" aria-hidden="true"></i>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="user in users | orderBy: [parameter, 'username']">
+                    <td>
+                        <p>{{ user.username }}</p>
+                        <small> Repos: </small>
+                        <small ng-repeat="repo in user.repos">
+                            {{repo}}
+                        </small>
+                    </td>
+                    <td>
+                        {{ user.cosine.toFixed(2) }}
+                    </td>
+                    <td>
+                        {{ user.jaccard.toFixed(2) }}
+                    </td>
+                    <td>
+                        {{ user.ssaZScore.toFixed(2) }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="modal-footer">
+        <button class="btn btn-primary" type="button" ng-click="ok()">OK</button>
+    </div>
+</script>
