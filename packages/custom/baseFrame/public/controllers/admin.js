@@ -21,7 +21,7 @@ function ($scope, $resource, $http){
     }
 
     $scope.export = function(option){
-        alert("File is being created!");
+        // alert("File is being created!");
         showLoadingScreen();
         $http.get('/api/baseFrame/export/' + option).then(function (response){
             console.log(response);
