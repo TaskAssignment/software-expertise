@@ -19,7 +19,7 @@ var TagSchema = new Schema({
 });
 
 TagSchema.plugin(mongooseToCsv, {
-    headers: 'Name  SoCount',
+    headers: 'Name SoCount',
     constraints: {
         'Name': '_id',
         'SoCount': 'soTotalCount'

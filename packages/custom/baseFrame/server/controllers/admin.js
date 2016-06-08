@@ -6,6 +6,8 @@ var mongoose = require('mongoose');
 var fs = require('fs');
 var csv = require('fast-csv');
 
+var teste = "Comeco";
+
 module.exports = function (BaseFrame){
     return {
         /** Populates general StackOverflow tags from saved file.
@@ -88,6 +90,7 @@ module.exports = function (BaseFrame){
         * @param res - Express response.
         **/
         populateStopWords: function(req, res){
+            console.log(teste);
 
             var readFileCallback = function (words){
                 var StopWord = mongoose.model('StopWord');
@@ -120,6 +123,7 @@ module.exports = function (BaseFrame){
         * @param res - Express respnse.
         **/
         exportSoTags: function (req, res){
+            var Tag = mongoose.model('Tag');
             writeFile('files/tags2.tsv', '_id soTotalCount',res, Tag);
         },
 
@@ -129,6 +133,7 @@ module.exports = function (BaseFrame){
         * @param res - Express respnse.
         **/
         exportCoOccurrences: function (req, res){
+            var CoOccurrence = mongoose.model('CoOccurrence');
             writeFile('files/CoOccurrences.tsv', '-_id source target occurrences', res, CoOccurrence);
         },
 
@@ -155,6 +160,7 @@ module.exports = function (BaseFrame){
 **/
 function writeFile(file, items,  res, MongooseModel){
     console.log("Writing File!");
+    console.log(new Date());
     var stream = fs.createWriteStream(file);
     MongooseModel.findAndStreamCsv({}, items, {lean: true})
     .pipe(stream)
@@ -166,13 +172,14 @@ function writeFile(file, items,  res, MongooseModel){
     })
     .on('finish', function (){
         console.log("Success!");
+        console.log(new Date());
         if(!res.headersSent){
             res.download(file);
         }
     });
 
     //This is to avoid timeout.
-    res.sendStatus(200);
+    res.sendStatus(202);
 }
 
 /** Helper function to read the files

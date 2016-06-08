@@ -21,8 +21,24 @@ function ($scope, $resource, $http){
     }
 
     $scope.export = function(option){
+        alert("File is being created!");
+        showLoadingScreen();
         $http.get('/api/baseFrame/export/' + option).then(function (response){
-            alert("File is being created!");
+            console.log(response);
+            var a = document.createElement("a");
+            document.body.appendChild(a);
+            a.style = "display: none";
+            var blob = new Blob([response.data], {type: "plain/text"}),
+            url = window.URL.createObjectURL(blob);
+            a.href = url;
+            a.download = option + '.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+            hideLoadingScreen();
+        }, function (response) {
+            hideLoadingScreen();
+            console.log(response);
         });
+
     }
 }]);
