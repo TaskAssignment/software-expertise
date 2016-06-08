@@ -29,8 +29,9 @@ var controllerCallback = function ($scope, $resource) {
     }
 
     $scope.parameter = '-cosine';
-
     $scope.selectedUsers = [];
+    $scope.comparison = false;
+
     $scope.selectUser = function (user){
         user.selected = !user.selected;
         if(user.selected){
@@ -39,11 +40,13 @@ var controllerCallback = function ($scope, $resource) {
             var index = $scope.selectedUsers.indexOf(user);
             $scope.selectedUsers.splice(index, 1);
         }
-        console.log($scope.selectedUsers);
     }
 
-    $scope.compare = function (){
-        $('#myModal').modal('show');
+    $scope.compare = function (value){
+        $scope.comparison = value;
+        if(!value){
+            $scope.selectedUsers = [];
+        }
     }
     $scope.sort = function(item){
         $scope.parameter = item;

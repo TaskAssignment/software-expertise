@@ -3,11 +3,11 @@
     <hr>
 
     <div class="scrollable">
-        <table class="table table-bordered">
+        <table class="table table-bordered" ng-if="!comparison">
             <thead>
                 <tr>
                     <th class="col-lg-1 col-md-1">
-                        <a href="" ng-click="compare()" class="btn btn-default">Compare</a>
+                        <a href="" ng-click="compare(true)" class="btn btn-default" ng-class="{disabled: selectedUsers.length < 2}">Compare</a>
                     </th>
                     <th class="col-lg-2 col-md-2">
                         Username
@@ -51,6 +51,48 @@
                 </tr>
             </tbody>
         </table>
+
+        <div ng-if="comparison">
+            <a href="" ng-click="compare(false)" class="btn btn-default">Close</a>
+
+            <table class="table table-bordered" >
+                <thead>
+                    <tr>
+                        <th class="col-lg-2 col-md-2">
+                            Username
+                        </th>
+                        <th class="col-lg-3 col-md-3">
+                            <a href="" ng-click="sort('-cosine')">Cosine Score</a>
+                            <i ng-if="parameter === '-cosine'" class="fa fa-caret-down" aria-hidden="true"></i>
+                        </th>
+                        <th class="col-lg-3 col-md-3">
+                            <a href="" ng-click="sort('-jaccard')">Jaccard Score</a>
+                            <i ng-if="parameter === '-jaccard'" class="fa fa-caret-down" aria-hidden="true"></i>
+                        </th>
+                        <th class="col-lg-3 col-md-3">
+                            <a href="" ng-click="sort('-ssaZScore')">SSA Z Score</a>
+                            <i ng-if="parameter === '-ssaZScore'" class="fa fa-caret-down" aria-hidden="true"></i>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="user in selectedUsers | orderBy: [parameter, 'username']">
+                        <td>
+                            {{ user.username }}
+                        </td>
+                        <td>
+                            {{ user.cosine.toFixed(2) }}
+                        </td>
+                        <td>
+                            {{ user.jaccard.toFixed(2) }}
+                        </td>
+                        <td>
+                            {{ user.ssaZScore.toFixed(2) }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <small>
