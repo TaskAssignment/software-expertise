@@ -8,9 +8,8 @@ function hideLoadingScreen(){
     angular.element('#loadingImage').css('display','none');
 }
 var baseFrame = angular.module('mean.baseFrame');
-baseFrame.controller('RepositoryController',
-['$scope', '$http', '$location', '$resource',
-function ($scope,  $http, $location, $resource) {
+
+var RepositoryController = function ($scope,  $http, $location, $resource) {
     $scope.repoSearch = {
         name: '',
         user: '',
@@ -224,4 +223,6 @@ function ($scope,  $http, $location, $resource) {
         }
         $scope.$broadcast('findMatches', args);
     }
-}]);
+}
+
+baseFrame.controller('RepositoryController', RepositoryController);

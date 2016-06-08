@@ -9,10 +9,7 @@ function hideLoadingScreen(){
     angular.element('#loadingImage').css('display','none');
 }
 
-var baseFrame = angular.module('mean.baseFrame');
-baseFrame.controller('AdminController', ['$scope', '$resource', '$http',
-function ($scope, $resource, $http){
-
+var AdminController = function ($scope, $resource, $http){
     $scope.populate = function(option){
         var Resource = $resource('/api/baseFrame/populate/' + option);
 
@@ -25,4 +22,7 @@ function ($scope, $resource, $http){
             alert("File is being created!");
         });
     }
-}]);
+}
+
+var baseFrame = angular.module('mean.baseFrame');
+baseFrame.controller('AdminController', AdminController);
