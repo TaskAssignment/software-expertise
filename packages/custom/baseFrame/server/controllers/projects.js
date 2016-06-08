@@ -146,6 +146,7 @@ module.exports = function (BaseFrame){
         **/
         populateContributors: function(req, res){
             var url = '/contributors';
+            var _ = require('lodash');
 
             var Developer = mongoose.model('Developer');
 
@@ -156,7 +157,10 @@ module.exports = function (BaseFrame){
                         return null;
                     }
                     if(dev){
+                        //TODO: Find a better solution to this.
                         dev.ghProfile.repositories.push(projectId);
+                        var repos = dev.ghProfile.repositories;
+                        dev.ghProfile.repositories = _.uniq(repos);
                     } else {
                         dev = new Developer({
                             _id: ghResult.login,

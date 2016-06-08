@@ -20,7 +20,7 @@ BaseFrame.register(function(app, database,system) {
 
   BaseFrame.aggregateAsset('css', 'theme.css');
 
-  BaseFrame.angularDependencies(['mean.system']);
+  BaseFrame.angularDependencies(['mean.system', 'ui.bootstrap']);
 
   return BaseFrame;
 });

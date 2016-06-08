@@ -2,7 +2,7 @@
     <h3> {{ selectedIssue.title }} </h3>
     <hr>
 
-    <div class="scrollable">
+    <div class="scrollable" ng-if="bestUsers">
         <table class="table table-bordered" ng-if="!comparison">
             <thead>
                 <tr>
@@ -32,28 +32,34 @@
                         <input type="checkbox" ng-click="selectUser(user)">
                     </td>
                     <td>
-                        <p ng-if="selectedUser._id == user.username">
-                            <strong> {{ user.username }} </strong>
-                        </p>
-                        <p ng-if="selectedUser._id != user.username">
-                            {{ user.username }}
-                        </p>
+                        <p>{{ user.username }}</p>
+                        <small> Repos: </small>
+                        <small ng-repeat="repo in user.repos">
+                            {{repo}}
+                        </small>
                     </td>
                     <td>
                         {{ user.cosine.toFixed(2) }}
+                        <p class="pull-right badge" ng-if="parameter === '-cosine'">{{ $index + 1 }}</p>
                     </td>
                     <td>
                         {{ user.jaccard.toFixed(2) }}
+                        <p class="pull-right badge" ng-if="parameter === '-jaccard'">{{ $index + 1 }}</p>
                     </td>
                     <td>
                         {{ user.ssaZScore.toFixed(2) }}
+                        <p class="pull-right badge" ng-if="parameter === '-ssaZScore'">{{ $index + 1 }}</p>
                     </td>
                 </tr>
             </tbody>
         </table>
 
         <div ng-if="comparison">
-            <a href="" ng-click="compare(false)" class="btn btn-default">Close</a>
+            <p>
+                Comparasion Table.
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close" ng-click="compare(false)"><span aria-hidden="true">&times;</span></button>
+                <!-- <a href="" ng-click="compare(false)" class="btn btn-default">x</a> -->
+            </p>
 
             <table class="table table-bordered" >
                 <thead>

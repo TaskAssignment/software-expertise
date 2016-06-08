@@ -142,7 +142,6 @@ module.exports = function (BaseFrame){
         return numerator/denominator;
     }
 
-    //TODO: Change this!!! Add real formula
     function ssaZSimilarity(user, issueTags){
         var _ = require('lodash');
 
@@ -241,7 +240,6 @@ module.exports = function (BaseFrame){
         findMatches: function (req, res) {
 
             var similarities = [];
-            var assignee = undefined;
 
             var mergeCallback = function (params){
                 var user = {};
@@ -250,6 +248,7 @@ module.exports = function (BaseFrame){
                 user.jaccard = jaccardSimilarity(params.tags);
                 user.cosine = cosineSimilarity(params.tags);
                 user.ssaZScore = ssaZSimilarity(params.user, params.issueTags);
+                user.repos = params.user.repos;
 
                 if(params.assignee == user.username){
                     user.assignee = true;
@@ -262,25 +261,20 @@ module.exports = function (BaseFrame){
 
             var issueCallback = function (params){
                 var filter = {
-                    $or: [
-                        {
-                            'ghProfile.repositories': params.Issue.projectId,
-                            soProfile: { $exists: true }
-                        },{
-                            _id: params.Issue.assigneeId
-                        }
-                    ]
+                    'ghProfile.repositories': params.Issue.projectId,
+                    soProfile: { $exists: true }
                 };
 
                 var tag_array = params.Issue.tags.map(function (tag){
                     return tag._id;
                 })
 
-                Developer.find(filter, 'soProfile', {lean: true}, function (err, users){
+                var selectItems = 'soProfile ghProfile.repositories'
+                Developer.find(filter, selectItems )
+                .populate('ghProfile.repositories').exec(function (err, users) {
                     for(var user of users){
                         var callbackParams = {
                             user: { id: user._id },
-                            assignee: params.Issue.assigneeId,
                             issueTags: tag_array
                         };
 
@@ -288,6 +282,10 @@ module.exports = function (BaseFrame){
                             params.Developer = {tags: user.soProfile.tags};
                             callbackParams.user.questions = user.soProfile.questions;
                             callbackParams.user.answers = user.soProfile.answers;
+                            callbackParams.user.repos = []
+                            for(var repo of user.ghProfile.repositories){
+                                callbackParams.user.repos.push(repo.name);
+                            }
                         } else {
                             params.Developer = {tags: []};
                         }

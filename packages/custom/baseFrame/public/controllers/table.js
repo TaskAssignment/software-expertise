@@ -10,18 +10,17 @@ function showLoadingScreen(){
 function hideLoadingScreen(){
     angular.element('#loadingImage').css('display','none');
 }
-var controllerCallback = function ($scope, $resource) {
+var controllerCallback = function ($scope, $resource, $uibModal) {
     $scope.assigneePosition = undefined
 
     var findMatches = function (event, params) {
         if(params.issueId){
-            $scope.issueId = params.issueId;
+            $scope.bestUsers = undefined;
             showLoadingScreen();
             var Match = $resource('api/baseFrame/find/:issueId/matches');
 
             Match.get(params).$promise.then(function (matches){
                 $scope.bestUsers = matches.similarities;
-                $scope.assignee = matches.assignee;
                 hideLoadingScreen();
             });
             $scope.selectedUsers = [];
@@ -48,6 +47,7 @@ var controllerCallback = function ($scope, $resource) {
             $scope.selectedUsers = [];
         }
     }
+
     $scope.sort = function(item){
         $scope.parameter = item;
     }
@@ -56,4 +56,4 @@ var controllerCallback = function ($scope, $resource) {
 }
 
 var baseFrame = angular.module('mean.baseFrame');
-baseFrame.controller('TableController', ['$scope', '$resource', controllerCallback]);
+baseFrame.controller('TableController', controllerCallback);

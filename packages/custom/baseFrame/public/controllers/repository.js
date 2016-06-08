@@ -17,25 +17,9 @@ function ($scope,  $http, $location, $resource) {
         description: '',
         readme: ''
     };
-    $scope.selectedTab = '.tabTable';
     findProject();
 
     // *************** SCOPE FUNCTIONS ***************//
-
-    //TODO: Change this to another controller
-    $scope.selectTab = function (tab){
-        angular.element('.tab').removeClass('active');
-        angular.element('.tab-pane').addClass('hidden');
-        $scope.selectedTab = tab;
-        if(tab == '.tabTable'){
-            sendToTable();
-        } else if(tab == '.tabGraph'){
-            sendToGraph();
-        }
-
-        angular.element(tab).addClass('active');
-        angular.element(tab).removeClass('hidden');
-    }
 
     $scope.fullPopulateRepo = function(){
         var items = [
@@ -141,32 +125,6 @@ function ($scope,  $http, $location, $resource) {
     }
 
     /**
-    * Displays the user portion of the expertise graph, based on StackOverflow
-    * user tags.
-    *
-    * @param username - github username
-    **/
-    $scope.selectUser = function (user){
-        $scope.selectedUser = user;
-
-        if(user.soProfile){
-            if(!user.soPopulated){
-                populateSOData(user.soProfile._id);
-            }
-        } else {
-            alert("User is not in StackOverflow.");
-        }
-        showLoadingScreen();
-        sendToGraph();
-        hideLoadingScreen();
-    }
-
-    $scope.deselect = function (resource){
-        $scope['selected' + resource] = undefined;
-        sendToGraph();
-    }
-
-    /**
     * display information based on issues
     *
     * @param issue - Dictionary with id, title and body from github issue
@@ -185,7 +143,6 @@ function ($scope,  $http, $location, $resource) {
             var Issue = $resource('/api/baseFrame/:projectId/makeIssuesTags');
             Issue.get(filter);
         }
-        sendToGraph();
         sendToTable();
     }
 
@@ -205,7 +162,6 @@ function ($scope,  $http, $location, $resource) {
         Resource.get(filter).$promise.then(function (){
             hideLoadingScreen();
             $scope.selectedUser.soPopulated = true;
-            sendToGraph();
         });
     }
 
@@ -220,26 +176,14 @@ function ($scope,  $http, $location, $resource) {
         $scope.selectedRepo = repo;
         $scope.search = false;
         $scope.repos = undefined;
-        $scope.users = [];
         $scope.issues = [];
-        $scope.selectedUser = undefined;
         $scope.selectedIssue = undefined;
-        $scope.soAssigned = true;
 
         $location.search('repoName', repo.name);
 
         showLoadingScreen();
         getRepoResources('issues');
-        getRepoResources('users');
         hideLoadingScreen();
-    }
-
-    $scope.getRepoUsersAndIssues = function (assigned){
-        $scope.soAssigned = assigned;
-        $scope.selectedUser = undefined;
-        $scope.selectedIssue = undefined;
-        getRepoResources('issues');
-        getRepoResources('users');
     }
 
     /**
@@ -253,7 +197,6 @@ function ($scope,  $http, $location, $resource) {
         var Resource = $resource('/api/baseFrame/:projectId/' + resource);
         var filter = {
             projectId: $scope.selectedRepo._id,
-            soAssigned: $scope.soAssigned
         };
         Resource.query(filter).$promise.then(function(resources){
             $scope.selectedRepo['empty' + resource] = false;
@@ -271,31 +214,14 @@ function ($scope,  $http, $location, $resource) {
                 getRepoInformation(project);
             });
         }
-        angular.element('svg').remove();
     }
 
     function sendToTable(){
         hideLoadingScreen();
-        if($scope.selectedTab == '.tabTable'){
-            var args = {};
-            if($scope.selectedIssue){
-                args.issueId = $scope.selectedIssue._id;
-            }
-            $scope.$broadcast('findMatches', args);
+        var args = {};
+        if($scope.selectedIssue){
+            args.issueId = $scope.selectedIssue._id;
         }
-    }
-
-    function sendToGraph(){
-        hideLoadingScreen();
-        if($scope.selectedTab == '.tabGraph'){
-            var ids = {};
-            if($scope.selectedIssue){
-                ids.issueId = $scope.selectedIssue._id;
-            }
-            if($scope.selectedUser){
-                ids.userId = $scope.selectedUser._id;
-            }
-            $scope.$broadcast('fetchGraphData', ids);
-        }
+        $scope.$broadcast('findMatches', args);
     }
 }]);
