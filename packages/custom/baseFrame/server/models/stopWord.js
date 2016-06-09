@@ -4,11 +4,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var StopWordSchema = new Schema({
-    _id: {
-        type: String,
-    }
-}, {
-    timestamps: true
+    _id: String
 });
 
 mongoose.model('StopWord', StopWordSchema);

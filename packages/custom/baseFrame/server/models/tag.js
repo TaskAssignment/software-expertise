@@ -3,7 +3,6 @@
 //dependencies
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-var mongooseToCsv = require('mongoose-to-csv');
 
 var TagSchema = new Schema({
     _id: {
@@ -11,19 +10,7 @@ var TagSchema = new Schema({
         required: true,
         unique: true
     },
-    soTotalCount: {
-        type: Number,
-    },
-}, {
-    timestamps: true
-});
-
-TagSchema.plugin(mongooseToCsv, {
-    headers: 'Name SoCount',
-    constraints: {
-        'Name': '_id',
-        'SoCount': 'soTotalCount'
-    }
+    soTotalCount: Number
 });
 
 mongoose.model('Tag', TagSchema);
