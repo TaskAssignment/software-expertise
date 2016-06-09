@@ -61,13 +61,32 @@ module.exports = function (BaseFrame){
 function writeFile(option){
     var MongooseModel = mongoose.model(option);
     var stream = fs.createWriteStream('files/' + option + 's.tsv');
-    MongooseModel.findAndStreamCsv()
-    .pipe(stream)
-    .on('error', function(error){
-        console.log(error);
-    })
-    .on('finish', function (){
-        console.log("Success!");
+
+    var dbStream = MongooseModel.find().lean().stream();
+
+    var options = {
+        delimiter: '\t',
+        headers: true
+    }
+
+    var csvStream = csv.createWriteStream(options);
+    csvStream.pipe(stream);
+
+    dbStream.on('data', function (model) {
+        if(option == 'CoOccurrence'){
+            delete model._id;
+        }
+
+        delete model.updatedAt;
+        delete model.createdAt;
+        delete model.__v;
+
+        csvStream.write(model);
+    }).on('error', function (err) {
+        console.log("========== AAAAHHHHHH")
+        console.log(err);
+    }).on('close', function (){
+        console.log("* Finished! *");
         fileReady[option] = true;
     });
 }
@@ -117,6 +136,8 @@ function writeDevs(){
         dev.email = dev.ghProfile.email;
 
         delete dev.ghProfile;
+        delete dev.createdAt;
+        delete dev.updatedAt;
         delete dev.soProfile;
         delete dev.__v;
 
@@ -126,9 +147,6 @@ function writeDevs(){
         console.log(err);
     }).on('close', function (){
         console.log("* Finished Developers! *");
-        devStream.end();
-        questionStream.end();
-        answerStream.end();
         fileReady.Developer = true;
     });
 }
@@ -153,7 +171,8 @@ function readFile(option){
             }
             var readable = fs.createReadStream(path, {encoding: 'utf8'});
 
-            console.log("** Reading file! **")
+            console.log("** Reading file! **");
+            var models = []
             csv.fromStream(readable, options)
             .on("data", function(model){
                 models.push(model)
