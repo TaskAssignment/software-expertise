@@ -1,18 +1,18 @@
 <section ng-controller="AdminController">
     <div class="row">
-        <a class="btn btn-default" ng-click="populate('tags')">
+        <a class="btn btn-default" ng-click="populate('Tag')">
         Populate SO Tags </a>
     </div>
     <div class="row">
-        <a class="btn btn-default" ng-click="populate('coOccurrences')">
+        <a class="btn btn-default" ng-click="populate('CoOccurrence')">
         Populate CoOccurrences </a>
     </div>
     <div class="row">
-        <a class="btn btn-default" ng-click="populate('developers')">
+        <a class="btn btn-default" ng-click="populate('Developer')">
         Populate Stack Overflow Users </a>
     </div>
     <div class="row">
-        <a class="btn btn-default" ng-click="populate('stopWords')">
+        <a class="btn btn-default" ng-click="populate('StopWord')">
         Populate Stop Words</a>
     </div>
     <div class="row">
@@ -28,6 +28,11 @@
     <div class="row">
         <a class="btn btn-default" ng-click="generate('Developer')">
         Export Developers</a>
+    </div>
+
+    <div class="row">
+        <a class="btn btn-default" ng-click="generate('StopWord')">
+        Export Stop Words</a>
     </div>
 
     {{ downloadStatus }}

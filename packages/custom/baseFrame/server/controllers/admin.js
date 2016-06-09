@@ -17,34 +17,24 @@ module.exports = function (BaseFrame){
     return {
         populate: function (req, res) {
             var option = req.query.resources;
-            switch (option) {
-                case 'tags':
-                    populateTags();
-                    break;
-                case 'coOccurrences':
-                    populateCoOccurrences();
-                    break;
-                case 'developers':
-                    populateDevelopers();
-                    break;
-                case 'stopWords':
-                    populateStopWords();
-                    break;
+
+            if(option == 'Developer'){
+                //I'll write the populate users again
+            } else {
+                readFile(option);
             }
             res.sendStatus(202);
         },
 
         generate: function (req, res) {
             var option = req.query.resource;
-            switch (option) {
-                case 'Tag':
-                case 'CoOccurrence':
-                    writeFile(option);
-                    break;
-                case 'Developer':
-                    writeDevs();
-                    break;
+
+            if(option == 'Developer'){
+                writeDevs();
+            } else {
+                writeFile(option);
             }
+
             res.sendStatus(202);
         },
 
@@ -63,95 +53,6 @@ module.exports = function (BaseFrame){
         }
     }
 }
-
-/** Populates general StackOverflow tags from saved file.
-**/
-function populateTags() {
-    var Tag = mongoose.model('Tag');
-
-    var readFileCallback = function (line){
-        var model = {};
-        model._id = line[1];
-        model.soTotalCount = line[2];
-
-        Tag.create(model, errorCallback);
-    }
-
-    readFile('files/tags.csv', readFileCallback);
-}
-
-/** Populates general StackOverflow coOccurrences from saved file.
-**/
-function populateCoOccurrences (){
-    var CoOccurrence = mongoose.model('CoOccurrence');
-
-    var readFileCallback = function (line){
-        var model = {};
-        model.source = line[0];
-        model.target = line[1];
-        model.occurrences = line[2];
-
-        CoOccurrence.create(model, errorCallback);
-    }
-
-    readFile('files/coOccurrences.csv', readFileCallback);
-}
-
-/** Populates StackOverflow users that have github accounts from saved file.
-**/
-function populateDevelopers(req, res) {
-    var Developer = mongoose.model('Developer');
-
-    var readFileCallback = function (line){
-
-        var options = {
-            upsert: true,
-            setDefaultsOnInsert: true
-        };
-
-        var update = {
-            soProfile: {
-                _id: line[0]
-            },
-            ghProfile: {
-                _id: line[1],
-                email: line[2]
-            }
-        };
-
-        Developer.findByIdAndUpdate(line[1], update, options,
-            errorCallback);
-    }
-    readFile('files/commonUsers.csv', readFileCallback);
-}
-
-/** Read file and populate StopWords.
-**/
-function populateStopWords() {
-    var readFileCallback = function (words){
-        var StopWord = mongoose.model('StopWord');
-        var stopwords = [];
-
-        for(var j in words){
-            var stopword = {}
-            stopword._id = words[j];
-
-            stopwords.push(stopword);
-        }
-
-        StopWord.create(stopwords, function(err){
-            if(err){
-                console.log(err.message);
-            }else{
-                console.log('Stop Words saved successfully!');
-            }
-        });
-    }
-
-    readFile('files/stopWords.csv', readFileCallback);
-}
-
-
 
 /** This is responsible for writing the file with the StackOverflow data.
 *
@@ -239,18 +140,37 @@ function writeDevs(){
 * @param callback - The callback to handle the read data.
 **/
 
-function readFile(path, callback){
-    //Using readStream to avoid memory explosion
-    var readable = fs.createReadStream(path, {encoding: 'utf8'});
+function readFile(option){
+    var MongooseModel = mongoose.model(option);
 
-    console.log("** Reading file! **")
-    csv.fromStream(readable, {ignoreEmpty: true})
-    .on("data", function(data){
-        callback(data);
-    })
-    .on("end", function(){
-        console.log("******************* DONE *******************");
-    });
+    var countCallback = function (err, count) {
+        if(count == 0) {
+            var path = 'files/' + option + 's.tsv';
+            var options = {
+                delimiter: '\t',
+                headers: true,
+                ignoreEmpty: true
+            }
+            var readable = fs.createReadStream(path, {encoding: 'utf8'});
+
+            console.log("** Reading file! **")
+            csv.fromStream(readable, options)
+            .on("data", function(model){
+                models.push(model)
+            }).on("end", function(){
+                MongooseModel.collection.insert(models, function (err) {
+                    if(err){
+                        console.log(err);
+                    } else {
+                        console.log(option + 's populated');
+                        console.log("***** DONE *****");
+                    }
+                })
+            });
+        }
+    }
+
+    MongooseModel.count().exec(countCallback);
 }
 
 /** This prints the error, if it exists
