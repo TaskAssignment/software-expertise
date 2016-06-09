@@ -134,9 +134,9 @@ function writeDevs(){
         dev.email = dev.ghProfile.email;
 
         delete dev.ghProfile;
+        delete dev.soProfile;
         delete dev.createdAt;
         delete dev.updatedAt;
-        delete dev.soProfile;
         delete dev.__v;
 
         devCsvStream.write(dev);
@@ -145,6 +145,9 @@ function writeDevs(){
         console.log(err);
     }).on('close', function (){
         console.log("* Finished Developers! *");
+        devCsvStream.end();
+        answerCsvStream.end();
+        questionCsvStream.end();
         fileReady.Developer = true;
     });
 }
