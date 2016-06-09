@@ -11,9 +11,9 @@ var QuestionSchema = new Schema({
     title: String,
     body: String,
     tags: [String],
-    score: Number
-}, {
-    timestamps: true
+    score: Number,
+    createdAt: Date,
+    updatedAt: Date
 });
 
 var AnswerSchema = new Schema({
@@ -22,9 +22,9 @@ var AnswerSchema = new Schema({
     questionId: String,
     tags: [String],
     favoriteCount: Number,
-    score: Number
-}, {
-    timestamps: true
+    score: Number,
+    createdAt: Date,
+    updatedAt: Date
 });
 
 var TagSchema = new Schema({

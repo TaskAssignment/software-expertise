@@ -1,34 +1,38 @@
 <section ng-controller="AdminController">
     <div class="row">
-        <a class="btn btn-default" ng-click="populate('SoTags')">
+        <a class="btn btn-default" ng-click="populate('tags')">
         Populate SO Tags </a>
     </div>
     <div class="row">
-        <a class="btn btn-default" ng-click="populate('CoOccurrences')">
+        <a class="btn btn-default" ng-click="populate('coOccurrences')">
         Populate CoOccurrences </a>
     </div>
     <div class="row">
-        <a class="btn btn-default" ng-click="populate('SoProfiles')">
+        <a class="btn btn-default" ng-click="populate('developers')">
         Populate Stack Overflow Users </a>
     </div>
     <div class="row">
-        <a class="btn btn-default" ng-click="populate('StopWords')">
+        <a class="btn btn-default" ng-click="populate('stopWords')">
         Populate Stop Words</a>
     </div>
     <div class="row">
-        <a class="btn btn-default" ng-click="export('SoTags')">
+        <a class="btn btn-default" ng-click="generate('Tag')">
         Export SoTags </a>
     </div>
 
     <div class="row">
-        <a class="btn btn-default" ng-click="export('CoOccurrences')">
+        <a class="btn btn-default" ng-click="generate('CoOccurrence')">
         Export Common Occurrences</a>
     </div>
 
     <div class="row">
-        <a class="btn btn-default" ng-click="export('SoProfiles')">
-        Export So Users</a>
+        <a class="btn btn-default" ng-click="generate('Developer')">
+        Export Developers</a>
     </div>
+
+    {{ downloadStatus }}
+    <i ng-if="downloadStatus && downloadStatus != 'Success'" class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+<span class="sr-only">Loading...</span>
 
 </section>
 

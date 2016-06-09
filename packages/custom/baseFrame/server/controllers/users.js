@@ -81,7 +81,7 @@ module.exports = function (BaseFrame){
         * @param res - Express response.
         **/
         populateAnswers: function (req, res){
-            var url = '/answers?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!bJjknYIYt0EOC*';
+            var url = '/answers?pagesize=100&order=desc&sort=activity&site=stackoverflow&filter=!)s1i5t90HOwF9alAsofL';
 
             var buildModels = function(items){
                 var answers = [];
@@ -90,9 +90,11 @@ module.exports = function (BaseFrame){
                     var question = {
                         _id: result.answer_id,
                         questionId: result.question_id,
-                        body: result.body_markdown,
+                        body: result.body,
                         score: result.score,
-                        tags: result.tags
+                        tags: result.tags,
+                        createdAt: result.creation_date,
+                        updatedAt: result.last_activity_date
                     };
                     answers.push(question);
                 }
@@ -124,9 +126,11 @@ module.exports = function (BaseFrame){
                     var question = {
                         _id: result.question_id,
                         title: result.title,
-                        body: result.body,
+                        body: result.body_markdown,
                         score: result.score,
-                        tags: result.tags
+                        tags: result.tags,
+                        createdAt: result.creation_date,
+                        updatedAt: result.last_activity_date
                     };
                     questions.push(question);
                 }
