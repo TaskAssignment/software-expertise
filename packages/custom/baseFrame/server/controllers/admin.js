@@ -7,8 +7,9 @@ var fs = require('fs');
 var csv = require('fast-csv');
 
 var fileReady = {
-    Tag: false,
-    CoOccurrence: false,
+    Tag: true,
+    CoOccurrence: true,
+    StopWord: true,
     Developer: false,
     Project: false
 }
@@ -23,6 +24,7 @@ module.exports = function (BaseFrame){
             } else {
                 readFile(option);
             }
+
             res.sendStatus(202);
         },
 
@@ -31,9 +33,9 @@ module.exports = function (BaseFrame){
 
             if(option == 'Developer'){
                 writeDevs();
-            } else {
-                writeFile(option);
             }
+
+            //I'm using the existing files, instead of checking the db, because this won't change for now!!
 
             res.sendStatus(202);
         },
@@ -76,10 +78,6 @@ function writeFile(option){
         if(option == 'CoOccurrence'){
             delete model._id;
         }
-
-        delete model.updatedAt;
-        delete model.createdAt;
-        delete model.__v;
 
         csvStream.write(model);
     }).on('error', function (err) {
@@ -153,9 +151,7 @@ function writeDevs(){
 
 /** Helper function to read the files
 *
-* @param path - The file address/name. The path given should be from the root
-  folder instead of from the baseFrame package!
-* @param callback - The callback to handle the read data.
+*  @param option - The Model that will be exported. The file will be the name of this model pluralized.
 **/
 
 function readFile(option){

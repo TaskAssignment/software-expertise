@@ -56,8 +56,6 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http){
         var delay = 1000;
         if(option == 'Developer'){
             $scope.downloadStatus += " This will generate muliple files!"
-        } else if (option == 'CoOccurrence') {
-            delay = 100000;
         }
 
         var check = $interval(function () {
