@@ -74,7 +74,7 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
                             <small> {{ downloadStatus.message }} </small>
                         </h3>
                     </div>
-                    <div class="row">
+                    <div class="row" ng-if="downloadStatus.linesRead > 0">
                         <h3 class="col-md-12 col-lg-12">
                             <i class="fa fa-spinner fa-pulse fa-fw"
                                 ng-if="!downloadStatus.fileGenerated"></i>
