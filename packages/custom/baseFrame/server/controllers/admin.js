@@ -55,6 +55,8 @@ var populated = {
 module.exports = function (BaseFrame){
     return {
         populate: function (req, res) {
+
+            var teste = require('../controllers/populator')(BaseFrame);
             var option = req.query.resources;
             readFile(option);
             res.status(NOT_READY).send(populated[option]);

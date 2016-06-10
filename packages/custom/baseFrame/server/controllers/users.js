@@ -93,8 +93,8 @@ module.exports = function (BaseFrame){
                         body: result.body,
                         score: result.score,
                         tags: result.tags,
-                        createdAt: result.creation_date,
-                        updatedAt: result.last_activity_date
+                        createdAt: result.creation_date * 1000,
+                        updatedAt: result.last_activity_date * 1000
                     };
                     answers.push(question);
                 }
@@ -129,8 +129,8 @@ module.exports = function (BaseFrame){
                         body: result.body_markdown,
                         score: result.score,
                         tags: result.tags,
-                        createdAt: result.creation_date,
-                        updatedAt: result.last_activity_date
+                        createdAt: result.creation_date * 1000,
+                        updatedAt: result.last_activity_date * 1000
                     };
                     questions.push(question);
                 }

@@ -7,8 +7,6 @@ var CoOccurrence = mongoose.model('CoOccurrence');
 var StopWord = mongoose.model('StopWord');
 var Issue = mongoose.model('Issue');
 
-var pullAll = require('lodash.pullall');
-
 module.exports = function (BaseFrame){
 
     function getIssues(stopWords, filter, res, project) {
@@ -138,7 +136,7 @@ module.exports = function (BaseFrame){
                 if(err) {
                     console.log(err.message);
                 } else {
-                    var stopWords = []
+                    var stopWords = [];
                     for(var index in words){
                         stopWords.push(words[index]._id);
                     }
