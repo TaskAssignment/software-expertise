@@ -65,6 +65,11 @@ module.exports = function (BaseFrame){
                         var commit = {
                             message: result.commit.message,
                         }
+                        if(result.commit.author){
+                            createdAt: result.commit.author.date
+                        }else if(result.commit.commiter){
+                            createdAt: result.commit.committer.date
+                        }
 
                         if(result.author){
                             commit.user = result.author.login;
@@ -250,6 +255,8 @@ module.exports = function (BaseFrame){
                         var comment = {
                             _id: result.id,
                             body: result.body,
+                            createdAt: result.created_at,
+                            updatedAt: result.updated_at,
                             user: result.user.login
                         }
 
@@ -290,6 +297,8 @@ module.exports = function (BaseFrame){
                     var comment = {
                         _id: result.id,
                         body: result.body,
+                        createdAt: result.created_at,
+                        updatedAt: result.updated_at,
                         user: result.user.login
                     }
 
