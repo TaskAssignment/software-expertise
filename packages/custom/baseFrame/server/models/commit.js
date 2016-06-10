@@ -6,9 +6,9 @@ var Schema = mongoose.Schema;
 var CommentSchema = new Schema({
     _id: String,
     body: String,
-    user: String
-}, {
-    timestamps: true
+    user: String,
+    createdAt: Date,
+    updatedAt: Date
 });
 
 var CommitSchema = new Schema({
@@ -19,9 +19,8 @@ var CommitSchema = new Schema({
         type: String,
         ref: 'Project',
     },
+    createdAt: Date,
     comments: [CommentSchema]
-}, {
-    timestamps: true
 });
 
 mongoose.model('Commit', CommitSchema);

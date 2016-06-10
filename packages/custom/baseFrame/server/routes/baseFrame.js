@@ -42,21 +42,14 @@ module.exports = function (BaseFrame, app, database) {
         .get(tags.makeIssuesTags);
 
     var admin = require(controllers + 'admin')(BaseFrame);
-    app.route(base + 'populate/SoTags')
-        .get(admin.populateSoTags);
-    app.route(base + 'populate/CoOccurrences')
-        .get(admin.populateCoOccurrences);
-    app.route(base + 'populate/SoProfiles')
-        .get(admin.populateSoProfiles);
-    app.route(base + 'export/SoTags')
-        .get(admin.exportSoTags);
-    app.route(base + 'export/CoOccurrences')
-        .get(admin.exportCoOccurrences);
-    app.route(base + 'export/SoProfiles')
-        .get(admin.exportSoProfiles);
-    app.route(base + 'populate/StopWords')
-        .get(admin.populateStopWords);
-
+    app.route(base + 'generate')
+        .get(admin.generate);
+    app.route(base + 'populate')
+        .get(admin.populate);
+    app.route(base + 'download')
+        .get(admin.download);
+    app.route(base + 'check')
+        .get(admin.check);
     /** My idea here is to be able to fetch data from different places.
     * The modes, for now, will be 'default' and 'default' to fetch data from our
     * database (populated from github/SO).
@@ -68,4 +61,6 @@ module.exports = function (BaseFrame, app, database) {
         .get(graph.calculateSimilarity);
     app.route(base + 'find/:issueId/matches')
         .get(graph.findMatches);
+    app.route(base + ':projectId/calculate/matches/averages')
+        .get(graph.findMatchAverage);
 };

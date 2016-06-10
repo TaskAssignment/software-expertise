@@ -5,6 +5,8 @@ var Issue = mongoose.model('Issue');
 var CoOccurrence = mongoose.model('CoOccurrence');
 var Developer = mongoose.model('Developer');
 
+var _ = require('lodash');
+
 /** This will provide the data for the graph **/
 
 module.exports = function (BaseFrame){
@@ -83,6 +85,19 @@ module.exports = function (BaseFrame){
         });
     }
 
+    function findModel(Model, filter, callback, callbackParams = {}, selectItems = 'tags'){
+        Model.find(filter, selectItems, {lean: true}, function (err, models){
+            if(err){
+                console.log(err);
+                if(!res.headersSent){
+                    res.sendStatus(500);
+                }
+            }
+            callbackParams[Model.modelName] = models;
+            callback(callbackParams);
+        });
+    }
+
     function cosineSimilarity(nodesJson){
         var num = 0;
         var sum_bug = 0;
@@ -93,7 +108,6 @@ module.exports = function (BaseFrame){
             if(typeof(node) === 'string'){
                 var node = JSON.parse(node);
             }
-
 
             num += (node.issueCount * node.userCount) || 0;
             sum_bug += (node.issueCount * node.issueCount) || 0;
@@ -143,8 +157,6 @@ module.exports = function (BaseFrame){
     }
 
     function ssaZSimilarity(user, issueTags){
-        var _ = require('lodash');
-
         var aScore = 0;
         var qScore = 0;
 
@@ -252,6 +264,7 @@ module.exports = function (BaseFrame){
 
                 if(params.assignee == user.username){
                     user.assignee = true;
+                    assignee = user;
                 } else {
                     user.assignee = false;
                 }
@@ -293,12 +306,179 @@ module.exports = function (BaseFrame){
                         mergeTags(params, mergeCallback, callbackParams);
                     }
 
-                    res.json({similarities: similarities});
+                    function sort(value1, value2, username1, username2){
+                        if(value1 == value2){
+                            if(username1 <  username2)
+                                return -1;
+                            else{
+                                return 1;
+                            }
+                        }
+                        //Desc order!
+                        return value2 - value1;
+                    }
+
+                    //Sort jaccard desc order.
+                    var sortJaccard = function (a, b){
+                        return sort(a.jaccard, b.jaccard, a.username.toLowerCase(), b.username.toLowerCase());
+                    }
+                    //Sort cosine desc order.
+                    var sortCosine = function (a, b){
+                        return sort(a.cosine, b.cosine, a.username.toLowerCase(), b.username.toLowerCase());
+                    }
+                    //Sort ssaZ desc order.
+                    var sortSsaZ = function (a, b){
+                        return sort(a.ssaZScore, b.ssaZScore, a.username.toLowerCase(), b.username.toLowerCase());
+                    }
+
+                    var findAssignee = function (element, index, array){
+                        return element.assignee;
+                    }
+
+                    var position = {};
+
+                    similarities.sort(sortCosine);
+                    position.cosine = similarities.findIndex(findAssignee);
+
+                    similarities.sort(sortJaccard);
+                    position.jaccard = similarities.findIndex(findAssignee);
+
+                    similarities.sort(sortSsaZ);
+                    position.ssaZ = similarities.findIndex(findAssignee);
+
+                    res.json({
+                        similarities: similarities,
+                        assigneePosition: position
+                    });
                 });
+
             }
 
             findOneModel(Issue, req.params.issueId, issueCallback, {}, 'tags projectId assigneeId');
 
+        },
+
+        findMatchAverage: function (req, res) {
+            var averages = {
+                cosine: 0,
+                jaccard: 0,
+                ssaZScore: 0,
+                MrrCosine: 0,
+                MrrJaccard: 0,
+                MrrSsaZ: 0
+            };
+
+            var mergeCallback = function(params){
+                params.user.cosine = cosineSimilarity(params.tags);
+                params.user.jaccard = jaccardSimilarity(params.tags);
+            }
+
+            var issuesCallback = function(params){
+                for(var issue of params.Issue){
+                    var similarities = [];
+                    var tag_array = issue.tags.map(function (tag){
+                        return tag._id;
+                    });
+                    for(var user of params.Developer){
+                        mergeTags({Issue: {tags: issue.tags}, Developer: {tags: user.soProfile.tags}}, mergeCallback, {user: user});
+
+                        user.ssaZScore = ssaZSimilarity(user.soProfile || {answers: [], questions: []}, tag_array);
+
+                        if(issue.assigneeId == user._id){
+                            user.assignee = true;
+                        } else {
+                            user.assignee = false;
+                        }
+
+                        similarities.push(user);
+                    }
+
+                    function sort(value1, value2, username1, username2){
+                        if(value1 == value2){
+                            if(username1 <  username2){
+                                return -1;
+                            }else{
+                                return 1;
+                            }
+                        }
+                        //Desc order!
+                        return value2 - value1;
+                    }
+
+                    //Sort jaccard desc order.
+                    var sortJaccard = function (a, b){
+                        return sort(a.jaccard, b.jaccard, a._id.toLowerCase(), b._id.toLowerCase());
+                    }
+
+                    //Sort cosine desc order.
+                    var sortCosine = function (a, b){
+                        return sort(a.cosine, b.cosine, a._id.toLowerCase(), b._id.toLowerCase());
+                    }
+
+                    // Sort ssaZ desc order.
+                    var sortSsaZ = function (a, b){
+                        return sort(a.ssaZScore, b.ssaZScore, a._id.toLowerCase(), b._id.toLowerCase());
+                    }
+
+                    var findAssignee = function (element, index, array){
+                        return element.assignee;
+                    }
+
+                    similarities.sort(sortCosine);
+                    var position = similarities.findIndex(findAssignee) + 1
+                    averages.cosine += position;
+                    averages.MrrCosine += 1/position;
+
+                    similarities.sort(sortJaccard);
+                    position = similarities.findIndex(findAssignee) + 1
+                    averages.jaccard += position;
+                    averages.MrrJaccard += 1/position;
+
+                    similarities.sort(sortSsaZ);
+                    position = similarities.findIndex(findAssignee) + 1
+                    averages.ssaZScore += position;
+                    averages.MrrSsaZ += 1/position;
+                }
+
+                for(var key in averages){
+                    averages[key] /= params.Issue.length;
+                    if(key.search('Mrr') >= 0){
+                        averages[key] = averages[key].toFixed(4);
+                    } else {
+                        averages[key] = Math.round(averages[key]);
+                    }
+                }
+
+                res.send({averages: averages});
+            }
+
+
+            var devCallback = function(params){
+                var callbackParams = {
+                    Developer: params.Developer
+                };
+
+                var dev_ids = params.Developer.map(function (dev){
+                    return dev._id;
+                });
+
+                var filter = {
+                    projectId: req.params.projectId,
+                    pull_request: false,
+                    parsed: true,
+                    assigneeId: { $in: dev_ids }
+                };
+
+                findModel(Issue, filter, issuesCallback, callbackParams, 'tags assigneeId');
+            }
+
+            var filter = {
+                'ghProfile.repositories': req.params.projectId,
+                soProfile: { $exists: true }
+            };
+
+
+            findModel(Developer, filter, devCallback, {}, 'soProfile');
         }
     }
 }
