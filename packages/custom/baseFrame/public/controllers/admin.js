@@ -1,14 +1,5 @@
 'use strict';
 
-
-function showLoadingScreen(){
-    angular.element('#loadingImage').css('display','block');
-}
-
-function hideLoadingScreen(){
-    angular.element('#loadingImage').css('display','none');
-}
-
 var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('AdminController', function ($scope, $interval, $http){
 
@@ -21,12 +12,31 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http){
         });
     }
 
-    $scope.downloadStatus = undefined;
+    $scope.downloadStatus = {
+        option: undefined,
+        fileRequested: false,
+        fileGenerated: false,
+        linesRead: 0,
+        started: false,
+        completed: false,
+        message: ''
+    };
+
+    $scope.populateStatus = undefined;
 
     $scope.generate = function (option) {
+        $scope.downloadStatus = {
+            option: option,
+            fileRequested: false,
+            fileGenerated: false,
+            linesRead: 0,
+            started: false,
+            completed: false,
+            message: ''
+        };
         $http.get('/api/baseFrame/generate', {params:{resource: option}})
         .then(function (response) {
-            $scope.downloadStatus = "We will download the file once it's ready";
+            $scope.downloadStatus.fileRequested = true;
             check(option);
         });
     }
@@ -44,9 +54,8 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http){
             a.download = option + 's.tsv';
             a.click();
             window.URL.revokeObjectURL(url);
-            hideLoadingScreen();
+            $scope.downloadStatus.completed = true;
         }, function (response) {
-            hideLoadingScreen();
             console.log(response);
         });
     }
@@ -54,14 +63,17 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http){
     function check(option) {
         var delay = 1000;
         if(option == 'Developer'){
-            $scope.downloadStatus += " This will generate muliple files!";
+            $scope.downloadStatus.message = "This will generate muliple files!";
             delay = 5000;
         }
 
         var check = $interval(function () {
             $http.get('/api/baseFrame/check', {params:{resource: option}})
             .then(function (response) {
+                console.log(response);
+                $scope.downloadStatus.linesRead = response.data.linesRead;
                 if(response.status == 200){
+                    $scope.downloadStatus.fileGenerated = response.data.ready;
                     stop();
                 }
             })
@@ -69,12 +81,12 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http){
 
         function stop(){
             $interval.cancel(check);
-            $scope.downloadStatus = "Success"
             $scope.download(option);
             if(option == 'Developer'){
                 $scope.download('Question');
                 $scope.download('Answer');
             }
+            $scope.downloadStatus.started = true;
         }
     }
 });

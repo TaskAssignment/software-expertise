@@ -6,12 +6,27 @@ var mongoose = require('mongoose');
 var fs = require('fs');
 var csv = require('fast-csv');
 
-var fileReady = {
-    Tag: true,
-    CoOccurrence: true,
-    StopWord: true,
-    Developer: false,
-    Project: false
+var file = {
+    Tag: {
+        ready: true,
+        linesRead: 0
+    },
+    CoOccurrence: {
+        ready: true,
+        linesRead: 0
+    },
+    StopWord: {
+        ready: true,
+        linesRead: 0
+    },
+    Developer: {
+        ready: false,
+        linesRead: 0
+    },
+    Project: {
+        ready: false,
+        linesRead: 0
+    }
 }
 
 module.exports = function (BaseFrame){
@@ -33,31 +48,35 @@ module.exports = function (BaseFrame){
 
             switch (option) {
                 case 'Developer':
+                    file[option].ready = false;
                     writeDevs();
                     break;
                 case 'Project':
-                    writeFile(option, 'languages._id');
+                    file[option].ready = false;
+                    writeFile(option);
                     break;
-                default:
-                    //I'm using the existing files, instead of checking the db, because this won't change for now!!
 
             }
+            //I'm using the existing files, instead of checking the db, because this won't change for now!!
+            console.log(file);
 
-            res.sendStatus(202);
+            res.status(202).send(file[option]);
         },
 
         download: function (req, res) {
+            console.log(file);
+
             var option = req.query.resource;
             res.download('files/' + option + 's.tsv');
         },
 
         check: function (req, res) {
             var option = req.query.resource;
-            if(fileReady[option]){
-                res.sendStatus(200);
-            } else {
-                res.sendStatus(202);
+            var code = 202
+            if(file[option].ready){
+                code = 200;
             }
+            res.status(code).send(file[option]);
         }
     }
 }
@@ -66,11 +85,11 @@ module.exports = function (BaseFrame){
 *
 * @param option - The Model that will be exported. The file will be the name of this model pluralized.
 **/
-function writeFile(option, items){
+function writeFile(option, items = '-updatedAt -createdAt -__v'){
     var MongooseModel = mongoose.model(option);
     var stream = fs.createWriteStream('files/' + option + 's.tsv');
 
-    var dbStream = MongooseModel.find().select().lean().stream();
+    var dbStream = MongooseModel.find().select(items).lean().stream();
 
     var options = {
         delimiter: '\t',
@@ -80,7 +99,10 @@ function writeFile(option, items){
     var csvStream = csv.createWriteStream(options);
     csvStream.pipe(stream);
 
+    var counter = 0;
+
     dbStream.on('data', function (model) {
+        counter++;
         if(option == 'CoOccurrence'){
             delete model._id;
         } else if (option == 'Project'){
@@ -89,9 +111,7 @@ function writeFile(option, items){
             });
         }
 
-        delete model.createdAt;
-        delete model.updatedAt;
-        delete model.__v;
+        file[option].linesRead = counter;
 
         csvStream.write(model);
     }).on('error', function (err) {
@@ -99,14 +119,15 @@ function writeFile(option, items){
         console.log(err);
     }).on('close', function (){
         console.log("* Finished! *");
-        fileReady[option] = true;
+        file[option].ready = true;
     });
 }
 
 function writeDevs(){
     console.log("** Generating developers file **");
+    var items = '-updatedAt -createdAt -__v'
     var Developer = mongoose.model('Developer');
-    var dbStream = Developer.find().lean().stream();
+    var dbStream = Developer.find().select(items).lean().stream();
 
     var devStream = fs.createWriteStream("files/Developers.tsv");
     var questionStream = fs.createWriteStream("files/Questions.tsv");
@@ -125,7 +146,9 @@ function writeDevs(){
     var devCsvStream = csv.createWriteStream(options);
     devCsvStream.pipe(devStream);
 
+    var counter = 0;
     dbStream.on('data', function (dev) {
+        counter++;
         if(dev.soProfile){
             for(var question of dev.soProfile.questions){
                 question.askerId = dev._id;
@@ -149,11 +172,9 @@ function writeDevs(){
 
         delete dev.ghProfile;
         delete dev.soProfile;
-        delete dev.createdAt;
-        delete dev.updatedAt;
-        delete dev.__v;
 
         devCsvStream.write(dev);
+        file.Developer.linesRead = counter;
     }).on('error', function (err) {
         console.log("========== AAAAHHHHHH")
         console.log(err);
@@ -162,7 +183,7 @@ function writeDevs(){
         devCsvStream.end();
         answerCsvStream.end();
         questionCsvStream.end();
-        fileReady.Developer = true;
+        file.Developer.ready = true;
     });
 }
 

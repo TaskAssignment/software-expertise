@@ -1,58 +1,115 @@
-<section ng-controller="AdminController" class="col-md-8 col-md-offset-2 col-lg-8 col-lg-offset-2">
+<section ng-controller="AdminController"
+class="col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
     <div class="row">
         <div class="col-md-3 col-lg-3">
-            <h2>Populate</h2>
-            <div class="list-group">
-                <button class="list-group-item" ng-click="populate('Tag')">
-                    SO Tags
-                </button>
+            <div class="row">
+                <h2>Populate</h2>
+                <div class="list-group">
+                    <button class="list-group-item" ng-click="populate('Tag')">
+                        SO Tags
+                    </button>
 
-                <button class="list-group-item" ng-click="populate('CoOccurrence')">
-                    CoOccurrences
-                </button>
+                    <button class="list-group-item" ng-click="populate('CoOccurrence')">
+                        CoOccurrences
+                    </button>
 
-                <button class="list-group-item" ng-click="populate('Developer')">
-                    Stack Overflow Users
-                </button>
+                    <button class="list-group-item" ng-click="populate('Developer')">
+                        Stack Overflow Users
+                    </button>
 
-                <button class="list-group-item" ng-click="populate('StopWord')">
-                    Stop Words
-                </button>
+                    <button class="list-group-item" ng-click="populate('StopWord')">
+                        Stop Words
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+                <h2>Export</h2>
+                <div class="list-group">
+                    <button class="list-group-item" ng-click="generate('Tag')">
+                        SO Tags
+                    </button>
+
+                    <button class="list-group-item" ng-click="generate('CoOccurrence')">
+                        CoOccurrences
+                    </button>
+
+                    <button class="list-group-item" ng-click="generate('Developer')">
+                        Developers
+                    </button>
+
+                    <button class="list-group-item" ng-click="generate('StopWord')">
+                        Stop Words
+                    </button>
+
+                    <button class="list-group-item" ng-click="generate('Project')">
+                        Project
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9 col-lg-9">
+            <h2> Status {{ downloadStatus.option }} </h2>
+
+            <div class="row" ng-if="downloadStatus.option">
+                <div class="col-md-12 col-lg-12">
+                    <div class="row">
+                        <h3 class="col-md-12 col-lg-12">
+                            <i class="fa fa-spinner fa-pulse fa-fw"
+                                ng-if="!downloadStatus.fileRequested"></i>
+                            <i class="fa fa-check"
+                                ng-if="downloadStatus.fileRequested"></i>
+                            File Requested
+                        </h3>
+                    </div>
+                    <div class="row">
+                        <h3 class="col-md-12 col-lg-12">
+                            <i class="fa fa-spinner fa-pulse fa-fw"
+                                ng-if="!downloadStatus.fileGenerated"></i>
+                            <i class="fa fa-check"
+                                ng-if="downloadStatus.fileGenerated"></i>                            Generating File
+                        </h3>
+                    </div>
+                    <div class="row">
+                        <h3 class="col-md-12 col-lg-12">
+                            <i class="fa fa-spinner fa-pulse fa-fw"
+                                ng-if="!downloadStatus.fileGenerated"></i>
+                            <i class="fa fa-check"
+                                ng-if="downloadStatus.fileGenerated"></i>                            Lines Read: {{downloadStatus.linesRead}}
+                        </h3>
+                    </div>
+                    <div class="row">
+                        <h3 class="col-md-12 col-lg-12">
+                            <i class="fa fa-spinner fa-pulse fa-fw"
+                                ng-if="!downloadStatus.fileGenerated"></i>
+                            <i class="fa fa-check"
+                                ng-if="downloadStatus.fileGenerated"></i>                            File Generated
+                        </h3>
+                    </div>
+                    <div class="row">
+                        <h3 class="col-md-12 col-lg-12">
+                            <i class="fa fa-spinner fa-pulse fa-fw"
+                                ng-if="!downloadStatus.started"></i>
+                            <i class="fa fa-check"
+                                ng-if="downloadStatus.started"></i>                            Started Download
+
+                            <small> {{ downloadStatus.message }} </small>
+                        </h3>
+                    </div>
+                    <div class="row">
+                        <h3 class="col-md-12 col-lg-12">
+                            <i class="fa fa-spinner fa-pulse fa-fw"
+                                ng-if="!downloadStatus.completed"></i>
+                            <i class="fa fa-check"
+                                ng-if="downloadStatus.completed"></i>
+                            Download Completed
+                        </h3>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-
-    <div class="row">
-        <div class="col-md-3 col-lg-3">
-            <h2>Export</h2>
-            <div class="list-group">
-                <button class="list-group-item" ng-click="generate('Tag')">
-                    SO Tags
-                </button>
-
-                <button class="list-group-item" ng-click="generate('CoOccurrence')">
-                    CoOccurrences
-                </button>
-
-                <button class="list-group-item" ng-click="generate('Developer')">
-                    Developers
-                </button>
-
-                <button class="list-group-item" ng-click="generate('StopWord')">
-                    Stop Words
-                </button>
-
-                <button class="list-group-item" ng-click="generate('Project')">
-                    Project
-                </button>
-            </div>
-        </div>
-    </div>
-
-    {{ downloadStatus }}
-    <i ng-if="downloadStatus && downloadStatus != 'Success'" class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
-<span class="sr-only">Loading...</span>
-
 </section>
 
 <img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
