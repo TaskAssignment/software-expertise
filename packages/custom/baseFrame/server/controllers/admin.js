@@ -167,9 +167,14 @@ function readFile(option){
             .on("data", function(model){
                 if(option == 'Developer'){
                     delete model.tags;
-                    model.soProfile = {
-                        _id: model.soId,
-                        tags: []
+                    if(model.soId){
+                        model.soProfile = {
+                            _id: model.soId,
+                            tags: [],
+                            questions: [],
+                            answers: [],
+                            soPopulated: false
+                        }
                     }
                     model.ghProfile = {
                         _id: model._id,
@@ -183,7 +188,6 @@ function readFile(option){
                 counter++;
                 populated[option].linesRead = counter;
             }).on("end", function(){
-                console.log(model[0]);
                 MongooseModel.collection.insert(models, function (err) {
                     if(err){
                         console.log(err);
