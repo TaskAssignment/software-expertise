@@ -6,25 +6,48 @@ var mongoose = require('mongoose');
 var fs = require('fs');
 var csv = require('fast-csv');
 
+var READY = 200; //Status code to be sent when ready.
+var NOT_READY = 202; //Send accepted status code
+
+//TODO: Use a for loop here!!
 var file = {
     Tag: {
-        ready: true,
+        status: READY,
         linesRead: 0
     },
     CoOccurrence: {
-        ready: true,
+        status: READY,
         linesRead: 0
     },
     StopWord: {
-        ready: true,
+        status: READY,
         linesRead: 0
     },
     Developer: {
-        ready: false,
+        status: NOT_READY,
         linesRead: 0
     },
     Project: {
-        ready: false,
+        status: NOT_READY,
+        linesRead: 0
+    }
+}
+
+var populated = {
+    Tag: {
+        status: NOT_READY,
+        linesRead: 0
+    },
+    CoOccurrence: {
+        status: NOT_READY,
+        linesRead: 0
+    },
+    StopWord: {
+        status: NOT_READY,
+        linesRead: 0
+    },
+    Developer: {
+        status: NOT_READY,
         linesRead: 0
     }
 }
@@ -33,14 +56,8 @@ module.exports = function (BaseFrame){
     return {
         populate: function (req, res) {
             var option = req.query.resources;
-
-            if(option == 'Developer'){
-                //I'll write the populate users again
-            } else {
-                readFile(option);
-            }
-
-            res.sendStatus(202);
+            readFile(option);
+            res.status(NOT_READY).send(populated[option]);
         },
 
         generate: function (req, res) {
@@ -48,35 +65,37 @@ module.exports = function (BaseFrame){
 
             switch (option) {
                 case 'Developer':
-                    file[option].ready = false;
+                    file[option].status = NOT_READY;
                     writeDevs();
                     break;
                 case 'Project':
-                    file[option].ready = false;
+                    file[option].status = NOT_READY;
                     writeFile(option);
                     break;
 
             }
             //I'm using the existing files, instead of checking the db, because this won't change for now!!
-            console.log(file);
-
-            res.status(202).send(file[option]);
+            res.status(NOT_READY).send(file[option]);
         },
 
         download: function (req, res) {
-            console.log(file);
-
             var option = req.query.resource;
             res.download('files/' + option + 's.tsv');
         },
 
         check: function (req, res) {
             var option = req.query.resource;
-            var code = 202
-            if(file[option].ready){
-                code = 200;
+
+            var populate = false;
+            if(req.query.populate){
+                populate = true;
             }
-            res.status(code).send(file[option]);
+
+            if(!populate){
+                res.status(file[option].status).send(file[option]);
+            } else {
+                res.status(populated[option].status).send(populated[option]);
+            }
         }
     }
 }
@@ -119,9 +138,71 @@ function writeFile(option, items = '-updatedAt -createdAt -__v'){
         console.log(err);
     }).on('close', function (){
         console.log("* Finished! *");
-        file[option].ready = true;
+        file[option].status = READY;
     });
 }
+
+/** Helper function to read the files
+*
+*  @param option - The Model that will be exported. The file will be the name of this model pluralized.
+**/
+
+function readFile(option){
+    var MongooseModel = mongoose.model(option);
+
+    var countCallback = function (err, dbCount) {
+        if(dbCount == 0) {
+            var path = 'files/' + option + 's.tsv';
+            var options = {
+                delimiter: '\t',
+                headers: true,
+                ignoreEmpty: true
+            }
+            var readable = fs.createReadStream(path, {encoding: 'utf8'});
+
+            console.log("** Reading file! **");
+            var models = [];
+            var counter = 0;
+            csv.fromStream(readable, options)
+            .on("data", function(model){
+                if(option == 'Developer'){
+                    delete model.tags;
+                    model.soProfile = {
+                        _id: model.soId,
+                        tags: []
+                    }
+                    model.ghProfile = {
+                        _id: model._id,
+                        email: model.email
+                    }
+                    delete model.email;
+                    delete model.soId;
+                }
+
+                models.push(model)
+                counter++;
+                populated[option].linesRead = counter;
+            }).on("end", function(){
+                console.log(model[0]);
+                MongooseModel.collection.insert(models, function (err) {
+                    if(err){
+                        console.log(err);
+                    } else {
+                        console.log(option + 's populated');
+                        console.log("***** DONE *****");
+                    }
+                });
+                populated[option].status = READY;
+            });
+        } else {
+            populated[option].status = READY;
+            populated[option].linesRead = dbCount;
+        }
+    }
+
+    MongooseModel.count().exec(countCallback);
+}
+
 
 function writeDevs(){
     console.log("** Generating developers file **");
@@ -183,45 +264,6 @@ function writeDevs(){
         devCsvStream.end();
         answerCsvStream.end();
         questionCsvStream.end();
-        file.Developer.ready = true;
+        file.Developer.status = READY;
     });
-}
-
-/** Helper function to read the files
-*
-*  @param option - The Model that will be exported. The file will be the name of this model pluralized.
-**/
-
-function readFile(option){
-    var MongooseModel = mongoose.model(option);
-
-    var countCallback = function (err, count) {
-        if(count == 0) {
-            var path = 'files/' + option + 's.tsv';
-            var options = {
-                delimiter: '\t',
-                headers: true,
-                ignoreEmpty: true
-            }
-            var readable = fs.createReadStream(path, {encoding: 'utf8'});
-
-            console.log("** Reading file! **");
-            var models = []
-            csv.fromStream(readable, options)
-            .on("data", function(model){
-                models.push(model)
-            }).on("end", function(){
-                MongooseModel.collection.insert(models, function (err) {
-                    if(err){
-                        console.log(err);
-                    } else {
-                        console.log(option + 's populated');
-                        console.log("***** DONE *****");
-                    }
-                })
-            });
-        }
-    }
-
-    MongooseModel.count().exec(countCallback);
 }

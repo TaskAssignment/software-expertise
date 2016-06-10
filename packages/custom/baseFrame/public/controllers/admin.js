@@ -4,25 +4,22 @@ var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('AdminController', function ($scope, $interval, $http){
 
     $scope.populate = function(option){
+        $scope.populateStatus = {
+            option: option,
+            linesRead: 0,
+            started: true,
+            completed: false,
+            message: "This can take a while!"
+        };
         $http.get('/api/baseFrame/populate', {params:{resources: option}})
         .then(function (response){
-            console.log(response);
+            checkPopulate(option);
         }, function(response){
             console.log(response);
         });
     }
 
-    $scope.downloadStatus = {
-        option: undefined,
-        fileRequested: false,
-        fileGenerated: false,
-        linesRead: 0,
-        started: false,
-        completed: false,
-        message: ''
-    };
 
-    $scope.populateStatus = undefined;
 
     $scope.generate = function (option) {
         $scope.downloadStatus = {
@@ -37,7 +34,7 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http){
         $http.get('/api/baseFrame/generate', {params:{resource: option}})
         .then(function (response) {
             $scope.downloadStatus.fileRequested = true;
-            check(option);
+            checkDownload(option);
         });
     }
 
@@ -60,27 +57,51 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http){
         });
     }
 
-    function check(option) {
-        var delay = 1000;
-        if(option == 'Developer'){
-            $scope.downloadStatus.message = "This will generate muliple files!";
-            delay = 5000;
-        }
+    function checkPopulate(option){
+        var delay = 5000;
 
-        var check = $interval(function () {
-            $http.get('/api/baseFrame/check', {params:{resource: option}})
-            .then(function (response) {
-                console.log(response);
-                $scope.downloadStatus.linesRead = response.data.linesRead;
+        var interval = $interval(function () {
+            var params = {
+                params: {
+                    resource: option,
+                    populate: true
+                }
+            };
+
+            $http.get('/api/baseFrame/check', params).then(function (response) {
+                $scope.populateStatus.linesRead = response.data.linesRead;
                 if(response.status == 200){
-                    $scope.downloadStatus.fileGenerated = response.data.ready;
                     stop();
                 }
             })
         }, delay);
 
         function stop(){
-            $interval.cancel(check);
+            $interval.cancel(interval);
+            $scope.populateStatus.completed = true;
+        }
+    }
+
+    function checkDownload(option) {
+        var delay = 100;
+        if(option == 'Developer'){
+            $scope.downloadStatus.message = "This will generate muliple files!";
+            delay = 5000;
+        }
+
+        var interval = $interval(function () {
+            $http.get('/api/baseFrame/check', {params:{resource: option}})
+            .then(function (response) {
+                $scope.downloadStatus.linesRead = response.data.linesRead;
+                if(response.status == 200){
+                    $scope.downloadStatus.fileGenerated = true;
+                    stop();
+                }
+            })
+        }, delay);
+
+        function stop(){
+            $interval.cancel(interval);
             $scope.download(option);
             if(option == 'Developer'){
                 $scope.download('Question');

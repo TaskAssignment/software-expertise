@@ -1,7 +1,7 @@
 <section ng-controller="AdminController"
-class="col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
+class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
     <div class="row">
-        <div class="col-md-3 col-lg-3">
+        <div class="col-md-2 col-lg-2">
             <div class="row">
                 <h2>Populate</h2>
                 <div class="list-group">
@@ -14,7 +14,7 @@ class="col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
                     </button>
 
                     <button class="list-group-item" ng-click="populate('Developer')">
-                        Stack Overflow Users
+                        Developers
                     </button>
 
                     <button class="list-group-item" ng-click="populate('StopWord')">
@@ -49,9 +49,10 @@ class="col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
             </div>
         </div>
 
-        <div class="col-md-9 col-lg-9">
-            <h2> Status {{ downloadStatus.option }} </h2>
-
+        <div class="col-md-5 col-lg-5">
+            <h2>
+                Status Downlad <small> {{ downloadStatus.option }}</small>
+            </h2>
             <div class="row" ng-if="downloadStatus.option">
                 <div class="col-md-12 col-lg-12">
                     <div class="row">
@@ -68,7 +69,9 @@ class="col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
                             <i class="fa fa-spinner fa-pulse fa-fw"
                                 ng-if="!downloadStatus.fileGenerated"></i>
                             <i class="fa fa-check"
-                                ng-if="downloadStatus.fileGenerated"></i>                            Generating File
+                                ng-if="downloadStatus.fileGenerated"></i>
+                            Generating File
+                            <small> {{ downloadStatus.message }} </small>
                         </h3>
                     </div>
                     <div class="row">
@@ -76,7 +79,8 @@ class="col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
                             <i class="fa fa-spinner fa-pulse fa-fw"
                                 ng-if="!downloadStatus.fileGenerated"></i>
                             <i class="fa fa-check"
-                                ng-if="downloadStatus.fileGenerated"></i>                            Lines Read: {{downloadStatus.linesRead}}
+                                ng-if="downloadStatus.fileGenerated"></i>
+                            Lines Read: {{downloadStatus.linesRead}}
                         </h3>
                     </div>
                     <div class="row">
@@ -84,7 +88,8 @@ class="col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
                             <i class="fa fa-spinner fa-pulse fa-fw"
                                 ng-if="!downloadStatus.fileGenerated"></i>
                             <i class="fa fa-check"
-                                ng-if="downloadStatus.fileGenerated"></i>                            File Generated
+                                ng-if="downloadStatus.fileGenerated"></i>
+                            File Generated
                         </h3>
                     </div>
                     <div class="row">
@@ -92,9 +97,8 @@ class="col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
                             <i class="fa fa-spinner fa-pulse fa-fw"
                                 ng-if="!downloadStatus.started"></i>
                             <i class="fa fa-check"
-                                ng-if="downloadStatus.started"></i>                            Started Download
-
-                            <small> {{ downloadStatus.message }} </small>
+                                ng-if="downloadStatus.started"></i>
+                            Started Download
                         </h3>
                     </div>
                     <div class="row">
@@ -109,7 +113,43 @@ class="col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
                 </div>
             </div>
         </div>
+
+        <div class="col-md-5 col-lg-5">
+            <h2>
+                Status Populate <small> {{ populateStatus.option }}</small>
+            </h2>
+            <div class="row" ng-if="populateStatus.option">
+                <div class="col-md-12 col-lg-12">
+                    <div class="row">
+                        <h3 class="col-md-12 col-lg-12">
+                            <i class="fa fa-spinner fa-pulse fa-fw"
+                            ng-if="!populateStatus.started"></i>
+                            <i class="fa fa-check"
+                            ng-if="populateStatus.started"></i>
+                            Populate Started
+                            <small> {{ populateStatus.message }} </small>
+                        </h3>
+                    </div>
+                    <div class="row">
+                        <h3 class="col-md-12 col-lg-12">
+                            <i class="fa fa-spinner fa-pulse fa-fw"
+                            ng-if="!populateStatus.completed"></i>
+                            <i class="fa fa-check"
+                            ng-if="populateStatus.completed"></i>
+                            Lines Read: {{populateStatus.linesRead}}
+                        </h3>
+                    </div>
+                    <div class="row">
+                        <h3 class="col-md-12 col-lg-12">
+                            <i class="fa fa-spinner fa-pulse fa-fw"
+                            ng-if="!populateStatus.completed"></i>
+                            <i class="fa fa-check"
+                            ng-if="populateStatus.completed"></i>
+                            Populate Completed
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
-
-<img id="loadingImage" style='display:none;' src="/baseFrame/assets/img/loading.gif">
