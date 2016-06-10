@@ -1,4 +1,23 @@
 # --------------------
+# App Files
+# --------------------
+files/
+data/
+tests/results/**
+modules/public/
+modules/views/
+/public/build/
+/packages/**/**/public/assets/lib
+packages/config/e2e/tests/results/e2e/junit
+
+# --------------------
+# Node Files
+# --------------------
+.nodemonignore
+npm-debug.log
+node_modules/
+
+# --------------------
 # OSX Files
 # --------------------
 .DS_Store
@@ -8,6 +27,22 @@ Icon
 ._*
 .Spotlight-V100
 .Trashes
+
+# --------------------
+# SASS Files
+# --------------------
+.sass-cache/
+
+# --------------------
+# Bower Files
+# --------------------
+.bower-*/
+bower_components
+
+# --------------------
+# vim Files
+# --------------------
+*.swp
 
 # --------------------
 # Eclipse or Nodeclipse "Enide Studio" Files
@@ -37,38 +72,3 @@ dist/
 nbdist/
 nbactions.xml
 nb-configuration.xml
-
-# --------------------
-# Node Files
-# --------------------
-.nodemonignore
-npm-debug.log
-node_modules/
-
-
-# --------------------
-# SASS Files
-# --------------------
-.sass-cache/
-
-# --------------------
-# Bower Files
-# --------------------
-.bower-*/
-bower_components
-
-# --------------------
-# App Files
-# --------------------
-data/
-tests/results/**
-modules/public/
-modules/views/
-/public/build/
-/packages/**/**/public/assets/lib
-packages/config/e2e/tests/results/e2e/junit
-
-# --------------------
-# vim Files
-# --------------------
-*.swp
