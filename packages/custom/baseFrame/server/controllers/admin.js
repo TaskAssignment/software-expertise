@@ -49,16 +49,22 @@ var populated = {
     Developer: {
         status: NOT_READY,
         linesRead: 0
+    },
+    Project: {
+        status: READY,
+        linesRead: 0
     }
 }
 
 module.exports = function (BaseFrame){
     return {
         populate: function (req, res) {
-
-            var teste = require('../controllers/populator')(BaseFrame);
             var option = req.query.resources;
-            readFile(option);
+            if(option == 'Project'){
+                populate(option);
+            } else {
+                readFile(option);
+            }
             res.status(NOT_READY).send(populated[option]);
         },
 
@@ -207,6 +213,11 @@ function readFile(option){
     }
 
     MongooseModel.count().exec(countCallback);
+}
+
+function populate(option){
+    var populator = require('../controllers/populator')();
+    populator.GitHub(['8514']);
 }
 
 

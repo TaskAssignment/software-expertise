@@ -50,44 +50,7 @@ module.exports = function (BaseFrame){
         * @param res - Express response
         **/
         populateCommits: function(req, res){
-            Commit.findOne(req.params, '-_id updatedAt', {sort: '-updatedAt', lean:true},function (err, lastUpdate){
-                var url = '/commits';
-
-                if(lastUpdate){
-                    url += '?since=' + lastUpdate.updatedAt.toISOString();
-                }
-
-                var buildModels = function(results, projectId){
-                    var commits = [];
-
-                    for (var i in results) {
-                        var result = results[i];
-                        var commit = {
-                            message: result.commit.message,
-                        }
-                        if(result.commit.author){
-                            createdAt: result.commit.author.date
-                        }else if(result.commit.commiter){
-                            createdAt: result.commit.committer.date
-                        }
-
-                        if(result.author){
-                            commit.user = result.author.login;
-                        }else if(result.commiter){
-                            commit.user = result.commiter.login;
-                        }
-
-                        commits.push(commit);
-                    }
-
-                    Commit.create(commits, function(err){
-                        if(err){
-                            console.log(err);
-                        }
-                    });
-                }
-                gitHubRequest(url, req.params.projectId, res, buildModels);
-            });
+            
         },
 
         /** Stores in the database all the issues of a given repository.
@@ -96,52 +59,7 @@ module.exports = function (BaseFrame){
         * @param res - Express response
         **/
         populateIssues: function(req, res){
-            Issue.findOne(req.params, '-_id updatedAt', {sort: '-updatedAt', lean:true},function (err, lastUpdate){
-                var url = '/issues?state=all&sort=created&direction=asc'
 
-                if(lastUpdate){
-                    url += '&since=' + lastUpdate.updatedAt.toISOString();
-                }
-
-                var buildModels = function(results, projectId){
-                    var issues = []
-                    for (var i in results) {
-                        var result = results[i];
-                        var issue = {
-                            _id: result.id,
-                            number: result.number,
-                            body: result.body,
-                            title: result.title,
-                            state: result.state,
-                            projectId: projectId,
-                            parsed: false,
-                            createdAt: result.created_at,
-                            updatedAt: result.updated_at,
-                            reporterId: result.user.login
-                        }
-
-                        if(result.assignee){
-                            issue.assigneeId = result.assignee.login;
-                        }
-
-                        if(result.pull_request){
-                            issue.pull_request = true;
-                        }
-
-                        issues.push(issue);
-                    }
-
-                    Issue.create(issues, function(err){
-                        if(err){
-                            console.log(err);
-                        } else {
-                            console.log("Issues created!");
-                        }
-                    });
-
-                }
-                gitHubRequest(url, req.params.projectId, res, buildModels);
-            });
         },
 
         /** Stores in the database all the contributors of a given repository.
@@ -150,50 +68,7 @@ module.exports = function (BaseFrame){
         * @param res - Express response
         **/
         populateContributors: function(req, res){
-            var url = '/contributors';
-            var _ = require('lodash');
 
-            var Developer = mongoose.model('Developer');
-
-            function updateOrCreateDev(ghResult, projectId){
-                Developer.findById(ghResult.login, function (err, dev){
-                    if(err){
-                        console.log(err.message);
-                        return null;
-                    }
-                    if(dev){
-                        //TODO: Find a better solution to this.
-                        dev.ghProfile.repositories.push(projectId);
-                        var repos = dev.ghProfile.repositories;
-                        dev.ghProfile.repositories = _.uniq(repos);
-                    } else {
-                        dev = new Developer({
-                            _id: ghResult.login,
-                            ghProfile: {
-                                _id: ghResult.login,
-                                repositories: [projectId]
-                            }
-                        });
-                    }
-                    dev.save(function (err){
-                        if(err){
-                            console.log(err.message);
-                        } else {
-                            console.log(ghResult.login + " updated!");
-                        }
-                    });
-                });
-            }
-
-
-            var buildModels = function(results, projectId){
-                for (var i in results) {
-                    var result = results[i];
-                    updateOrCreateDev(result, projectId);
-                }
-            }
-
-            gitHubRequest(url, req.params.projectId, res, buildModels);
         },
 
         /** Stores in the database all the languages of a given repository.
@@ -202,40 +77,7 @@ module.exports = function (BaseFrame){
         * @param res - Express response
         **/
         populateLanguages: function(req, res){
-            var url = '/languages';
 
-            var buildModels = function(results, projectId){
-                var languages = [];
-
-                var keys = Object.keys(results);
-                keys.forEach(function(key, index, array){
-                    var language = {
-                        _id: key.toLowerCase(),
-                        amount: results[key]
-                    };
-                    languages.push(language);
-                });
-
-                var filter = {
-                    _id: projectId,
-                }
-
-                var updateFields = {
-                    $addToSet: {
-                        languages: {
-                            $each : languages
-                        }
-                    }
-                }
-
-                Project.update(filter, updateFields, {upsert: true}, function(err){
-                    if(err){
-                        console.log(err);
-                    }
-                });
-
-            }
-            gitHubRequest(url, req.params.projectId, res, buildModels);
         },
 
         /** Stores in the database all the issue comments of a given repository.
