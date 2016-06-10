@@ -26,7 +26,7 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http){
     $scope.generate = function (option) {
         $http.get('/api/baseFrame/generate', {params:{resource: option}})
         .then(function (response) {
-            $scope.downloadStatus = "We are generating the file. We will download it once it's ready";
+            $scope.downloadStatus = "We will download the file once it's ready";
             check(option);
         });
     }
@@ -52,7 +52,6 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http){
     }
 
     function check(option) {
-        var counter = 1;
         var delay = 1000;
         if(option == 'Developer'){
             $scope.downloadStatus += " This will generate muliple files!";
@@ -62,8 +61,6 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http){
         var check = $interval(function () {
             $http.get('/api/baseFrame/check', {params:{resource: option}})
             .then(function (response) {
-                console.log(counter);
-                counter++;
                 if(response.status == 200){
                     stop();
                 }

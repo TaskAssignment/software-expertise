@@ -31,11 +31,17 @@ module.exports = function (BaseFrame){
         generate: function (req, res) {
             var option = req.query.resource;
 
-            if(option == 'Developer'){
-                writeDevs();
-            }
+            switch (option) {
+                case 'Developer':
+                    writeDevs();
+                    break;
+                case 'Project':
+                    writeFile(option, 'languages._id');
+                    break;
+                default:
+                    //I'm using the existing files, instead of checking the db, because this won't change for now!!
 
-            //I'm using the existing files, instead of checking the db, because this won't change for now!!
+            }
 
             res.sendStatus(202);
         },
@@ -60,11 +66,11 @@ module.exports = function (BaseFrame){
 *
 * @param option - The Model that will be exported. The file will be the name of this model pluralized.
 **/
-function writeFile(option){
+function writeFile(option, items){
     var MongooseModel = mongoose.model(option);
     var stream = fs.createWriteStream('files/' + option + 's.tsv');
 
-    var dbStream = MongooseModel.find().lean().stream();
+    var dbStream = MongooseModel.find().select().lean().stream();
 
     var options = {
         delimiter: '\t',
@@ -77,7 +83,15 @@ function writeFile(option){
     dbStream.on('data', function (model) {
         if(option == 'CoOccurrence'){
             delete model._id;
+        } else if (option == 'Project'){
+            model.languages = model.languages.map(function (lang) {
+                return lang._id;
+            });
         }
+
+        delete model.createdAt;
+        delete model.updatedAt;
+        delete model.__v;
 
         csvStream.write(model);
     }).on('error', function (err) {
@@ -189,12 +203,4 @@ function readFile(option){
     }
 
     MongooseModel.count().exec(countCallback);
-}
-
-/** This prints the error, if it exists
-**/
-var errorCallback = function (err){
-    if(err){
-        console.log(err);
-    }
 }

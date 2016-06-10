@@ -1,38 +1,52 @@
-<section ng-controller="AdminController">
+<section ng-controller="AdminController" class="col-md-8 col-md-offset-2 col-lg-8 col-lg-offset-2">
     <div class="row">
-        <a class="btn btn-default" ng-click="populate('Tag')">
-        Populate SO Tags </a>
-    </div>
-    <div class="row">
-        <a class="btn btn-default" ng-click="populate('CoOccurrence')">
-        Populate CoOccurrences </a>
-    </div>
-    <div class="row">
-        <a class="btn btn-default" ng-click="populate('Developer')">
-        Populate Stack Overflow Users </a>
-    </div>
-    <div class="row">
-        <a class="btn btn-default" ng-click="populate('StopWord')">
-        Populate Stop Words</a>
-    </div>
-    <div class="row">
-        <a class="btn btn-default" ng-click="generate('Tag')">
-        Export SoTags </a>
+        <div class="col-md-3 col-lg-3">
+            <h2>Populate</h2>
+            <div class="list-group">
+                <button class="list-group-item" ng-click="populate('Tag')">
+                    SO Tags
+                </button>
+
+                <button class="list-group-item" ng-click="populate('CoOccurrence')">
+                    CoOccurrences
+                </button>
+
+                <button class="list-group-item" ng-click="populate('Developer')">
+                    Stack Overflow Users
+                </button>
+
+                <button class="list-group-item" ng-click="populate('StopWord')">
+                    Stop Words
+                </button>
+            </div>
+        </div>
     </div>
 
     <div class="row">
-        <a class="btn btn-default" ng-click="generate('CoOccurrence')">
-        Export Common Occurrences</a>
-    </div>
+        <div class="col-md-3 col-lg-3">
+            <h2>Export</h2>
+            <div class="list-group">
+                <button class="list-group-item" ng-click="generate('Tag')">
+                    SO Tags
+                </button>
 
-    <div class="row">
-        <a class="btn btn-default" ng-click="generate('Developer')">
-        Export Developers</a>
-    </div>
+                <button class="list-group-item" ng-click="generate('CoOccurrence')">
+                    CoOccurrences
+                </button>
 
-    <div class="row">
-        <a class="btn btn-default" ng-click="generate('StopWord')">
-        Export Stop Words</a>
+                <button class="list-group-item" ng-click="generate('Developer')">
+                    Developers
+                </button>
+
+                <button class="list-group-item" ng-click="generate('StopWord')">
+                    Stop Words
+                </button>
+
+                <button class="list-group-item" ng-click="generate('Project')">
+                    Project
+                </button>
+            </div>
+        </div>
     </div>
 
     {{ downloadStatus }}
