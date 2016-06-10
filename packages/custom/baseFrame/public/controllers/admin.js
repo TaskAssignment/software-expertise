@@ -39,7 +39,6 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http){
     }
 
     $scope.download = function(option){
-        showLoadingScreen();
         $http.get('/api/baseFrame/download', {params:{resource: option}})
         .then(function (response) {
             var a = document.createElement("a");
