@@ -27,7 +27,11 @@ var populated = {
         status: NOT_READY,
         pagesAdded: 0
     },
-    Comment: {
+    IssueComment: {
+        status: NOT_READY,
+        pagesAdded: 0
+    },
+    CommitComment: {
         status: NOT_READY,
         pagesAdded: 0
     },
@@ -53,7 +57,6 @@ var gitHubPopulate = function (option, specificUrl, callback){
         uri += '&per_page=100';
     }
 
-    console.log(uri);
     var options = {
         headers: {
             'User-Agent': 'software-expertise',
@@ -199,9 +202,8 @@ function populateIssues(id){
 
         var sinceUrl = '';
         if(lastCreated){
-            console.log(lastCreated);
-            sinceUrl = '&since=' + lastCreated.createdAt.toISOString();
-            url += sinceUrl;
+            sinceUrl = 'since=' + lastCreated.createdAt.toISOString();
+            url += '&' + sinceUrl;
         }
 
         var buildModels = function(results){
@@ -254,7 +256,7 @@ function populateIssues(id){
         function stop(){
             clearInterval(interval);
             populateIssuesComments(id, sinceUrl);
-            makeTags(projectId);
+            // makeTags(projectId);
         }
     });
 }
@@ -277,8 +279,7 @@ function populateContributors(projectId){
                 },
                 $setOnInsert: {
                     ghProfile: {
-                        _id: result.login,
-                        repositories: [projectId]
+                        _id: result.login
                     }
                 }
             }
@@ -289,16 +290,18 @@ function populateContributors(projectId){
     gitHubPopulate('Developer', url, buildModels);
 }
 
-function populateCommits(id){
+function populateCommits(projectId){
     var Commit = mongoose.model('Commit');
-    Commit.findOne({projectId: id}, 'createdAt', {sort: '-createdAt', lean:true},function (err, lastUpdate){
-        var url = id + '/commits';
+    Commit.findOne({projectId: projectId}, 'createdAt', {sort: '-createdAt', lean:true},function (err, lastCreated){
+        var url = projectId + '/commits';
 
-        if(lastUpdate){
-            url += '?since=' + lastUpdate.createdAt.toISOString();
+        console.log(lastCreated);
+
+        if(lastCreated){
+            url += '?since=' + lastCreated.createdAt.toISOString();
         }
 
-        var buildModels = function(results, projectId){
+        var buildModels = function(results){
             var commits = [];
 
             for (var i in results) {
@@ -306,13 +309,14 @@ function populateCommits(id){
                 var commit = {
                     _id: result.sha,
                     message: result.commit.message,
+                    projectId: projectId,
                     comments: []
                 }
 
                 if(result.commit.author){
-                    commit.createdAt = result.commit.author.date;
+                    commit.createdAt = new Date(result.commit.author.date);
                 } else if(result.commit.commiter){
-                    commit.createdAt = result.commit.committer.date;
+                    commit.createdAt = new Date(result.commit.committer.date);
                 } else {
                     // Just to make sure there will be a date here!
                     // But this should never enter here!!!
@@ -346,13 +350,14 @@ function populateCommits(id){
 
         function stop(){
             clearInterval(interval);
-            populateIssuesComments(id);
+            populateCommitsComments(projectId);
         }
     });
 }
 
 function populateIssuesComments(projectId, sinceUrl){
-    var url = '/issues/comments' + sinceUrl;
+    var url = projectId + '/issues/comments?' + sinceUrl;
+    var Issue = mongoose.model('Issue');
 
 
     var buildModels = function(results){
@@ -385,11 +390,13 @@ function populateIssuesComments(projectId, sinceUrl){
         }
 
     }
-    gitHubPopulate('Comment', url, buildModels);
+    gitHubPopulate('IssueComment', url, buildModels);
 }
 
 function populateCommitsComments(projectId){
-    var url = '/comments';
+    var url = projectId + '/comments';
+
+    var Commit = mongoose.model('Commit');
 
     var buildModels = function(results, projectId){
         for (var i in results) {
@@ -421,5 +428,5 @@ function populateCommitsComments(projectId){
         }
     }
 
-    gitHubRequest('Comment', url, buildModels);
+    gitHubPopulate('CommitComment', url, buildModels);
 }

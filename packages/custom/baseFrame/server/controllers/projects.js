@@ -45,7 +45,7 @@ module.exports = function (BaseFrame){
         },
 
         find: function (req, res) {
-            Project.find(req.query, '_id name description languages', {lean: true}, function (err, projects){
+            Project.find(req.query, '_id name', {lean: true}, function (err, projects){
                 res.send({projects: projects});
             })
         }
