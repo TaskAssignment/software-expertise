@@ -40,9 +40,6 @@
                         <li role="presentation" class="tab tabTable active">
                             <a href="" ng-click="selectTab('.tabTable')">Table</a>
                         </li>
-                        <li role="presentation" class="tab tabAdmin">
-                            <a href="" ng-click="selectTab('.tabAdmin')">Admin</a>
-                        </li>
                     </ul>
                 </div>
             </div>
@@ -56,9 +53,6 @@
                     <div role="tabpanel" class="tab-pane tabTable"
                         id="expertiseTable"
                         ng-include="'baseFrame/views/table.html'" ng-controller="TableController"></div>
-                    <div role="tabpanel" class="tab-pane hidden tabAdmin"
-                        id='populate'
-                        ng-include="'baseFrame/views/repo_admin.html'"></div>
                 </div>
             </div>
         </div>
