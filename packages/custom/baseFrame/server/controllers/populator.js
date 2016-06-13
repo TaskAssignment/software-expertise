@@ -320,7 +320,7 @@ function populateIssues(id){
                     projectId: id,
                     parsed: false,
                     pullRequest: false,
-                    assigneeId: undefined,
+                    tags: [],
                     createdAt: new Date(result.created_at),
                     updatedAt: new Date(result.updated_at),
                     reporterId: result.user.login
