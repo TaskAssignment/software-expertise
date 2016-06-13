@@ -41,6 +41,10 @@ var populated = {
     }
 }
 
+var languages = [];
+var tags = [];
+var stopWords = [];
+
 var gitHubPopulate = function (option, specificUrl, callback){
     var uri = 'https://api.github.com/repositories/' + specificUrl
     if(specificUrl.lastIndexOf('?') < 0){
@@ -76,7 +80,9 @@ var gitHubPopulate = function (option, specificUrl, callback){
                 }
             }
 
+            pageCounter++;
             populated[option].pagesAdded = pageCounter;
+            console.log(option + ': page ' + pageCounter + ' populated');
             if(next){
                 var begin = next.indexOf('<');
                 var end = next.indexOf('>');
@@ -191,8 +197,11 @@ function populateIssues(id){
     Issue.findOne({projectId: id}, '-_id createdAt', {sort: '-createdAt', lean:true},function (err, lastCreated){
         var url = id + '/issues?state=all&sort=created&direction=asc'
 
+        var sinceUrl = '';
         if(lastCreated){
-            url += '&since=' + lastUpdate.createdAt.toISOString();
+            console.log(lastCreated);
+            sinceUrl = '&since=' + lastCreated.createdAt.toISOString();
+            url += sinceUrl;
         }
 
         var buildModels = function(results){
@@ -209,8 +218,8 @@ function populateIssues(id){
                     parsed: false,
                     pullRequest: false,
                     assigneeId: undefined,
-                    createdAt: result.created_at,
-                    updatedAt: result.updated_at,
+                    createdAt: new Date(result.created_at),
+                    updatedAt: new Date(result.updated_at),
                     reporterId: result.user.login
                 }
 
@@ -235,6 +244,18 @@ function populateIssues(id){
 
         }
         gitHubPopulate('Issue', url, buildModels);
+
+        var interval = setInterval(function () {
+            if(populated.Issue.status === READY){
+                stop();
+            }
+        }, 10000);
+
+        function stop(){
+            clearInterval(interval);
+            populateIssuesComments(id, sinceUrl);
+            makeTags(projectId);
+        }
     });
 }
 
@@ -270,7 +291,7 @@ function populateContributors(projectId){
 
 function populateCommits(id){
     var Commit = mongoose.model('Commit');
-    Commit.findOne({projectId: id}, '-_id createdAt', {sort: '-createdAt', lean:true},function (err, lastUpdate){
+    Commit.findOne({projectId: id}, 'createdAt', {sort: '-createdAt', lean:true},function (err, lastUpdate){
         var url = id + '/commits';
 
         if(lastUpdate){
@@ -316,5 +337,89 @@ function populateCommits(id){
             });
         }
         gitHubPopulate('Commit', url, buildModels);
+
+        var interval = setInterval(function () {
+            if(populated.Commit.status === READY){
+                stop();
+            }
+        }, 10000);
+
+        function stop(){
+            clearInterval(interval);
+            populateIssuesComments(id);
+        }
     });
+}
+
+function populateIssuesComments(projectId, sinceUrl){
+    var url = '/issues/comments' + sinceUrl;
+
+
+    var buildModels = function(results){
+        for (var i in results) {
+            var result = results[i];
+            var comment = {
+                _id: result.id,
+                body: result.body,
+                createdAt: result.created_at,
+                updatedAt: result.updated_at,
+                user: result.user.login
+            }
+
+            var updateFields = {
+                $addToSet: {
+                    comments: comment
+                }
+            };
+
+            var filter = {
+                projectId: projectId,
+                number: result.issue_url.split('/').pop()
+            }
+
+            Issue.update(filter, updateFields, function(err){
+                if(err){
+                    console.log(err);
+                }
+            });
+        }
+
+    }
+    gitHubPopulate('Comment', url, buildModels);
+}
+
+function populateCommitsComments(projectId){
+    var url = '/comments';
+
+    var buildModels = function(results, projectId){
+        for (var i in results) {
+            var result = results[i];
+            var comment = {
+                _id: result.id,
+                body: result.body,
+                createdAt: result.created_at,
+                updatedAt: result.updated_at,
+                user: result.user.login
+            }
+
+            var updateFields = {
+                $addToSet: {
+                    comments: comment
+                }
+            };
+
+            var filter = {
+                projectId: projectId,
+                _id: result.commit_id
+            }
+
+            Commit.update(filter, updateFields, function(err){
+                if(err){
+                    console.log(err);
+                }
+            });
+        }
+    }
+
+    gitHubRequest('Comment', url, buildModels);
 }

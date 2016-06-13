@@ -206,7 +206,7 @@ var RepositoryController = function ($scope,  $http, $location, $resource) {
 
     function findProject(){
         $scope.search = true;
-        var Project = $resource('/api/baseFrame/project/find/:name');
+        var Project = $resource('/api/baseFrame/project/get/:name');
         var repoName = $location.search().repoName;
         if(repoName){
             Project.get({name: repoName}).$promise.then(function(project){

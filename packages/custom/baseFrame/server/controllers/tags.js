@@ -37,21 +37,15 @@ module.exports = function (BaseFrame){
                     }
                 }
 
-                for(var j in title) {
-                    var word = title[j];
-                    if(word.indexOf('_') >= 0){
-                        // Tags in SO are dash separated.
-                        word = word.replace(/_/g, '-');
-                    }
-                    if(allWords[word] === undefined){
-                        allWords[word] = 1;
-                    } else {
-                        allWords[word] += 1;
-                    }
+                for(var word of title) {
+                    checkWord(word);
                 }
 
-                for(var k in body){
-                    var word = body[k];
+                for(var word of body){
+                    checkWord(word);
+                }
+
+                function checkWord(word){
                     if(word.indexOf('_') >= 0){
                         // Tags in SO are dash separated.
                         word = word.replace(/_/g, '-');

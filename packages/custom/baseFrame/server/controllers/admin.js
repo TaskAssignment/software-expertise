@@ -59,13 +59,14 @@ var populated = {
 module.exports = function (BaseFrame){
     return {
         populate: function (req, res) {
-            var option = req.query.resources;
-            if(option == 'Project'){
-                populate(option);
+            var query = req.query;
+            console.log(query);
+            if(query.option == 'Project'){
+                populate(query.option, query.project);
             } else {
-                readFile(option);
+                readFile(query.option);
             }
-            res.status(NOT_READY).send(populated[option]);
+            res.status(NOT_READY).send(populated[query.option]);
         },
 
         generate: function (req, res) {
@@ -92,6 +93,7 @@ module.exports = function (BaseFrame){
         },
 
         check: function (req, res) {
+
             var option = req.query.resource;
 
             var populate = false;
@@ -215,9 +217,11 @@ function readFile(option){
     MongooseModel.count().exec(countCallback);
 }
 
-function populate(option){
+function populate(option, project){
+    var repo = JSON.parse(project);
     var populator = require('../controllers/populator')();
-    populator.GitHub(['8514']);
+    console.log(repo);
+    populator.GitHub([repo._id]);
 }
 
 

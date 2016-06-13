@@ -6,22 +6,12 @@ module.exports = function (BaseFrame, app, database) {
     var controllers = '../controllers/';
 
     var projects = require(controllers + 'projects')(BaseFrame);
-    app.route(base + 'project/find/:name')
+    app.route(base + 'project/get/:name')
+        .get(projects.get);
+    app.route(base + 'project/find')
         .get(projects.find);
     app.route(base + 'project/new/')
         .get(projects.save);
-    app.route(base + ':projectId/populate/users')
-        .get(projects.populateContributors);
-    app.route(base + ':projectId/populate/issues')
-        .get(projects.populateIssues);
-    app.route(base + ':projectId/populate/commits')
-        .get(projects.populateCommits);
-    app.route(base + ':projectId/populate/languages')
-        .get(projects.populateLanguages);
-    app.route(base + ':projectId/populate/issues/comments')
-        .get(projects.populateIssuesComments);
-    app.route(base + ':projectId/populate/commits/comments')
-        .get(projects.populateCommitsComments);
 
     var issues = require(controllers + 'issues')(BaseFrame);
     app.route(base + ':projectId/issues')

@@ -2,6 +2,9 @@
 
 var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('AdminController', function ($scope, $interval, $http){
+    findProjects();
+    $scope.selectedProject = undefined;
+
     $scope.populate = function(option){
         $scope.populateStatus = {
             option: option,
@@ -10,7 +13,13 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http){
             completed: false,
             message: "This can take a while!"
         };
-        $http.get('/api/baseFrame/populate', {params:{resources: option}})
+        var params = {
+            params: {
+                option: option,
+                project: $scope.selectedProject
+            }
+        }
+        $http.get('/api/baseFrame/populate', params)
         .then(function (response){
             checkPopulate(option);
         }, function(response){
@@ -105,5 +114,13 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http){
             }
             $scope.downloadStatus.started = true;
         }
+    }
+
+    function findProjects(){
+        $http.get('api/baseFrame/project/find/').then(function (response){
+            $scope.projects = response.data.projects;
+        }, function (response){
+            $scope.projects = undefined;
+        })
     }
 });
