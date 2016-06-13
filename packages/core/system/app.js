@@ -28,17 +28,6 @@ SystemPackage.register(function(app, database) {
   // Set views path, template engine and default layout
   app.set('views', __dirname + '/server/views');
 
-  // Setting the favicon and static folder
-  if(config.favicon) {
-    //app.use(favicon(config.favicon));
-    app.use(favicon(__dirname + '/public/assets/img/favicon.ico'));
-    app.use(__dirname + '/public/assets/img/*');
-
-  } else {
-   // app.use(favicon(__dirname + '/public/assets/img/favicon.ico'));
-    app.use(favicon(__dirname + '/public/assets/img/favicon.ico'));
-  }
-
   // Adding robots and humans txt
   app.useStatic(__dirname + '/public/assets/static');
 

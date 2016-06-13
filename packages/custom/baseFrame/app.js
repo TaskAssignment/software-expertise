@@ -7,6 +7,7 @@ var Module = require('meanio').Module;
 
 /* Setting up our favicon **/
 var express = require('express');
+var favicon = require('serve-favicon');
 
 var BaseFrame = new Module('baseFrame');
 
@@ -20,7 +21,9 @@ BaseFrame.register(function(app, database,system) {
 
   BaseFrame.aggregateAsset('css', 'theme.css');
 
-  BaseFrame.angularDependencies(['mean.system']);
+  BaseFrame.angularDependencies(['mean.system', 'ui.bootstrap']);
+  app.use(favicon(__dirname + '/public/assets/img/favicon.ico'));
+
 
   return BaseFrame;
 });

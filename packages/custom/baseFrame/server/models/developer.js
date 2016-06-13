@@ -11,6 +11,7 @@ var QuestionSchema = new Schema({
     body: String,
     tags: [String],
     score: Number,
+    title: String,
     createdAt: Date,
     updatedAt: Date
 });
@@ -55,6 +56,7 @@ var GitHubProfileSchema = new Schema({
     email: String,
     repositories: [{
         type: String,
+        ref: 'Project',
         unique: true
     }]
 }, {
