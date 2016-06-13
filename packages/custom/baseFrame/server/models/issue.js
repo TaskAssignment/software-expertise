@@ -32,7 +32,7 @@ var IssueSchema = new Schema({
     number: String,
     body: String,
     title: String,
-    pull_request: {
+    pullRequest: {
         type: Boolean,
         default: false
     },

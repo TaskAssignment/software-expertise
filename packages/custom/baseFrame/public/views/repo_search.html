@@ -1,16 +1,16 @@
-<div class="col-lg-1" ng-model="$parent.search" >
-    <a ng-click="$parent.search = !$parent.search" href="">
+<div class="col-lg-1 col-md-1" ng-model="$parent.search" >
+    <h4><a ng-click="$parent.search = !$parent.search" href="">
         <i class="fa fa-search fa-lg" aria-hidden="true"></i>
-    </a>
+    </a></h4>
 </div>
-<div class="col-lg-11" id='repositorySearch' ng-show="search">
-    <div class='searchBoxInput'>
+<div class="col-lg-11 col-md-1">
+    <div class='searchBoxInput' id='repositorySearch' ng-show="search">
         <p>Search for a repository:</p>
         <form class='form-group form-horizontal' ng-submit=queryRepos()>
-            <input type='text' ng-model="$parent.repoSearch.name" name="$parent.repoSearch.name"
-              class='form-control col-md-3'
+            <input type='text' ng-model="$parent.repoSearch.user" name="$parent.repoSearch.user" class='form-control'
               placeholder='User or Organization'>
-            <input type='text' ng-model="$parent.repoSearch.user" name="$parent.repoSearch.user" class='form-control col-md-3'
+              <input type='text' ng-model="$parent.repoSearch.name" name="$parent.repoSearch.name"
+              class='form-control'
               placeholder='Repository name'>
             <input type='text' ng-model="$parent.repoSearch.description" name="$parent.repoSearch.description" class='form-control'
               placeholder='Any phrase in the repo description'>
@@ -27,4 +27,5 @@
             {{ repo.name }}
         </button>
     </div>
+    <h4 ng-if="selectedRepo.name"><strong> {{ selectedRepo.name }}: </strong></h4>
 </div>

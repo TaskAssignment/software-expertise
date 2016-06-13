@@ -6,22 +6,12 @@ module.exports = function (BaseFrame, app, database) {
     var controllers = '../controllers/';
 
     var projects = require(controllers + 'projects')(BaseFrame);
-    app.route(base + 'project/find/:name')
+    app.route(base + 'project/get/:name')
+        .get(projects.get);
+    app.route(base + 'project/find')
         .get(projects.find);
     app.route(base + 'project/new/')
         .get(projects.save);
-    app.route(base + ':projectId/populate/users')
-        .get(projects.populateContributors);
-    app.route(base + ':projectId/populate/issues')
-        .get(projects.populateIssues);
-    app.route(base + ':projectId/populate/commits')
-        .get(projects.populateCommits);
-    app.route(base + ':projectId/populate/languages')
-        .get(projects.populateLanguages);
-    app.route(base + ':projectId/populate/issues/comments')
-        .get(projects.populateIssuesComments);
-    app.route(base + ':projectId/populate/commits/comments')
-        .get(projects.populateCommitsComments);
 
     var issues = require(controllers + 'issues')(BaseFrame);
     app.route(base + ':projectId/issues')
@@ -30,12 +20,6 @@ module.exports = function (BaseFrame, app, database) {
     var users = require(controllers + 'users')(BaseFrame);
     app.route(base + ':projectId/users')
         .get(users.find);
-    app.route(base + 'user/:soId/populate/tags')
-        .get(users.populateTags);
-    app.route(base + 'user/:soId/populate/answers')
-        .get(users.populateAnswers);
-    app.route(base + 'user/:soId/populate/questions')
-        .get(users.populateQuestions);
 
     var tags = require(controllers + 'tags')(BaseFrame);
     app.route(base + ':projectId/makeIssuesTags')
@@ -50,6 +34,7 @@ module.exports = function (BaseFrame, app, database) {
         .get(admin.download);
     app.route(base + 'check')
         .get(admin.check);
+
     /** My idea here is to be able to fetch data from different places.
     * The modes, for now, will be 'default' and 'default' to fetch data from our
     * database (populated from github/SO).

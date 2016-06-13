@@ -1,9 +1,13 @@
 'use strict';
 
-angular.module('mean.baseFrame').controller('BaseFrameController',
-['$scope', 'Global', 'BaseFrame', function($scope, Global, BaseFrame) {
+var Ctrl = function($scope, Global, BaseFrame) {
     $scope.global = Global;
     $scope.package = {
         name: 'baseFrame'
     };
-}]);
+}
+
+var BaseFrameController = ['$scope', 'Global', 'BaseFrame', Ctrl];
+
+var mod = angular.module('mean.baseFrame');
+mod.controller('BaseFrameController', BaseFrameController);
