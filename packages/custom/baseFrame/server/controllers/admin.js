@@ -60,7 +60,6 @@ module.exports = function (BaseFrame){
     return {
         populate: function (req, res) {
             var query = req.query;
-            console.log(query);
             if(query.option == 'Project'){
                 populate(query.option, query.project);
             } else {
@@ -93,7 +92,6 @@ module.exports = function (BaseFrame){
         },
 
         check: function (req, res) {
-
             var option = req.query.resource;
 
             var populate = false;
@@ -220,8 +218,8 @@ function readFile(option){
 function populate(option, project){
     var repo = JSON.parse(project);
     var populator = require('../controllers/populator')();
-    console.log(repo);
-    populator.GitHub([repo._id]);
+    // populator.GitHub([repo._id]);
+    populator.StackOverflow('Developer', repo._id);
 }
 
 
