@@ -74,6 +74,7 @@ module.exports = function (BaseFrame) {
                     break;
                 case 'CoOccurrence':
                     populateCoOccurrences('!bNKX0pf0ks06(E');
+                    break;
             }
         },
         check: function (option) {
@@ -85,8 +86,12 @@ module.exports = function (BaseFrame) {
 function populateCoOccurrences(filter = 'default', site = 'stackoverflow'){
     var Tag = mongoose.model('Tag');
     var CoOccurrence = mongoose.model('CoOccurrence');
+
     Tag.find().lean().exec(function (err, tags){
-        for(var tag in tags){
+        console.log(tags.length);
+        for(var tag of tags){
+            var CONFIDENCE = 0.01;
+            var MINIMUM_COUNT = CONFIDENCE * tag.soTotalCount;
             var url = 'tags/' + tag._id + '/related?order=desc&sort=popular';
             url += '&site=' + site;
             url += '&filter=' + filter;
@@ -95,21 +100,28 @@ function populateCoOccurrences(filter = 'default', site = 'stackoverflow'){
                 var coOccurrences = [];
                 for(var i in items){
                     var result = items[i];
-                    var coOccurrence = {
-                        source: tag._id,
-                        target: result.name,
-                        occurrences: result.count
-                    };
+                    if(result.count >= MINIMUM_COUNT) {
 
-                    coOccurrences.push(coOccurrence);
+                        var coOccurrence = {
+                            source: tag._id,
+                            target: result.name,
+                            occurrences: result.count
+                        };
+
+                        coOccurrences.push(coOccurrence);
+                    } else {
+                        break;
+                    }
                 }
 
                 CoOccurrence.collection.insert(coOccurrences);
             }
 
-            soPopulate('CoOccurrence', url, buildModels);
+            setTimeout(function () {
+                soPopulate('CoOccurrence', url, buildModels);
+            }, 100);
         }
-    })
+    });
 }
 
 function populateTags(filter = 'default', site = 'stackoverflow'){
@@ -168,7 +180,7 @@ function populateStackOverflowUserData(projectId){
         partialUsers(devs);
     });
 }
-//
+
 /** Populates all the user tags from stackoverflow using the
 * soPopulate function.
 *
@@ -668,7 +680,7 @@ function soPopulate(option, specificUrl, callback) {
             // Check for next page
             if(results.has_more){
                 var new_uri = uri + '&page=' +
-                  (parseInt(results.page) + 1);
+                (parseInt(results.page) + 1);
                 options.uri = new_uri;
 
                 //To avoid exceed rate limit

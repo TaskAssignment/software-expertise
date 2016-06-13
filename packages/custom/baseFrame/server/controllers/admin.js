@@ -35,11 +35,11 @@ var file = {
 
 var populated = {
     Tag: {
-        status: NOT_READY,
+        status: READY,
         linesRead: 0
     },
     CoOccurrence: {
-        status: NOT_READY,
+        status: READY,
         linesRead: 0
     },
     StopWord: {
@@ -60,11 +60,18 @@ module.exports = function (BaseFrame){
     return {
         populate: function (req, res) {
             var query = req.query;
-            if(query.option == 'Project'){
-                populate(query.option, query.project);
-            } else {
-                readFile(query.option);
+            switch (query.option) {
+                case 'StopProject':
+                case 'Developer':
+                    readFile(query.option);
+                    break;
+                case 'Project':
+                    populate(query.option, query.project);
+                    break;
+                default:
+                    populate(query.option);
             }
+
             res.status(NOT_READY).send(populated[query.option]);
         },
 
@@ -215,11 +222,15 @@ function readFile(option){
     MongooseModel.count().exec(countCallback);
 }
 
-function populate(option, project){
-    var repo = JSON.parse(project);
+function populate(option, project = undefined){
     var populator = require('../controllers/populator')();
-    // populator.GitHub([repo._id]);
-    populator.StackOverflow('Developer', repo._id);
+    if(project){
+        var repo = JSON.parse(project);
+        populator.GitHub([repo._id]);
+        populator.StackOverflow('Developer', repo._id);
+    } else {
+        populator.StackOverflow(option);
+    }
 }
 
 
