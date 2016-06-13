@@ -34,6 +34,7 @@ module.exports = function (BaseFrame, app, database) {
         .get(admin.download);
     app.route(base + 'check')
         .get(admin.check);
+
     /** My idea here is to be able to fetch data from different places.
     * The modes, for now, will be 'default' and 'default' to fetch data from our
     * database (populated from github/SO).
