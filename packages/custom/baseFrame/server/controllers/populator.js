@@ -56,27 +56,84 @@ module.exports = function (BaseFrame) {
             }
         },
         StackOverflow: function (option, projectId = '') {
-            if(option == 'Developer'){
-                var interval = setInterval(function () {
-                    if(populated.Developer.status === READY){
-                        stop();
+            switch (option) {
+                case 'Developer':
+                    var interval = setInterval(function () {
+                        if(populated.Developer.status === READY){
+                            stop();
+                        }
+                    }, 1000);
+
+                    function stop(){
+                        clearInterval(interval);
+                        populateStackOverflowUserData(projectId);
                     }
-                }, 1000);
-
-                function stop(){
-                    clearInterval(interval);
-                    populateStackOverflowUserData(projectId);
-                }
-
-                populated.Developer.status = READY;
-            } else {
-
+                    break;
+                case 'Tag':
+                    populateTags('!4-J-dtwSuoIA.NOpA');
+                    break;
+                case 'CoOccurrence':
+                    populateCoOccurrences('!bNKX0pf0ks06(E');
             }
         },
         check: function (option) {
             return populated[option];
         }
     }
+}
+
+function populateCoOccurrences(filter = 'default', site = 'stackoverflow'){
+    var Tag = mongoose.model('Tag');
+    var CoOccurrence = mongoose.model('CoOccurrence');
+    Tag.find().lean().exec(function (err, tags){
+        for(var tag in tags){
+            var url = 'tags/' + tag._id + '/related?order=desc&sort=popular';
+            url += '&site=' + site;
+            url += '&filter=' + filter;
+
+            var buildModels = function(items){
+                var coOccurrences = [];
+                for(var i in items){
+                    var result = items[i];
+                    var coOccurrence = {
+                        source: tag._id,
+                        target: result.name,
+                        occurrences: result.count
+                    };
+
+                    coOccurrences.push(coOccurrence);
+                }
+
+                CoOccurrence.collection.insert(coOccurrences);
+            }
+
+            soPopulate('CoOccurrence', url, buildModels);
+        }
+    })
+}
+
+function populateTags(filter = 'default', site = 'stackoverflow'){
+    var url = 'tags?order=desc&sort=popular';
+    url += '&site=' + site;
+    url += '&filter=' + filter;
+
+    var Tag = mongoose.model('Tag');
+
+    var buildModels = function(items){
+        var tags = [];
+        for(var i in items){
+            var result = items[i];
+            var tag = {
+                _id: result.name,
+                soTotalCount: result.count
+            };
+            tags.push(tag);
+        }
+
+        Tag.collection.insert(tags);
+    }
+
+    soPopulate('Tag', url, buildModels);
 }
 
 function populateStackOverflowUserData(projectId){
