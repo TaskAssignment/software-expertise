@@ -177,9 +177,11 @@ function populateStackOverflowUserData(projectId){
 
         ids = ids.slice(0, -1);
 
-        populateUserTags(ids, '!bMMZz)9AYohK3E');
-        populateQuestions(ids, '!)Q2B_A1DlRRlrXhamw-lxR5M');
-        populateAnswers(ids, '!FcbKgR9VoP8kZFhRg5uitziPRm');
+        if(!stopRequests){
+            populateUserTags(ids, '!bMMZz)9AYohK3E');
+            populateQuestions(ids, '!)Q2B_A1DlRRlrXhamw-lxR5M');
+            populateAnswers(ids, '!FcbKgR9VoP8kZFhRg5uitziPRm');
+        }
     }
 
     Developer.find(devFilter).select(selectItems).lean().exec(function(err, devs){
