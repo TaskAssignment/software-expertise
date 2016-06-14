@@ -92,7 +92,6 @@ module.exports = function (BaseFrame){
                     writeFile(option);
                     break;
             }
-            //I'm using the existing files, instead of checking the db, because this won't change for now!!
             res.status(NOT_READY).send(file[option]);
         },
 

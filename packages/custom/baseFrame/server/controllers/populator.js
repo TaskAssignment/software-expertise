@@ -45,6 +45,9 @@ var populated = {
     }
 }
 
+var stopRequests = false;
+var delay = 34; // 34 ms to assure that one there will be no more than 30 requests per second.
+
 module.exports = function (BaseFrame) {
     return {
         GitHub: function (ids = []) {
@@ -87,14 +90,10 @@ function populateCoOccurrences(filter = 'default', site = 'stackoverflow'){
     var Tag = mongoose.model('Tag');
     var CoOccurrence = mongoose.model('CoOccurrence');
 
-
-
-    var urls = [];
-
     Tag.find().lean().exec(function (err, tags){
         var index = 0;
         var interval = setInterval(function () {
-            var tag = tags[index]
+            var tag = tags[index];
             var CONFIDENCE = 0.01;
             var MINIMUM_COUNT = CONFIDENCE * tag.soTotalCount;
             var url = 'tags/' + tag._id + '/related?order=desc&sort=popular';
@@ -124,10 +123,10 @@ function populateCoOccurrences(filter = 'default', site = 'stackoverflow'){
 
             soPopulate('CoOccurrence', url, buildModels);
             index++;
-            if(index == tags.length){
+            if(stopRequests || index == tags.length){
                 stop();
             }
-        }, 34);
+        }, delay);
 
         function stop(){
             clearInterval(interval);
@@ -701,6 +700,8 @@ function soPopulate(option, specificUrl, callback) {
                 console.log(option + ' done!')
             }
 
+        } else if(response.statusCode == 502){
+            stopRequests = true;
         } else {
             console.log(body, error);
         }
