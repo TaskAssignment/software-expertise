@@ -83,11 +83,14 @@ module.exports = function (BaseFrame){
                     file[option].status = NOT_READY;
                     writeDevs();
                     break;
-                case 'Project':
+                case 'StopWord':
+                    file[option].status = READY;
+                    writeFile(option);
+                    break;
+                default:
                     file[option].status = NOT_READY;
                     writeFile(option);
                     break;
-
             }
             //I'm using the existing files, instead of checking the db, because this won't change for now!!
             res.status(NOT_READY).send(file[option]);
