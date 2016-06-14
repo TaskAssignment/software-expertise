@@ -70,7 +70,7 @@ module.exports = function (BaseFrame) {
                     }
                     break;
                 case 'Tag':
-                    populateTags('!4-J-dtwSuoIA.NOpA');
+                    populateTags('!*MPoAL(H5L.Myr5b');
                     break;
                 case 'CoOccurrence':
                     populateCoOccurrences('!bNKX0pf0ks06(E');
@@ -87,9 +87,14 @@ function populateCoOccurrences(filter = 'default', site = 'stackoverflow'){
     var Tag = mongoose.model('Tag');
     var CoOccurrence = mongoose.model('CoOccurrence');
 
+
+
+    var urls = [];
+
     Tag.find().lean().exec(function (err, tags){
-        console.log(tags.length);
-        for(var tag of tags){
+        var index = 0;
+        var interval = setInterval(function () {
+            var tag = tags[index]
             var CONFIDENCE = 0.01;
             var MINIMUM_COUNT = CONFIDENCE * tag.soTotalCount;
             var url = 'tags/' + tag._id + '/related?order=desc&sort=popular';
@@ -117,9 +122,15 @@ function populateCoOccurrences(filter = 'default', site = 'stackoverflow'){
                 CoOccurrence.collection.insert(coOccurrences);
             }
 
-            setTimeout(function () {
-                soPopulate('CoOccurrence', url, buildModels);
-            }, 100);
+            soPopulate('CoOccurrence', url, buildModels);
+            index++;
+            if(index == tags.length){
+                stop();
+            }
+        }, 34);
+
+        function stop(){
+            clearInterval(interval);
         }
     });
 }
@@ -670,7 +681,6 @@ function soPopulate(option, specificUrl, callback) {
         gzip: true,
         uri: uri
     };
-
     var requestCallback = function (error, response, body){
         if (!error && response.statusCode == 200) {
             var results = JSON.parse(body);
