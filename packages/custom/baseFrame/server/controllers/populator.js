@@ -45,6 +45,9 @@ var populated = {
     }
 }
 
+var stopRequests = false;
+var delay = 34; // 34 ms to assure that one there will be no more than 30 requests per second.
+
 module.exports = function (BaseFrame) {
     return {
         GitHub: function (ids = []) {
@@ -56,27 +59,103 @@ module.exports = function (BaseFrame) {
             }
         },
         StackOverflow: function (option, projectId = '') {
-            if(option == 'Developer'){
-                var interval = setInterval(function () {
-                    if(populated.Developer.status === READY){
-                        stop();
+            switch (option) {
+                case 'Developer':
+                    var interval = setInterval(function () {
+                        if(populated.Developer.status === READY){
+                            stop();
+                        }
+                    }, 1000);
+
+                    function stop(){
+                        clearInterval(interval);
+                        populateStackOverflowUserData(projectId);
                     }
-                }, 1000);
-
-                function stop(){
-                    clearInterval(interval);
-                    populateStackOverflowUserData(projectId);
-                }
-
-                populated.Developer.status = READY;
-            } else {
-
+                    break;
+                case 'Tag':
+                    populateTags('!*MPoAL(H5L.Myr5b');
+                    break;
+                case 'CoOccurrence':
+                    populateCoOccurrences('!bNKX0pf0ks06(E');
+                    break;
             }
         },
         check: function (option) {
             return populated[option];
         }
     }
+}
+
+function populateCoOccurrences(filter = 'default', site = 'stackoverflow'){
+    var Tag = mongoose.model('Tag');
+    var CoOccurrence = mongoose.model('CoOccurrence');
+
+    Tag.find().lean().exec(function (err, tags){
+        var index = 0;
+        var interval = setInterval(function () {
+            var tag = tags[index];
+            var CONFIDENCE = 0.01;
+            var MINIMUM_COUNT = CONFIDENCE * tag.soTotalCount;
+            var url = 'tags/' + tag._id + '/related?order=desc&sort=popular';
+            url += '&site=' + site;
+            url += '&filter=' + filter;
+
+            var buildModels = function(items){
+                var coOccurrences = [];
+                for(var i in items){
+                    var result = items[i];
+                    if(result.count >= MINIMUM_COUNT) {
+
+                        var coOccurrence = {
+                            source: tag._id,
+                            target: result.name,
+                            occurrences: result.count
+                        };
+
+                        coOccurrences.push(coOccurrence);
+                    } else {
+                        break;
+                    }
+                }
+
+                CoOccurrence.collection.insert(coOccurrences);
+            }
+
+            soPopulate('CoOccurrence', url, buildModels);
+            index++;
+            if(stopRequests || index == tags.length){
+                stop();
+            }
+        }, delay);
+
+        function stop(){
+            clearInterval(interval);
+        }
+    });
+}
+
+function populateTags(filter = 'default', site = 'stackoverflow'){
+    var url = 'tags?order=desc&sort=popular';
+    url += '&site=' + site;
+    url += '&filter=' + filter;
+
+    var Tag = mongoose.model('Tag');
+
+    var buildModels = function(items){
+        var tags = [];
+        for(var i in items){
+            var result = items[i];
+            var tag = {
+                _id: result.name,
+                soTotalCount: result.count
+            };
+            tags.push(tag);
+        }
+
+        Tag.collection.insert(tags);
+    }
+
+    soPopulate('Tag', url, buildModels);
 }
 
 function populateStackOverflowUserData(projectId){
@@ -98,9 +177,11 @@ function populateStackOverflowUserData(projectId){
 
         ids = ids.slice(0, -1);
 
-        populateUserTags(ids, '!bMMZz)9AYohK3E');
-        populateQuestions(ids, '!)Q2B_A1DlRRlrXhamw-lxR5M');
-        populateAnswers(ids, '!FcbKgR9VoP8kZFhRg5uitziPRm');
+        if(!stopRequests){
+            populateUserTags(ids, '!bMMZz)9AYohK3E');
+            populateQuestions(ids, '!)Q2B_A1DlRRlrXhamw-lxR5M');
+            populateAnswers(ids, '!FcbKgR9VoP8kZFhRg5uitziPRm');
+        }
     }
 
     Developer.find(devFilter).select(selectItems).lean().exec(function(err, devs){
@@ -111,7 +192,7 @@ function populateStackOverflowUserData(projectId){
         partialUsers(devs);
     });
 }
-//
+
 /** Populates all the user tags from stackoverflow using the
 * soPopulate function.
 *
@@ -320,6 +401,7 @@ function populateIssues(id){
                     projectId: id,
                     parsed: false,
                     pullRequest: false,
+                    tags: [],
                     createdAt: new Date(result.created_at),
                     updatedAt: new Date(result.updated_at),
                     reporterId: result.user.login
@@ -600,7 +682,6 @@ function soPopulate(option, specificUrl, callback) {
         gzip: true,
         uri: uri
     };
-
     var requestCallback = function (error, response, body){
         if (!error && response.statusCode == 200) {
             var results = JSON.parse(body);
@@ -610,7 +691,7 @@ function soPopulate(option, specificUrl, callback) {
             // Check for next page
             if(results.has_more){
                 var new_uri = uri + '&page=' +
-                  (parseInt(results.page) + 1);
+                (parseInt(results.page) + 1);
                 options.uri = new_uri;
 
                 //To avoid exceed rate limit
@@ -621,6 +702,8 @@ function soPopulate(option, specificUrl, callback) {
                 console.log(option + ' done!')
             }
 
+        } else if(response.statusCode == 502){
+            stopRequests = true;
         } else {
             console.log(body, error);
         }
