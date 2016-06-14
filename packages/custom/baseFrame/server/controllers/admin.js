@@ -30,16 +30,24 @@ var file = {
     Project: {
         status: NOT_READY,
         linesRead: 0
+    },
+    Issue: {
+        status: NOT_READY,
+        linesRead: 0
+    },
+    Commit: {
+        status: NOT_READY,
+        linesRead: 0
     }
 }
 
 var populated = {
     Tag: {
-        status: NOT_READY,
+        status: READY,
         linesRead: 0
     },
     CoOccurrence: {
-        status: NOT_READY,
+        status: READY,
         linesRead: 0
     },
     StopWord: {
@@ -60,11 +68,18 @@ module.exports = function (BaseFrame){
     return {
         populate: function (req, res) {
             var query = req.query;
-            if(query.option == 'Project'){
-                populate(query.option, query.project);
-            } else {
-                readFile(query.option);
+            switch (query.option) {
+                case 'StopProject':
+                case 'Developer':
+                    readFile(query.option);
+                    break;
+                case 'Project':
+                    populate(query.option, query.project);
+                    break;
+                default:
+                    populate(query.option);
             }
+
             res.status(NOT_READY).send(populated[query.option]);
         },
 
@@ -76,13 +91,18 @@ module.exports = function (BaseFrame){
                     file[option].status = NOT_READY;
                     writeDevs();
                     break;
-                case 'Project':
+                case 'StopWord':
+                    file[option].status = READY;
+                    writeFile(option);
+                    break;
+                case 'Issue':
+                case 'Commit':
+                    writeIssueOrCommit(option);
+                default:
                     file[option].status = NOT_READY;
                     writeFile(option);
                     break;
-
             }
-            //I'm using the existing files, instead of checking the db, because this won't change for now!!
             res.status(NOT_READY).send(file[option]);
         },
 
@@ -142,10 +162,10 @@ function writeFile(option, items = '-updatedAt -createdAt -__v'){
 
         csvStream.write(model);
     }).on('error', function (err) {
-        console.log("========== AAAAHHHHHH")
+        console.log('========== AAAAHHHHHH')
         console.log(err);
     }).on('close', function (){
-        console.log("* Finished! *");
+        console.log('* Finished! *');
         file[option].status = READY;
     });
 }
@@ -168,11 +188,11 @@ function readFile(option){
             }
             var readable = fs.createReadStream(path, {encoding: 'utf8'});
 
-            console.log("** Reading file! **");
+            console.log('** Reading file! **');
             var models = [];
             var counter = 0;
             csv.fromStream(readable, options)
-            .on("data", function(model){
+            .on('data', function(model){
                 if(option == 'Developer'){
                     delete model.tags;
                     if(model.soId){
@@ -195,13 +215,13 @@ function readFile(option){
                 models.push(model)
                 counter++;
                 populated[option].linesRead = counter;
-            }).on("end", function(){
+            }).on('end', function(){
                 MongooseModel.collection.insert(models, function (err) {
                     if(err){
                         console.log(err);
                     } else {
                         console.log(option + 's populated');
-                        console.log("***** DONE *****");
+                        console.log('***** DONE *****');
                     }
                 });
                 populated[option].status = READY;
@@ -215,23 +235,27 @@ function readFile(option){
     MongooseModel.count().exec(countCallback);
 }
 
-function populate(option, project){
-    var repo = JSON.parse(project);
+function populate(option, project = undefined){
     var populator = require('../controllers/populator')();
-    // populator.GitHub([repo._id]);
-    populator.StackOverflow('Developer', repo._id);
+    if(project){
+        var repo = JSON.parse(project);
+        populator.GitHub([repo._id]);
+        populator.StackOverflow('Developer', repo._id);
+    } else {
+        populator.StackOverflow(option);
+    }
 }
 
 
 function writeDevs(){
-    console.log("** Generating developers file **");
+    console.log('** Generating developers file **');
     var items = '-updatedAt -createdAt -__v'
     var Developer = mongoose.model('Developer');
     var dbStream = Developer.find().select(items).lean().stream();
 
-    var devStream = fs.createWriteStream("files/Developers.tsv");
-    var questionStream = fs.createWriteStream("files/Questions.tsv");
-    var answerStream = fs.createWriteStream("files/Answers.tsv");
+    var devStream = fs.createWriteStream('files/Developers.tsv');
+    var questionStream = fs.createWriteStream('files/Questions.tsv');
+    var answerStream = fs.createWriteStream('files/Answers.tsv');
 
     var options = {
         delimiter: '\t',
@@ -276,13 +300,59 @@ function writeDevs(){
         devCsvStream.write(dev);
         file.Developer.linesRead = counter;
     }).on('error', function (err) {
-        console.log("========== AAAAHHHHHH")
+        console.log('========== AAAAHHHHHH')
         console.log(err);
     }).on('close', function (){
-        console.log("* Finished Developers! *");
+        console.log('* Finished Developers! *');
         devCsvStream.end();
         answerCsvStream.end();
         questionCsvStream.end();
         file.Developer.status = READY;
+    });
+}
+
+
+function writeIssueOrCommit(option = 'Issue'){
+    console.log('** Generating file **');
+    var items = '-__v'
+    var Model = mongoose.model(option);
+    var dbStream = Model.find().select(items).lean().stream();
+
+    var mainStream = fs.createWriteStream('files/' + option + 's.tsv');
+    var commentStream = fs.createWriteStream('files/' + option + 'Comments.tsv');
+
+    var options = {
+        delimiter: '\t',
+        headers: true
+    }
+
+    var mainCvsStream = csv.createWriteStream(options);
+    mainCvsStream.pipe(mainStream);
+
+    var commentCsvStream = csv.createWriteStream(options);
+    commentCsvStream.pipe(commentStream);
+
+    var counter = 0;
+    dbStream.on('data', function (model) {
+        counter++;
+        if(model.comments){
+            for(var comment of model.comments){
+                commentCsvStream.write(comment);
+            }
+            delete model.comments;
+        }
+
+        delete model.tags;
+
+        mainCvsStream.write(model);
+        file[option].linesRead = counter;
+    }).on('error', function (err) {
+        console.log('========== AAAAHHHHHH')
+        console.log(err);
+    }).on('close', function (){
+        console.log('* Finished ' + option + '! *');
+        mainCvsStream.end();
+        commentCsvStream.end();
+        file[option].status = READY;
     });
 }

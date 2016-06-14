@@ -89,9 +89,13 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http){
 
     function checkDownload(option) {
         var delay = 1000;
-        if(option == 'Developer'){
-            $scope.downloadStatus.message = "This will generate muliple files!";
-            delay = 50000;
+        switch (option) {
+            case 'Developer':
+                delay = 50000;
+            case 'Issue':
+            case 'Commit':
+                $scope.downloadStatus.message = "This will generate muliple files!";
+                break;
         }
 
         var interval = $interval(function () {
@@ -111,6 +115,10 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http){
             if(option == 'Developer'){
                 $scope.download('Question');
                 $scope.download('Answer');
+            } else if (option == 'Issue') {
+                $scope.download('IssueComment');
+            } else if (option == 'Commit') {
+                $scope.download('CommitComment');
             }
             $scope.downloadStatus.started = true;
         }
