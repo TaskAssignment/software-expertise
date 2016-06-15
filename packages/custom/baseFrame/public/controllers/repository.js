@@ -37,51 +37,6 @@ function ($scope,  $http, $location, $resource) {
         angular.element(tab).removeClass('hidden');
     }
 
-    $scope.fullPopulateRepo = function(){
-        var items = [
-            'issues',
-            'users',
-            'languages',
-            'commits',
-            'issues/comments',
-            'commits/comments',
-        ]
-
-        for(var i in items){
-            var item = items[i];
-            showLoadingScreen();
-            var Resource = $resource('/api/baseFrame/:projectId/populate/' +
-                item);
-            var filter = {
-                projectId: $scope.selectedRepo._id
-            }
-            Resource.get(filter).$promise.then(function (response){
-                hideLoadingScreen();
-            });
-        }
-    }
-
-    $scope.getAllSOData = function (){
-        for(var i in $scope.users){
-            var user = $scope.users[i];
-            if(user.soProfile && !user.soProfile.soPopulated) {
-                populateSOData(user.soProfile._id);
-            }
-        }
-    }
-
-    $scope.makeIssuesTags = function (){
-        showLoadingScreen();
-        var Resource = $resource('/api/baseFrame/:projectId/makeIssuesTags');
-        var filter = {
-            projectId: $scope.selectedRepo._id,
-            project: $scope.selectedRepo
-        }
-        Resource.get(filter).$promise.then(function (response){
-            hideLoadingScreen();
-        });
-    }
-
     /** Looks for repositories with the given filters
      **/
     $scope.queryRepos = function () {
@@ -126,20 +81,6 @@ function ($scope,  $http, $location, $resource) {
         });
     }
 
-
-    $scope.populateRepoResources = function (resource){
-        showLoadingScreen();
-        var Resource = $resource('/api/baseFrame/:projectId/populate/' + resource);
-        var filter = {
-            projectId: $scope.selectedRepo._id
-        }
-        Resource.get(filter).$promise.then(function (response){
-            $scope.selectedRepo['empty' + resource] = false;
-            hideLoadingScreen();
-            getRepoInformation($scope.selectedRepo);
-        }, function(response){console.log(response);});
-    }
-
     /**
     * Displays the user portion of the expertise graph, based on StackOverflow
     * user tags.
@@ -149,11 +90,7 @@ function ($scope,  $http, $location, $resource) {
     $scope.selectUser = function (user){
         $scope.selectedUser = user;
 
-        if(user.soProfile){
-            if(!user.soPopulated){
-                populateSOData(user.soProfile._id);
-            }
-        } else {
+        if(!user.soProfile){
             alert("User is not in StackOverflow.");
         }
         showLoadingScreen();
@@ -172,43 +109,9 @@ function ($scope,  $http, $location, $resource) {
     * @param issue - Dictionary with id, title and body from github issue
     **/
     $scope.selectIssue = function (issue) {
-        showLoadingScreen();
         $scope.selectedIssue = issue;
-
-        if(!issue.parsed){
-            var filter = {
-                projectId: $scope.selectedRepo._id,
-                _id: issue._id,
-                project: $scope.selectedRepo
-            };
-
-            var Issue = $resource('/api/baseFrame/:projectId/makeIssuesTags');
-            Issue.get(filter);
-        }
-        sendToGraph();
         sendToTable();
     }
-
-    function populateSOData(soId) {
-        showLoadingScreen();
-        var filter = {
-            soId: soId,
-        }
-        var url = '/api/baseFrame/user/:soId/populate/';
-        var Resource = $resource(url + 'answers');
-        Resource.get(filter);
-
-        Resource = $resource(url + 'questions');
-        Resource.get(filter);
-
-        Resource = $resource(url + 'tags');
-        Resource.get(filter).$promise.then(function (){
-            hideLoadingScreen();
-            $scope.selectedUser.soPopulated = true;
-            sendToGraph();
-        });
-    }
-
     // *************** HELPER FUNCTIONS ***************//
 
     /**
@@ -264,7 +167,7 @@ function ($scope,  $http, $location, $resource) {
 
     function findProject(){
         $scope.search = true;
-        var Project = $resource('/api/baseFrame/project/find/:name');
+        var Project = $resource('/api/baseFrame/project/get/:name');
         var repoName = $location.search().repoName;
         if(repoName){
             Project.get({name: repoName}).$promise.then(function(project){

@@ -262,9 +262,8 @@ module.exports = function (BaseFrame){
                 user.ssaZScore = ssaZSimilarity(params.user, params.issueTags);
                 user.repos = params.user.repos;
 
-                if(params.assignee == user.username){
+                if(params.assignee == params.user.id){
                     user.assignee = true;
-                    assignee = user;
                 } else {
                     user.assignee = false;
                 }
@@ -288,6 +287,7 @@ module.exports = function (BaseFrame){
                     for(var user of users){
                         var callbackParams = {
                             user: { id: user._id },
+                            assignee: params.Issue.assigneeId,
                             issueTags: tag_array
                         };
 
@@ -295,7 +295,7 @@ module.exports = function (BaseFrame){
                             params.Developer = {tags: user.soProfile.tags};
                             callbackParams.user.questions = user.soProfile.questions;
                             callbackParams.user.answers = user.soProfile.answers;
-                            callbackParams.user.repos = []
+                            callbackParams.user.repos = [];
                             for(var repo of user.ghProfile.repositories){
                                 callbackParams.user.repos.push(repo.name);
                             }
@@ -464,7 +464,7 @@ module.exports = function (BaseFrame){
 
                 var filter = {
                     projectId: req.params.projectId,
-                    pull_request: false,
+                    pullRequest: false,
                     parsed: true,
                     assigneeId: { $in: dev_ids }
                 };

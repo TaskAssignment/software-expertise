@@ -12,18 +12,10 @@ module.exports = function (BaseFrame, app, database) {
         .get(projects.find);
     app.route(base + 'project/new/')
         .get(projects.save);
-
-    var issues = require(controllers + 'issues')(BaseFrame);
     app.route(base + ':projectId/issues')
-        .get(issues.find);
-
-    var users = require(controllers + 'users')(BaseFrame);
+        .get(projects.findIssues);
     app.route(base + ':projectId/users')
-        .get(users.find);
-
-    var tags = require(controllers + 'tags')(BaseFrame);
-    app.route(base + ':projectId/makeIssuesTags')
-        .get(tags.makeIssuesTags);
+        .get(projects.findUsers);
 
     var admin = require(controllers + 'admin')(BaseFrame);
     app.route(base + 'generate')
