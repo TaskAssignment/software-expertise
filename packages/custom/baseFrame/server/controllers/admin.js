@@ -51,7 +51,7 @@ var populated = {
         linesRead: 0
     },
     StopWord: {
-        status: NOT_READY,
+        status: READY,
         linesRead: 0
     },
     Developer: {
@@ -71,6 +71,7 @@ module.exports = function (BaseFrame){
             switch (query.option) {
                 case 'StopProject':
                 case 'Developer':
+                case 'CoOccurrence':
                     readFile(query.option);
                     break;
                 case 'Project':
