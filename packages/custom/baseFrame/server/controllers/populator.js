@@ -61,7 +61,6 @@ module.exports = function (BaseFrame) {
                 for(var id of ids){
                     populateLanguages(id);
                     var interval = setInterval(function () {
-                        console.log('entrou');
                         if(populated.Language.status === READY){
                             stop();
                         }
@@ -91,7 +90,7 @@ module.exports = function (BaseFrame) {
                     }
                     break;
                 case 'Tag':
-                    populateTags('!*MPoAL(H5L.Myr5b');
+                    populateTags('!bNKX0pf0ks0KAn');
                     break;
                 case 'CoOccurrence':
                     populateCoOccurrences('!bNKX0pf0ks06(E');
@@ -398,7 +397,7 @@ function populateIssues(id){
     Issue.findOne({projectId: id}, '-_id createdAt', {sort: '-createdAt', lean:true},function (err, lastCreated){
         var url = id + '/issues?state=all&sort=created&direction=asc'
 
-        var sinceUrl = '';
+        var sinceUrl = undefined;
         if(lastCreated){
             sinceUrl = 'since=' + lastCreated.createdAt.toISOString();
             url += '&' + sinceUrl;
@@ -418,6 +417,7 @@ function populateIssues(id){
                     parsed: false,
                     pullRequest: false,
                     tags: [],
+                    comments: [],
                     createdAt: new Date(result.created_at),
                     updatedAt: new Date(result.updated_at),
                     reporterId: result.user.login
@@ -518,9 +518,9 @@ function populateIssues(id){
                     console.log(err);
                 } else {
                     console.log("Issues created!");
-                    issues = null;
-                    populateIssuesComments(id, sinceUrl);
                 }
+                issues = null;
+                populateIssuesComments(id, sinceUrl);
             });
         }
     });
@@ -622,13 +622,14 @@ function populateCommits(projectId){
 }
 
 function populateIssuesComments(projectId, sinceUrl){
-    var url = projectId + '/issues/comments?' + sinceUrl;
+    var url = projectId + '/issues/comments'
+    if(sinceUrl){
+        url += '?' + sinceUrl;
+    }
     var Issue = mongoose.model('Issue');
 
-
     var buildModels = function(results){
-        for (var i in results) {
-            var result = results[i];
+        for (var result of results) {
             var comment = {
                 _id: result.id,
                 body: result.body,
@@ -638,17 +639,17 @@ function populateIssuesComments(projectId, sinceUrl){
             }
 
             var updateFields = {
-                $addToSet: {
+                $push: {
                     comments: comment
                 }
             };
 
             var filter = {
                 projectId: projectId,
-                number: result.issue_url.split('/').pop()
+                number: parseInt(result.issue_url.split('/').pop())
             }
 
-            Issue.update(filter, updateFields, function(err){
+            Issue.update(filter, updateFields).exec(function(err){
                 if(err){
                     console.log(err);
                 }
@@ -747,7 +748,7 @@ function gitHubPopulate(option, specificUrl, callback){
                 }, 1000);
             }
         } else {
-            console.log(body, error)
+            console.log(response, body, error)
         }
     }
 
