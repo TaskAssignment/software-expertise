@@ -207,6 +207,7 @@ function readFile(option){
                     }
                     model.ghProfile = {
                         _id: model._id,
+                        repositories: [],
                         email: model.email
                     }
                     delete model.email;
@@ -276,12 +277,16 @@ function writeDevs(){
         counter++;
         if(dev.soProfile){
             for(var question of dev.soProfile.questions){
+                question.body = question.body.replace(/\t/g, '        ');
+                question.body = question.body.replace(/(?:\r\n|\r|\n)/g, '                ');
                 question.askerId = dev._id;
                 question.askerSoId = dev.soProfile._id;
                 questionCsvStream.write(question);
             }
 
             for(var answer of dev.soProfile.answers){
+                answer.body = answer.body.replace(/\t/g, '        ');
+                answer.body = answer.body.replace(/(?:\r\n|\r|\n)/g, '                ');
                 answer.answererId = dev._id;
                 answer.answererSoId = dev.soProfile._id;
                 answerCsvStream.write(answer);

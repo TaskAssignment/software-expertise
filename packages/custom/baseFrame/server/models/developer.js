@@ -29,6 +29,7 @@ var AnswerSchema = new Schema({
 
 var TagSchema = new Schema({
     _id: String,
+    synonyms: [String],
     count: Number,
     soCount: Number
 });
