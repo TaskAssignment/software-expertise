@@ -18,6 +18,7 @@ var QuestionSchema = new Schema({
 
 var AnswerSchema = new Schema({
     _id: String,
+    title: String,
     body: String,
     questionId: String,
     tags: [String],
