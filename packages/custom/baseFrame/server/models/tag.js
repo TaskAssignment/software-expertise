@@ -10,6 +10,7 @@ var TagSchema = new Schema({
         required: true,
         unique: true
     },
+    synonyms: [String],
     soTotalCount: Number
 });
 

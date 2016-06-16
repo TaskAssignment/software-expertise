@@ -68,10 +68,10 @@ module.exports = function (BaseFrame) {
 
                     function stop(){
                         clearInterval(interval);
-                        populateIssues(id);
-                        populateContributors(id);
-                        populateCommits(id);
+                        // populateIssues(id);
                     }
+                    populateContributors(id);
+                    // populateCommits(id);
                 }
             });
         },
@@ -90,7 +90,7 @@ module.exports = function (BaseFrame) {
                     }
                     break;
                 case 'Tag':
-                    populateTags('!bNKX0pf0ks0KAn');
+                    populateTags('!4-J-dto(jg0aSjE(E');
                     break;
                 case 'CoOccurrence':
                     populateCoOccurrences('!bNKX0pf0ks06(E');
@@ -164,8 +164,13 @@ function populateTags(filter = 'default', site = 'stackoverflow'){
             var result = items[i];
             var tag = {
                 _id: result.name,
+                synonyms: [],
                 soTotalCount: result.count
             };
+
+            if(result.has_synonyms){
+                tag.synonyms = result.synonyms;
+            }
             tags.push(tag);
         }
 
@@ -196,7 +201,7 @@ function populateStackOverflowUserData(projectId){
         ids = ids.slice(0, -1);
 
         if(!stopRequests){
-            populateUserTags(ids, '!bMMZz)9AYohK3E');
+            populateUserTags(ids, '!bMMRSq0xzD.9EI');
             populateAnswers(ids, '!FcbKgR9VoP8kZFhRg5uitziPRm');
             populateQuestions(ids, '!.FjwPG4rNrCRp8_giA4)OJE9BA8N-');
         }
@@ -243,6 +248,7 @@ function populateUserTags(ids = '', filter = 'default', site = 'stackoverflow'){
                     'soProfile.tags': tag
                 }
             };
+            console.log(filter);
 
             Developer.update(filter, updateFields).exec(function(err){
                 if(err){
@@ -257,8 +263,13 @@ function populateUserTags(ids = '', filter = 'default', site = 'stackoverflow'){
             var result = items[i];
             var tag = {
                 _id: result.name,
+                synonyms: [],
                 count: result.count
             };
+
+            if(result.has_synonyms){
+                tag.synonyms = result.synonyms;
+            }
             findTags(tag, result);
         }
 
@@ -282,8 +293,7 @@ function populateAnswers(ids, filter = 'default', obj = 'users/', site = 'stacko
     var Developer = mongoose.model('Developer');
 
     var buildModels = function(items){
-        for(var i in items){
-            var result = items[i];
+        for(var result of items){
             var answer = {
                 _id: result.answer_id,
                 questionId: result.question_id,
@@ -294,20 +304,25 @@ function populateAnswers(ids, filter = 'default', obj = 'users/', site = 'stacko
                 createdAt: result.creation_date * 1000,
                 updatedAt: result.last_activity_date * 1000
             };
+
+            var filter = {
+                'soProfile._id': result.owner.user_id
+            }
+
+            var updateFields = {
+                $addToSet: {
+                    'soProfile.answers': answer
+                },
+                'soProfile.soPopulated': true
+            };
+
+            Developer.update(filter, updateFields).exec(function (err){
+                if(err){
+                    console.log(err.message);
+                }
+            });
         }
 
-        var filter = {
-            'soProfile._id': result.owner.user_id
-        }
-
-        var updateFields = {
-            $addToSet: {
-                'soProfile.answers': answer
-            },
-            soPopulated: true
-        };
-
-        Developer.update(filter, updateFields).exec();
     }
 
     soPopulate('Answer', url, buildModels);
@@ -330,7 +345,6 @@ function populateQuestions(ids, filter = 'default', obj = 'users/', site = 'stac
     var buildModels = function(items){
         for(var i in items){
             var result = items[i];
-            console.log(result);
             var question = {
                 _id: result.question_id,
                 title: result.title,
@@ -351,9 +365,11 @@ function populateQuestions(ids, filter = 'default', obj = 'users/', site = 'stac
                 }
             };
 
-            console.log(question);
-
-            Developer.update(filter, updateFields).exec();
+            Developer.update(filter, updateFields).exec(function (err){
+                if(err){
+                    console.log(err.message);
+                }
+            });
         }
     }
 
@@ -540,7 +556,7 @@ function populateContributors(projectId){
 
             var updateFields = {
                 $addToSet: {
-                    repositories: projectId
+                    'ghProfile.repositories': projectId
                 },
                 $setOnInsert: {
                     ghProfile: {
@@ -549,7 +565,11 @@ function populateContributors(projectId){
                 }
             };
 
-            Developer.update(filter, updateFields, {upsert: true}).exec();
+            Developer.update(filter, updateFields, {upsert: true}).exec(function (err){
+                if(err){
+                    console.log(err.message);
+                }
+            });
         }
     }
 

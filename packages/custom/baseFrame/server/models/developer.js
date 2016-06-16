@@ -18,6 +18,7 @@ var QuestionSchema = new Schema({
 
 var AnswerSchema = new Schema({
     _id: String,
+    title: String,
     body: String,
     questionId: String,
     tags: [String],
@@ -29,6 +30,7 @@ var AnswerSchema = new Schema({
 
 var TagSchema = new Schema({
     _id: String,
+    synonyms: [String],
     count: Number,
     soCount: Number
 });
