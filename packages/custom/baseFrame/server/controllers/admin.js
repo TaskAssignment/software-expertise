@@ -71,7 +71,7 @@ module.exports = function (BaseFrame){
             switch (query.option) {
                 case 'StopProject':
                 case 'Developer':
-                case 'CoOccurrence':
+                // case 'CoOccurrence':
                     readFile(query.option);
                     break;
                 case 'Project':
@@ -105,6 +105,37 @@ module.exports = function (BaseFrame){
                     break;
             }
             res.status(NOT_READY).send(file[option]);
+        },
+
+        oauth: function (req, res) {
+            var request = require('request');
+            //
+            // var get = {
+            //     method: 'GET',
+            //     uri: 'https://stackexchange.com/oauth?client_id=7211&scope=read_inbox&redirect_uri=http://localhost:3000/admin',
+            // }
+            // request(get, function (err, response, body){
+            //     console.log(body);
+            //     res.send(body);
+            // });
+
+            var req = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                uri: 'https://stackexchange.com/oauth/access_token',
+                form: {
+                    'client_id': '7345',
+                    'client_secret': 'YlMgg2VjucoX9q9ksZyyKA((',
+                    'code': req.query.code,
+                    'redirect_uri': 'http://localhost:3000/admin'
+                }
+            };
+            request(req, function (err, response, body){
+                console.log(body);
+                res.send(body);
+            });
         },
 
         download: function (req, res) {

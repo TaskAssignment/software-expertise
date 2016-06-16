@@ -1,9 +1,19 @@
 'use strict';
 
 var baseFrame = angular.module('mean.baseFrame');
-baseFrame.controller('AdminController', function ($scope, $interval, $http){
+baseFrame.controller('AdminController', function ($scope, $interval, $http, $location){
     findProjects();
     $scope.selectedProject = undefined;
+
+    $scope.oauth = function () {
+        var code = $location.search().code;
+        $http.get('/api/baseFrame/oauth', {params: {code: code}})
+        .then(function (response) {
+            console.log(response.data);
+        }, function (response){
+            console.log(response);
+        });
+    }
 
     $scope.populate = function(option){
         $scope.populateStatus = {

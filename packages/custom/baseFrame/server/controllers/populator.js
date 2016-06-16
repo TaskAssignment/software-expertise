@@ -45,8 +45,18 @@ var populated = {
     }
 }
 
+
+var next_token = 0;
+var ACCESS_TOKENS = [
+    'access_token=7mnlmGk6edBcSJnG1Qpn1w))&key=vqnCl1eW8aKqHEBXFabq7Q((',
+    'access_token=pQYmG3eKP1xoNlN*m0RD5Q))&key=LrB92oMtLUnGJ5uyZvA)bw((',
+    'access_token=Al(Mk7j*crIMRteMw7AnZg))&key=Ctt)0cvvDQttNSj9wmv38g((',
+    'access_token=*NptX8UDdghuEVxycU3BIQ))&key=J1y9C6i6AhWLcgHAyC2iOQ((',
+    'access_token=(CnKXfjNGlEWcTd7yT7s0A))&key=vRMoDd5M)SvR0OSzLWQIfw((',
+    'access_token=oXBWhENXHQZJY8h8LAykUw))&key=unaHxXqTCHJ5Ve6AfnIJGg(('
+]
 var stopRequests = false;
-var delay = 34; // 34 ms to assure that one there will be no more than 30 requests per second.
+var delay = 34; // 34 ms to assure that there will be no more than 30 requests per second.
 var selectedProject = undefined;
 var stopWords = [];
 
@@ -106,49 +116,60 @@ module.exports = function (BaseFrame) {
 function populateCoOccurrences(filter = 'default', site = 'stackoverflow'){
     var Tag = mongoose.model('Tag');
     var CoOccurrence = mongoose.model('CoOccurrence');
+    var patterns = ['[a-c]', '[d-h]', '[i-n]', '[o-r]', '[s-w]', '[x-z]','[^a-z]'];
+    for(var pattern of patterns){
+        var regex = new RegExp('^' + pattern);
+        findTags(regex);
+    }
 
-    Tag.find().lean().exec(function (err, tags){
-        var index = 0;
-        var interval = setInterval(function () {
-            var tag = tags[index];
-            var CONFIDENCE = 0.01;
-            var MINIMUM_COUNT = CONFIDENCE * tag.soTotalCount;
-            var url = 'tags/' + tag._id + '/related?order=desc&sort=popular';
-            url += '&site=' + site;
-            url += '&filter=' + filter;
+    function findTags(regex){
+        Tag.find({_id: regex}).lean().exec(function (err, tags){
+            console.log(tags.length);
+            for(var tag of tags){
+                coOccurrenceRequest(tag, regex);
+            }
+        });
+    }
 
-            var buildModels = function(items){
-                var coOccurrences = [];
-                for(var i in items){
-                    var result = items[i];
-                    if(result.count >= MINIMUM_COUNT) {
+    function coOccurrenceRequest(tag, regex){
+        if(!stopRequests){
+            console.log(regex);
+            setTimeout(function () {
+                var CONFIDENCE = 0.01;
+                var MINIMUM_COUNT = CONFIDENCE * tag.soTotalCount;
+                var url = 'tags/' + tag._id + '/related?order=desc&sort=popular';
+                url += '&site=' + site;
+                url += '&filter=' + filter;
 
-                        var coOccurrence = {
-                            source: tag._id,
-                            target: result.name,
-                            occurrences: result.count
-                        };
+                var buildModels = function(items){
+                    var coOccurrences = [];
+                    for(var i in items){
+                        var result = items[i];
+                        if(result.count >= MINIMUM_COUNT) {
 
-                        coOccurrences.push(coOccurrence);
-                    } else {
-                        break;
+                            var coOccurrence = {
+                                source: tag._id,
+                                target: result.name,
+                                occurrences: result.count
+                            };
+
+                            coOccurrences.push(coOccurrence);
+                        } else {
+                            break;
+                        }
                     }
+
+                    CoOccurrence.collection.insert(coOccurrences, function (err){
+                        if(err){
+                            console.log(err);
+                        }
+                    });
                 }
 
-                CoOccurrence.collection.insert(coOccurrences);
-            }
-
-            soPopulate('CoOccurrence', url, buildModels);
-            index++;
-            if(stopRequests || index == tags.length){
-                stop();
-            }
-        }, delay);
-
-        function stop(){
-            clearInterval(interval);
+                soPopulate('CoOccurrence', url, buildModels);
+            }, delay);
         }
-    });
+    }
 }
 
 function populateTags(filter = 'default', site = 'stackoverflow'){
@@ -533,7 +554,7 @@ function populateIssues(id){
                 if(err){
                     console.log(err);
                 } else {
-                    console.log("Issues created!");
+                    console.log('Issues created!');
                 }
                 issues = null;
                 populateIssuesComments(id, sinceUrl);
@@ -777,7 +798,8 @@ function gitHubPopulate(option, specificUrl, callback){
 
 function soPopulate(option, specificUrl, callback) {
     var uri = 'https://api.stackexchange.com/2.2/' + specificUrl +
-      '&pagesize=100&pagesize=100&key=unaHxXqTCHJ5Ve6AfnIJGg((';
+      '&pagesize=100&pagesize=100';
+    uri += ACCESS_TOKENS[next_token];
 
     var options = {
         headers: {
@@ -791,10 +813,10 @@ function soPopulate(option, specificUrl, callback) {
             var results = JSON.parse(body);
             callback(results.items);
 
-            console.log(option + ': Page ' + results.page + ' populated.');
+            // console.log(option + ': Page ' + results.page + ' populated.');
             // Check for next page
             if(results.has_more){
-                var new_uri = uri + '&page=' +
+                var new_uri = uri + ACCESS_TOKENS[next_token] + '&page=' +
                 (parseInt(results.page) + 1);
                 options.uri = new_uri;
 
@@ -803,11 +825,18 @@ function soPopulate(option, specificUrl, callback) {
                     request(options, requestCallback);
                 }, 100);
             } else {
-                console.log(option + ' done!')
+                // console.log(option + ' done!')
             }
 
-        } else if(response.statusCode == 502){
-            stopRequests = true;
+        } else if(!error && (response.statusCode === 502 || response.statusCode === 400)){
+            next_token = (next_token + 1) % ACCESS_TOKENS.length;
+            if(next_token == 0){
+                stopRequests = true;
+            } else {
+                var page = '&' + options.uri.split('&').pop();
+                options.uri = uri + ACCESS_TOKENS[next_token] + page;
+                request(options, requestCallback);
+            }
         } else {
             console.log(body, error);
         }
