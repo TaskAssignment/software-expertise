@@ -202,8 +202,8 @@ function populateStackOverflowUserData(projectId){
 
         if(!stopRequests){
             populateUserTags(ids, '!bMMRSq0xzD.9EI');
-            // populateAnswers(ids, '!FcbKgR9VoP8kZFhRg5uitziPRm');
-            // populateQuestions(ids, '!.FjwPG4rNrCRp8_giA4)OJE9BA8N-');
+            populateAnswers(ids, '!FcbKgR9VoP8kZFhRg5uitziPRm');
+            populateQuestions(ids, '!.FjwPG4rNrCRp8_giA4)OJE9BA8N-');
         }
     }
 
