@@ -68,10 +68,10 @@ module.exports = function (BaseFrame) {
 
                     function stop(){
                         clearInterval(interval);
-                        // populateIssues(id);
+                        populateIssues(id);
                     }
                     populateContributors(id);
-                    // populateCommits(id);
+                    populateCommits(id);
                 }
             });
         },
