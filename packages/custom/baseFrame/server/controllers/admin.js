@@ -341,14 +341,21 @@ function writeIssueOrCommit(option = 'Issue'){
     var counter = 0;
     dbStream.on('data', function (model) {
         counter++;
+        model.tags = undefined;
+        delete model.tags;
         if(model.comments){
             for(var comment of model.comments){
                 commentCsvStream.write(comment);
             }
             delete model.comments;
         }
-
-        delete model.tags;
+        if(model.body){
+            model.body = model.body.replace(/\t/g, '        ');
+            model.body = model.body.replace(/(?:\r\n|\r|\n)/g, '                ');
+        } else if(model.message){
+            model.message = model.message.replace(/\t/g, '        ');
+            model.message = model.message.replace(/(?:\r\n|\r|\n)/g, '                ');
+        }
 
         mainCvsStream.write(model);
         file[option].linesRead = counter;

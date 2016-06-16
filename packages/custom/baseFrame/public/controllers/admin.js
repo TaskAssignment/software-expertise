@@ -91,9 +91,9 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http){
         var delay = 1000;
         switch (option) {
             case 'Developer':
-                delay = 50000;
             case 'Issue':
             case 'Commit':
+                delay = 50000;
                 $scope.downloadStatus.message = "This will generate muliple files!";
                 break;
         }
