@@ -207,7 +207,7 @@ module.exports = function (BaseFrame){
 *
 * @param option - The Model that will be exported. The file will be the name of this model pluralized.
 **/
-function writeFile(option, items = '-updatedAt -createdAt -__v'){
+function writeFile(option, headers = true, items = '-updatedAt -createdAt -__v'){
     var MongooseModel = mongoose.model(option);
     var stream = fs.createWriteStream('files/' + option + 's.tsv');
 
@@ -215,7 +215,7 @@ function writeFile(option, items = '-updatedAt -createdAt -__v'){
 
     var options = {
         delimiter: '\t',
-        headers: true
+        headers: headers
     }
 
     var csvStream = csv.createWriteStream(options);

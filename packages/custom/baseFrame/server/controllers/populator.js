@@ -722,6 +722,48 @@ function populateIssuesComments(projectId, sinceUrl){
     gitHubPopulate('IssueComment', url, buildModels);
 }
 
+function populateEvents(projectId, sinceUrl){
+    var url = projectId + '/issues/events'
+    if(sinceUrl){
+        url += '?' + sinceUrl;
+    }
+    var Issue = mongoose.model('Issue');
+
+    var buildModels = function(results){
+        for (var result of results) {
+            var comment = {
+                _id: result.id,
+                body: result.body,
+                createdAt: result.created_at,
+                updatedAt: result.updated_at,
+                user: result.user.login
+            }
+
+            var updateFields = {
+                $push: {
+                    comments: comment
+                }
+            };
+
+            var filter = {
+                projectId: projectId,
+                number: parseInt(result.issue_url.split('/').pop())
+            }
+
+            // console.log(filter);
+
+            Issue.update(filter, updateFields).exec(function(err){
+                if(err){
+                    console.log(err);
+                }
+            });
+        }
+
+    }
+    gitHubPopulate('IssueComment', url, buildModels);
+}
+
+
 function populateCommitsComments(projectId){
     var url = projectId + '/comments';
 
@@ -760,7 +802,7 @@ function populateCommitsComments(projectId){
     gitHubPopulate('CommitComment', url, buildModels);
 }
 
-function gitHubPopulate(option, specificUrl, callback){
+function gitHubPopulate(option, specificUrl, callback, etag = undefined){
     var uri = 'https://api.github.com/repositories/' + specificUrl
     uri += specificUrl.lastIndexOf('?') < 0 ? '?' : '&';
     uri += 'per_page=100';
@@ -776,11 +818,17 @@ function gitHubPopulate(option, specificUrl, callback){
         }
     };
 
+    if(etag){
+        options.headers['If-None-Match'] = etag;
+    }
+
     var pageCounter = 0;
 
     var requestCallback = function (error, response, body){
         if (!error && response.statusCode == 200) {
             var results = JSON.parse(body);
+            console.log(response.headers);
+            results.etag = response.headers.etag;
             callback(results);
 
             var links = response.headers.link || '';

@@ -57,7 +57,7 @@ var GitHubProfileSchema = new Schema({
     },
     email: String,
     repositories: [{
-        type: String,
+        type: Number,
         ref: 'Project',
         unique: true
     }]
