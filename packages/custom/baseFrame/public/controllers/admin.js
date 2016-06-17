@@ -127,6 +127,7 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
                 $scope.download('Answer');
             } else if (option == 'Issue') {
                 $scope.download('IssueComment');
+                $scope.download('IssueEvent');
             } else if (option == 'Commit') {
                 $scope.download('CommitComment');
             }

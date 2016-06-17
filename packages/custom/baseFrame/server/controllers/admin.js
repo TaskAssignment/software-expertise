@@ -125,6 +125,7 @@ module.exports = function (BaseFrame){
                         }
                     }
                     writeIssueOrCommit(option, headers, transform);
+                    writeFile('IssueEvent');
                     break;
                 case 'Commit':
                     var headers = {
@@ -316,12 +317,11 @@ function populate(option, project = undefined){
     if(project){
         var repo = JSON.parse(project);
         populator.GitHub([repo._id]);
-        // populator.StackOverflow('Developer', repo._id);
+        populator.StackOverflow('Developer', repo._id);
     } else {
         populator.StackOverflow(option);
     }
 }
-
 
 function writeDevs(){
     console.log('** Generating developers file **');
@@ -390,7 +390,6 @@ function writeDevs(){
         file.Developer.status = READY;
     });
 }
-
 
 function writeIssueOrCommit(option = 'Issue',
             headers = {main: true, comments: true}, transform = {}){

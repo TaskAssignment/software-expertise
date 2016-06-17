@@ -6,45 +6,15 @@ var mongoose = require('mongoose');
 var READY = true; //Status code to be sent when ready.
 var NOT_READY = false; //Send accepted status code
 
-var populated = {
-    Tag: {
-        status: NOT_READY,
-        pagesAdded: 0
-    },
-    CoOccurrence: {
-        status: NOT_READY,
-        pagesAdded: 0
-    },
-    Issue: {
-        status: NOT_READY,
-        pagesAdded: 0
-    },
-    Developer: {
-        status: NOT_READY,
-        pagesAdded: 0
-    },
-    Commit: {
-        status: NOT_READY,
-        pagesAdded: 0
-    },
-    IssueComment: {
-        status: NOT_READY,
-        pagesAdded: 0
-    },
-    CommitComment: {
-        status: NOT_READY,
-        pagesAdded: 0
-    },
-    Language: {
-        status: NOT_READY,
-        pagesAdded: 0
-    },
-    Project: {
+var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit', 'IssueComment', 'CommitComment', 'Language', 'Project', 'IssueEvent'];
+
+var populated = {};
+for(var model of models){
+    populated[model] = {
         status: NOT_READY,
         pagesAdded: 0
     }
 }
-
 
 var next_token = 0;
 var ACCESS_TOKENS = [
@@ -70,6 +40,10 @@ module.exports = function (BaseFrame) {
                 });
                 for(var id of ids){
                     populateLanguages(id);
+                    populateEvents(id);
+                    populateContributors(id);
+                    populateCommits(id);
+
                     var interval = setInterval(function () {
                         if(populated.Language.status === READY){
                             stop();
@@ -80,8 +54,6 @@ module.exports = function (BaseFrame) {
                         clearInterval(interval);
                         populateIssues(id);
                     }
-                    // populateContributors(id);
-                    // populateCommits(id);
                 }
             });
         },
@@ -124,7 +96,6 @@ function populateCoOccurrences(filter = 'default', site = 'stackoverflow'){
 
     function findTags(regex){
         Tag.find({_id: regex}).lean().exec(function (err, tags){
-            console.log(tags.length);
             for(var tag of tags){
                 coOccurrenceRequest(tag, regex);
             }
@@ -133,7 +104,6 @@ function populateCoOccurrences(filter = 'default', site = 'stackoverflow'){
 
     function coOccurrenceRequest(tag, regex){
         if(!stopRequests){
-            console.log(regex);
             setTimeout(function () {
                 var CONFIDENCE = 0.01;
                 var MINIMUM_COUNT = CONFIDENCE * tag.soTotalCount;
@@ -161,7 +131,7 @@ function populateCoOccurrences(filter = 'default', site = 'stackoverflow'){
 
                     CoOccurrence.collection.insert(coOccurrences, function (err){
                         if(err){
-                            console.log(err);
+                            console.log('=== Error CoOccurrence: ' + err.message);
                         }
                     });
                 }
@@ -229,6 +199,8 @@ function populateStackOverflowUserData(projectId){
     }
 
     Developer.find(devFilter).select(selectItems).lean().exec(function(err, devs){
+        console.log(devs.length);
+        console.log(stopRequests);
         while(devs.length > 100){
             var dev_part = devs.splice(0, 100);
             partialUsers(dev_part);
@@ -272,7 +244,9 @@ function populateUserTags(ids = '', filter = 'default', site = 'stackoverflow'){
 
             Developer.update(filter, updateFields).exec(function(err){
                 if(err){
-                    console.log(err);
+                    console.log('=== Error UserTags: ' + err.message);
+                } else {
+                    console.log('Dev tags updated!');
                 }
             });
         });
@@ -321,8 +295,9 @@ function populateAnswers(ids, filter = 'default', obj = 'users/', site = 'stacko
                 title: result.title,
                 score: result.score,
                 tags: result.tags,
-                createdAt: result.creation_date * 1000,
-                updatedAt: result.last_activity_date * 1000
+                //Time comes in seconds on Stack Exchange API
+                createdAt: new Date(result.creation_date * 1000),
+                updatedAt: new Date(result.last_activity_date * 1000)
             };
 
             var filter = {
@@ -338,7 +313,9 @@ function populateAnswers(ids, filter = 'default', obj = 'users/', site = 'stacko
 
             Developer.update(filter, updateFields).exec(function (err){
                 if(err){
-                    console.log(err.message);
+                    console.log('=== Error Answers: ' + err.message);
+                } else {
+                    console.log('Dev answers updated!');
                 }
             });
         }
@@ -371,8 +348,8 @@ function populateQuestions(ids, filter = 'default', obj = 'users/', site = 'stac
                 body: result.body_markdown,
                 score: result.score,
                 tags: result.tags,
-                createdAt: parseInt(result.creation_date) * 1000,
-                updatedAt: parseInt(result.last_activity_date) * 1000
+                createdAt: new Date(result.creation_date * 1000),
+                updatedAt: new Date(result.last_activity_date * 1000)
             };
 
             var filter = {
@@ -387,7 +364,9 @@ function populateQuestions(ids, filter = 'default', obj = 'users/', site = 'stac
 
             Developer.update(filter, updateFields).exec(function (err){
                 if(err){
-                    console.log(err.message);
+                    console.log('=== Error Questions: ' + err.message);
+                } else {
+                    console.log('Dev questions updated!');
                 }
             });
         }
@@ -418,7 +397,7 @@ function populateLanguages(id){
 
         Project.findByIdAndUpdate(id, updateFields, {new: true}, function(err, project){
             if(err){
-                console.log(err);
+                console.log('=== Error Project: ' + err.message);
             } else {
                 selectedProject = project;
             }
@@ -439,8 +418,6 @@ function populateIssues(id){
             sinceUrl = 'since=' + lastCreated.createdAt.toISOString();
             url += '&' + sinceUrl;
         }
-
-        var issues = [];
 
         function makeTags(issue) {
             var title = issue.title + ' ' + selectedProject.description;
@@ -471,16 +448,16 @@ function populateIssues(id){
                     // Tags in SO are dash separated.
                     word = word.replace(/_/g, '-');
                 }
-                if(allWords[word] === undefined){
-                    allWords[word] = 1;
-                } else {
+                if(allWords.hasOwnProperty(word)){
                     allWords[word] += 1;
+                } else {
+                    allWords[word] = 1;
                 }
             }
 
             for(var word of stopWords){
                 // If a stop word is in my all words, I remove it.
-                if(allWords[word]){
+                if(allWords.hasOwnProperty(word)){
                     delete allWords[word];
                 }
             }
@@ -505,7 +482,7 @@ function populateIssues(id){
                     issue.tags.push(issueTag);
                 }
                 issue.parsed = true;
-                issues.push(issue);
+                saveIssue(issue);
             });
         }
 
@@ -549,6 +526,18 @@ function populateIssues(id){
 
         gitHubPopulate('Issue', url, buildModels);
 
+        function saveIssue(issue) {
+            Issue.update({_id: issue._id}, issue, {upsert:true})
+            .exec(function(err){
+                if(err){
+                    console.log('=== Error Issue: ' + err.message);
+                } else {
+                    console.log('Issue #' + issue.number + ' saved.');
+                    issue = null;
+                }
+            });
+        }
+
         var interval = setInterval(function () {
             if(populated.Issue.status === READY){
                 stop();
@@ -557,27 +546,11 @@ function populateIssues(id){
 
         function stop(){
             clearInterval(interval);
-            for(var issue of issues){
-                saveIssue(issue);
-            }
 
-            //100 issues are saved in about 1 second. So each should take about 10 ms.
-            var commentDelay = 10 * issues.length;
+            //Wait one second to be sure all issues are saved
             setTimeout(function (){
-                console.log("Comments now!");
                 populateIssuesComments(id, sinceUrl);
-            }, commentDelay);
-        }
-
-        function saveIssue(issue) {
-            Issue.update({_id: issue._id}, issue, {upsert:true})
-              .exec(function(err){
-                if(err){
-                    console.log(err);
-                } else {
-                    console.log("Issue #" + issue.number + " saved.");
-                }
-            });
+            }, 1000);
         }
     });
 }
@@ -607,7 +580,7 @@ function populateContributors(projectId){
 
             Developer.update(filter, updateFields, {upsert: true}).exec(function (err){
                 if(err){
-                    console.log(err.message);
+                    console.log('=== Error Developer: ' + err.message);
                 }
             });
         }
@@ -620,8 +593,6 @@ function populateCommits(projectId){
     var Commit = mongoose.model('Commit');
     Commit.findOne({projectId: projectId}, 'createdAt', {sort: '-createdAt', lean:true},function (err, lastCreated){
         var url = projectId + '/commits';
-
-        console.log(lastCreated);
 
         if(lastCreated){
             url += '?since=' + lastCreated.createdAt.toISOString();
@@ -660,7 +631,7 @@ function populateCommits(projectId){
 
             Commit.create(commits, function(err){
                 if(err){
-                    console.log(err);
+                    console.log('=== Error Commit: ' + err.message);
                 } else {
                     console.log('Commits created!')
                 }
@@ -709,11 +680,9 @@ function populateIssuesComments(projectId, sinceUrl){
                 number: parseInt(result.issue_url.split('/').pop())
             }
 
-            // console.log(filter);
-
             Issue.update(filter, updateFields).exec(function(err){
                 if(err){
-                    console.log(err);
+                    console.log('=== Error IssueComment: ' + err.message);
                 }
             });
         }
@@ -722,45 +691,43 @@ function populateIssuesComments(projectId, sinceUrl){
     gitHubPopulate('IssueComment', url, buildModels);
 }
 
-function populateEvents(projectId, sinceUrl){
+function populateEvents(projectId){
     var url = projectId + '/issues/events'
-    if(sinceUrl){
-        url += '?' + sinceUrl;
-    }
-    var Issue = mongoose.model('Issue');
+    var IssueEvent = mongoose.model('IssueEvent');
 
     var buildModels = function(results){
+        var issueEvents = [];
         for (var result of results) {
-            var comment = {
+            var issueEvent = {
                 _id: result.id,
-                body: result.body,
-                createdAt: result.created_at,
-                updatedAt: result.updated_at,
-                user: result.user.login
-            }
-
-            var updateFields = {
-                $push: {
-                    comments: comment
-                }
-            };
-
-            var filter = {
+                actor: result.actor.login,
                 projectId: projectId,
-                number: parseInt(result.issue_url.split('/').pop())
+                issueId: result.issue.id,
+                issueNumber: result.issue.number,
+                typeOfEvent: result.event,
             }
 
-            // console.log(filter);
+            if(result.commit_id){
+                issueEvent.commitId = result.commit_id
+            }
 
-            Issue.update(filter, updateFields).exec(function(err){
-                if(err){
-                    console.log(err);
-                }
-            });
+            if(result.assignee){
+                issueEvent.assigneeId = result.assignee.login
+            }
+
+            issueEvents.push(issueEvent)
         }
 
+        IssueEvent.create(issueEvents, function(err){
+            if(err){
+                console.log('=== Error IssueEvent: ' + err.message);
+            } else {
+                console.log('Events Created');
+            }
+        });
+
     }
-    gitHubPopulate('IssueComment', url, buildModels);
+    gitHubPopulate('IssueEvent', url, buildModels);
 }
 
 
@@ -793,7 +760,7 @@ function populateCommitsComments(projectId){
 
             Commit.update(filter, updateFields, function(err){
                 if(err){
-                    console.log(err);
+                    console.log('=== Error Comment: ' + err.message);
                 }
             });
         }
@@ -827,8 +794,7 @@ function gitHubPopulate(option, specificUrl, callback, etag = undefined){
     var requestCallback = function (error, response, body){
         if (!error && response.statusCode == 200) {
             var results = JSON.parse(body);
-            console.log(response.headers);
-            results.etag = response.headers.etag;
+            // results.etag = response.headers.etag;
             callback(results);
 
             var links = response.headers.link || '';
@@ -841,22 +807,21 @@ function gitHubPopulate(option, specificUrl, callback, etag = undefined){
 
             pageCounter++;
             populated[option].pagesAdded = pageCounter;
-            console.log(option + ': page ' + pageCounter + ' populated');
-            // if(next){
-            //     var begin = next.indexOf('<');
-            //     var end = next.indexOf('>');
-            //
-            //     //This gets string = [begin, end)
-            //     var new_uri = next.substring(begin + 1, end);
-            //
-            //     options.uri = new_uri;
-            //
-            //     request(options, requestCallback);
-            // } else {
+            if(next){
+                var begin = next.indexOf('<');
+                var end = next.indexOf('>');
+
+                //This gets string = [begin, end)
+                var new_uri = next.substring(begin + 1, end);
+
+                options.uri = new_uri;
+
+                request(options, requestCallback);
+            } else {
                 setTimeout(function () {
                     populated[option].status = READY;
                 }, 1000);
-            // }
+            }
         } else {
             console.log(response, body, error)
         }
@@ -882,7 +847,7 @@ function soPopulate(option, specificUrl, callback) {
             var results = JSON.parse(body);
             callback(results.items);
 
-            // console.log(option + ': Page ' + results.page + ' populated.');
+            console.log(option + ': Page ' + results.page);
             // Check for next page
             if(results.has_more){
                 var new_uri = uri + ACCESS_TOKENS[next_token] + '&page=' +

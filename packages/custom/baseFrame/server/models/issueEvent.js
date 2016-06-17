@@ -14,10 +14,12 @@ var IssueEventSchema = new Schema({
         type: Number,
         ref: 'Issue',
     },
+    issueNumber: Number,
     actor: String,
     commitId: String,
     typeOfEvent: String,
     assigneeId: String,
+    createdAt: Date
 });
 
 mongoose.model('IssueEvent', IssueEventSchema);

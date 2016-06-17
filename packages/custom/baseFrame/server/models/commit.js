@@ -16,7 +16,7 @@ var CommitSchema = new Schema({
     message: String,
     user: String,
     projectId: {
-        type: String,
+        type: Number,
         ref: 'Project',
     },
     createdAt: Date,

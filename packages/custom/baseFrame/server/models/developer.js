@@ -6,7 +6,7 @@ var Schema = mongoose.Schema;
 /************** SUBDOCUMENTS *******************/
 
 var QuestionSchema = new Schema({
-    _id: String,
+    _id: Number,
     title: String,
     body: String,
     tags: [String],
@@ -17,7 +17,7 @@ var QuestionSchema = new Schema({
 });
 
 var AnswerSchema = new Schema({
-    _id: String,
+    _id: Number,
     title: String,
     body: String,
     questionId: String,
@@ -29,14 +29,14 @@ var AnswerSchema = new Schema({
 });
 
 var TagSchema = new Schema({
-    _id: String,
+    _id: String, //tag Name
     synonyms: [String],
     count: Number,
     soCount: Number
 });
 
 var SoProfileSchema = new Schema({
-    _id: String,
+    _id: Number,
     displayName: String,
     soPopulated: {
         type: Boolean,
