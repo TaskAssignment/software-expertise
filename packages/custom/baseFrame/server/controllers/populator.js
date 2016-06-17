@@ -192,9 +192,9 @@ function populateStackOverflowUserData(projectId){
         ids = ids.slice(0, -1);
 
         if(!stopRequests){
-            populateUserTags(ids, '!bMMRSq0xzD.9EI');
             populateAnswers(ids, '!FcbKgR9VoP8kZFhRg5uitziPRm');
             populateQuestions(ids, '!.FjwPG4rNrCRp8_giA4)OJE9BA8N-');
+            populateUserTags(ids, '!bMMRSq0xzD.9EI');
         }
     }
 
@@ -239,14 +239,15 @@ function populateUserTags(ids = '', filter = 'default', site = 'stackoverflow'){
             var updateFields = {
                 $addToSet: {
                     'soProfile.tags': tag
-                }
+                },
+                'soProfile.soPopulated': true
             };
 
             Developer.update(filter, updateFields).exec(function(err){
                 if(err){
                     console.log('=== Error UserTags: ' + err.message);
                 } else {
-                    console.log('Dev tags updated!');
+                    console.log(result.user_id + ' tags updated!');
                 }
             });
         });
@@ -307,15 +308,14 @@ function populateAnswers(ids, filter = 'default', obj = 'users/', site = 'stacko
             var updateFields = {
                 $addToSet: {
                     'soProfile.answers': answer
-                },
-                'soProfile.soPopulated': true
+                }
             };
 
             Developer.update(filter, updateFields).exec(function (err){
                 if(err){
                     console.log('=== Error Answers: ' + err.message);
                 } else {
-                    console.log('Dev answers updated!');
+                    console.log(result.owner.user_id + ' answers updated!');
                 }
             });
         }
@@ -366,7 +366,7 @@ function populateQuestions(ids, filter = 'default', obj = 'users/', site = 'stac
                 if(err){
                     console.log('=== Error Questions: ' + err.message);
                 } else {
-                    console.log('Dev questions updated!');
+                    console.log(result.owner.user_id + ' questions updated!');
                 }
             });
         }
@@ -417,6 +417,18 @@ function populateIssues(id){
             lastCreated.createdAt.setSeconds(lastCreated.createdAt.getSeconds() + 1);
             sinceUrl = 'since=' + lastCreated.createdAt.toISOString();
             url += '&' + sinceUrl;
+        }
+
+        function saveIssue(issue) {
+            Issue.update({_id: issue._id}, issue, {upsert:true})
+            .exec(function(err){
+                if(err){
+                    console.log('=== Error Issue: ' + err.message);
+                } else {
+                    console.log('Issue #' + issue.number + ' saved.');
+                    issue = null;
+                }
+            });
         }
 
         function makeTags(issue) {
@@ -526,18 +538,6 @@ function populateIssues(id){
 
         gitHubPopulate('Issue', url, buildModels);
 
-        function saveIssue(issue) {
-            Issue.update({_id: issue._id}, issue, {upsert:true})
-            .exec(function(err){
-                if(err){
-                    console.log('=== Error Issue: ' + err.message);
-                } else {
-                    console.log('Issue #' + issue.number + ' saved.');
-                    issue = null;
-                }
-            });
-        }
-
         var interval = setInterval(function () {
             if(populated.Issue.status === READY){
                 stop();
@@ -573,7 +573,8 @@ function populateContributors(projectId){
                 },
                 $setOnInsert: {
                     ghProfile: {
-                        _id: result.login
+                        _id: result.login,
+                        repositories: [projectId]
                     }
                 }
             };
@@ -654,10 +655,32 @@ function populateCommits(projectId){
 
 function populateIssuesComments(projectId, sinceUrl){
     var url = projectId + '/issues/comments'
-    if(sinceUrl){
-        url += '?' + sinceUrl;
-    }
+    // if(sinceUrl){
+    //     url += '?' + sinceUrl;
+    // }
     var Issue = mongoose.model('Issue');
+
+    function saveComment(comment, issueNumber){
+        var updateFields = {
+            $addToSet: {
+                comments: comment
+            }
+        };
+
+        var filter = {
+            projectId: projectId,
+            number: issueNumber
+        }
+
+        Issue.update(filter, updateFields).exec(function(err){
+            if(err){
+                console.log('=== Error IssueComment: ' + err.message);
+            } else {
+                console.log('Add comment to issue #' + filter.number);
+            }
+        });
+
+    }
 
     var buildModels = function(results){
         for (var result of results) {
@@ -669,22 +692,7 @@ function populateIssuesComments(projectId, sinceUrl){
                 user: result.user.login
             }
 
-            var updateFields = {
-                $push: {
-                    comments: comment
-                }
-            };
-
-            var filter = {
-                projectId: projectId,
-                number: parseInt(result.issue_url.split('/').pop())
-            }
-
-            Issue.update(filter, updateFields).exec(function(err){
-                if(err){
-                    console.log('=== Error IssueComment: ' + err.message);
-                }
-            });
+            saveComment(comment, parseInt(result.issue_url.split('/').pop()));
         }
 
     }
@@ -705,6 +713,7 @@ function populateEvents(projectId){
                 issueId: result.issue.id,
                 issueNumber: result.issue.number,
                 typeOfEvent: result.event,
+                createdAt: new Date(result.created_at)
             }
 
             if(result.commit_id){

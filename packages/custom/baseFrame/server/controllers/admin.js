@@ -10,60 +10,21 @@ var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
 
 //TODO: Use a for loop here!!
-var file = {
-    Tag: {
-        status: READY,
-        linesRead: 0
-    },
-    CoOccurrence: {
-        status: READY,
-        linesRead: 0
-    },
-    StopWord: {
-        status: READY,
-        linesRead: 0
-    },
-    Developer: {
-        status: NOT_READY,
-        linesRead: 0
-    },
-    Project: {
-        status: NOT_READY,
-        linesRead: 0
-    },
-    Issue: {
-        status: NOT_READY,
-        linesRead: 0
-    },
-    Commit: {
-        status: NOT_READY,
-        linesRead: 0
-    }
-}
 
-var populated = {
-    Tag: {
-        status: READY,
-        linesRead: 0
-    },
-    CoOccurrence: {
-        status: READY,
-        linesRead: 0
-    },
-    StopWord: {
-        status: READY,
-        linesRead: 0
-    },
-    Developer: {
-        status: NOT_READY,
-        linesRead: 0
-    },
-    Project: {
-        status: READY,
-        linesRead: 0
-    }
-}
+var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit', 'IssueComment', 'CommitComment', 'Language', 'Project', 'IssueEvent'];
 
+var populated = {};
+var file = {};
+for(var model of models){
+    populated[model] = {
+        status: NOT_READY,
+        pagesAdded: 0
+    };
+    file[model] = {
+        status: NOT_READY,
+        pagesAdded: 0
+    };
+}
 module.exports = function (BaseFrame){
     return {
         populate: function (req, res) {
@@ -75,6 +36,7 @@ module.exports = function (BaseFrame){
                     readFile(query.option);
                     break;
                 case 'Project':
+                    populated.Project.status = READY;
                     populate(query.option, query.project);
                     break;
                 default:
@@ -94,7 +56,6 @@ module.exports = function (BaseFrame){
                     break;
                 case 'StopWord':
                     file[option].status = READY;
-                    writeFile(option);
                     break;
                 case 'Issue':
                     var headers = {
@@ -107,12 +68,14 @@ module.exports = function (BaseFrame){
 
                     var transform = {
                         main: function (row) {
-                            row.body = row.body
-                              .replace(/\t/g, '        ');
-                            row.body = row.body
-                              .replace(/(?:\r\n|\r|\n)/g, '                ');
-                            row.body = row.body
-                              .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
+                            if(row.body){
+                                row.body = row.body
+                                .replace(/\t/g, '        ');
+                                row.body = row.body
+                                .replace(/(?:\r\n|\r|\n)/g, '                ');
+                                row.body = row.body
+                                .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
+                            }
                             row.reporterLogin = row.reporterId;
                             row.assigneeLogin = row.assigneeId;
                             delete row.reporterId;
@@ -273,7 +236,7 @@ function readFile(option){
                     delete model.tags;
                     if(model.soId){
                         model.soProfile = {
-                            _id: model.soId,
+                            _id: parseInt(model.soId),
                             tags: [],
                             questions: [],
                             answers: [],
