@@ -97,8 +97,62 @@ module.exports = function (BaseFrame){
                     writeFile(option);
                     break;
                 case 'Issue':
+                    var headers = {
+                        main: ['_id', 'projectId', 'number', 'title',
+                          'body', 'pullRequest', 'labels', 'state',
+                          'reporterLogin', 'assigneeLogin', 'createdAt'],
+                        comments: ['_id', 'projectId', 'issueId', 'body',
+                          'commenterLogin', 'createdAt'],
+                    };
+
+                    var transform = {
+                        main: function (row) {
+                            row.body = row.body
+                              .replace(/\t/g, '        ');
+                            row.body = row.body
+                              .replace(/(?:\r\n|\r|\n)/g, '                ');
+                            row.body = row.body
+                              .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
+                            row.reporterLogin = row.reporterId;
+                            row.assigneeLogin = row.assigneeId;
+                            delete row.reporterId;
+                            delete row.assigneeId;
+                            return row;
+                        },
+                        comments: function (row) {
+                            row.issueId = row.modelId;
+                            return row;
+                        }
+                    }
+                    writeIssueOrCommit(option, headers, transform);
+                    break;
                 case 'Commit':
-                    writeIssueOrCommit(option);
+                    var headers = {
+                        main: ['sha', 'message', 'commenterId', 'projectId', 'createdAt'],
+                        comments: ['_id', 'projectId', 'commitSha', 'body', 'commenterLogin', 'createdAt'],
+                    };
+
+                    var transform = {
+                        main: function (row) {
+                            row.message = row.message
+                              .replace(/\t/g, '        ');
+                            row.message = row.message
+                              .replace(/(?:\r\n|\r|\n)/g, '                ');
+                            row.message = row.message
+                              .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
+                            row.commenterLogin = row.user;
+                            row.sha = row._id;
+                            delete row.user;
+                            delete row._id;
+                            return row;
+                        },
+                        comments: function (row) {
+                            row.commitSha = row.modelId;
+                            return row;
+                        }
+                    }
+                    writeIssueOrCommit(option, headers, transform);
+                    break;
                 default:
                     file[option].status = NOT_READY;
                     writeFile(option);
@@ -108,17 +162,6 @@ module.exports = function (BaseFrame){
         },
 
         oauth: function (req, res) {
-            var request = require('request');
-            //
-            // var get = {
-            //     method: 'GET',
-            //     uri: 'https://stackexchange.com/oauth?client_id=7211&scope=read_inbox&redirect_uri=http://localhost:3000/admin',
-            // }
-            // request(get, function (err, response, body){
-            //     console.log(body);
-            //     res.send(body);
-            // });
-
             var req = {
                 method: 'POST',
                 headers: {
@@ -273,7 +316,7 @@ function populate(option, project = undefined){
     if(project){
         var repo = JSON.parse(project);
         populator.GitHub([repo._id]);
-        populator.StackOverflow('Developer', repo._id);
+        // populator.StackOverflow('Developer', repo._id);
     } else {
         populator.StackOverflow(option);
     }
@@ -349,7 +392,8 @@ function writeDevs(){
 }
 
 
-function writeIssueOrCommit(option = 'Issue'){
+function writeIssueOrCommit(option = 'Issue',
+            headers = {main: true, comments: true}, transform = {}){
     console.log('** Generating file **');
     var items = '-__v'
     var Model = mongoose.model(option);
@@ -360,33 +404,42 @@ function writeIssueOrCommit(option = 'Issue'){
 
     var options = {
         delimiter: '\t',
-        headers: true
+        headers: headers.main
     }
 
-    var mainCvsStream = csv.createWriteStream(options);
+    var mainCvsStream = csv.createWriteStream(options)
+    if(transform.main){
+        mainCvsStream.transform(transform.main);
+    }
     mainCvsStream.pipe(mainStream);
 
+    options.headers = headers.comments;
     var commentCsvStream = csv.createWriteStream(options);
+    if(transform.comments){
+        commentCsvStream.transform(transform.comments);
+    }
     commentCsvStream.pipe(commentStream);
 
     var counter = 0;
     dbStream.on('data', function (model) {
         counter++;
-        model.tags = undefined;
         delete model.tags;
         if(model.comments){
             for(var comment of model.comments){
+                comment.body = comment.body
+                  .replace(/\t/g, '        ');
+                comment.body = comment.body
+                  .replace(/(?:\r\n|\r|\n)/g, '                ');
+                comment.body = comment.body
+                  .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
+                comment.modelId = model._id;
+                comment.projectId = model.projectId;
+                comment.createdAt = comment.createdAt.toISOString();
                 commentCsvStream.write(comment);
             }
-            delete model.comments;
         }
-        if(model.body){
-            model.body = model.body.replace(/\t/g, '        ');
-            model.body = model.body.replace(/(?:\r\n|\r|\n)/g, '                ');
-        } else if(model.message){
-            model.message = model.message.replace(/\t/g, '        ');
-            model.message = model.message.replace(/(?:\r\n|\r|\n)/g, '                ');
-        }
+
+        model.createdAt = model.createdAt.toISOString();
 
         mainCvsStream.write(model);
         file[option].linesRead = counter;

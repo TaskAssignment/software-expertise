@@ -80,8 +80,8 @@ module.exports = function (BaseFrame) {
                         clearInterval(interval);
                         populateIssues(id);
                     }
-                    populateContributors(id);
-                    populateCommits(id);
+                    // populateContributors(id);
+                    // populateCommits(id);
                 }
             });
         },
@@ -269,7 +269,6 @@ function populateUserTags(ids = '', filter = 'default', site = 'stackoverflow'){
                     'soProfile.tags': tag
                 }
             };
-            console.log(filter);
 
             Developer.update(filter, updateFields).exec(function(err){
                 if(err){
@@ -436,11 +435,80 @@ function populateIssues(id){
 
         var sinceUrl = undefined;
         if(lastCreated){
+            lastCreated.createdAt.setSeconds(lastCreated.createdAt.getSeconds() + 1);
             sinceUrl = 'since=' + lastCreated.createdAt.toISOString();
             url += '&' + sinceUrl;
         }
 
         var issues = [];
+
+        function makeTags(issue) {
+            var title = issue.title + ' ' + selectedProject.description;
+            title = title.toLowerCase().split(' ');
+
+            var body = [];
+            if(issue.body){ //It may not have a body.
+                body = issue.body.toLowerCase().split(' ');
+            }
+
+            // word: count
+            var allWords = {};
+
+            for(var lang of selectedProject.languages){
+                allWords[lang._id] = 1;
+            }
+
+            for(var word of title) {
+                checkWord(word);
+            }
+
+            for(var word of body){
+                checkWord(word);
+            }
+
+            function checkWord(word){
+                if(word.indexOf('_') >= 0){
+                    // Tags in SO are dash separated.
+                    word = word.replace(/_/g, '-');
+                }
+                if(allWords[word] === undefined){
+                    allWords[word] = 1;
+                } else {
+                    allWords[word] += 1;
+                }
+            }
+
+            for(var word of stopWords){
+                // If a stop word is in my all words, I remove it.
+                if(allWords[word]){
+                    delete allWords[word];
+                }
+            }
+
+            var Tag = mongoose.model('Tag');
+            var filter = {
+                _id: {
+                    $in: Object.keys(allWords)
+                }
+            };
+
+            Tag.find(filter).lean().exec(function(err, tags){
+                for(var i in tags){
+                    var tag = tags[i];
+
+                    var issueTag = {
+                        _id: tag._id,
+                        soCount: tag.soTotalCount,
+                        issueCount: allWords[tag._id]
+                    };
+
+                    issue.tags.push(issueTag);
+                }
+                issue.parsed = true;
+                issues.push(issue);
+            });
+        }
+
         var buildModels = function(results){
             for (var i in results) {
                 var result = results[i];
@@ -455,6 +523,7 @@ function populateIssues(id){
                     pullRequest: false,
                     tags: [],
                     comments: [],
+                    labels: [],
                     createdAt: new Date(result.created_at),
                     updatedAt: new Date(result.updated_at),
                     reporterId: result.user.login
@@ -468,74 +537,13 @@ function populateIssues(id){
                     issue.pullRequest = true;
                 }
 
+                if(result.labels){
+                    for(var label of result.labels){
+                        issue.labels.push(label.name);
+                    }
+                }
+
                 makeTags(issue);
-            }
-
-            function makeTags(issue) {
-                var title = issue.title + ' ' + selectedProject.description;
-                title = title.toLowerCase().split(' ');
-
-                var body = [];
-                if(issue.body){ //It may not have a body.
-                    body = issue.body.toLowerCase().split(' ');
-                }
-
-                // word: count
-                var allWords = {};
-
-                for(var lang of selectedProject.languages){
-                    allWords[lang._id] = 1;
-                }
-
-                for(var word of title) {
-                    checkWord(word);
-                }
-
-                for(var word of body){
-                    checkWord(word);
-                }
-
-                function checkWord(word){
-                    if(word.indexOf('_') >= 0){
-                        // Tags in SO are dash separated.
-                        word = word.replace(/_/g, '-');
-                    }
-                    if(allWords[word] === undefined){
-                        allWords[word] = 1;
-                    } else {
-                        allWords[word] += 1;
-                    }
-                }
-
-                for(var word of stopWords){
-                    // If a stop word is in my all words, I remove it.
-                    if(allWords[word]){
-                        delete allWords[word];
-                    }
-                }
-
-                var Tag = mongoose.model('Tag');
-                var filter = {
-                    _id: {
-                        $in: Object.keys(allWords)
-                    }
-                };
-
-                Tag.find(filter).lean().exec(function(err, tags){
-                    for(var i in tags){
-                        var tag = tags[i];
-
-                        var issueTag = {
-                            _id: tag._id,
-                            soCount: tag.soTotalCount,
-                            issueCount: allWords[tag._id]
-                        };
-
-                        issue.tags.push(issueTag);
-                    }
-                    issue.parsed = true;
-                    issues.push(issue);
-                });
             }
         }
 
@@ -549,15 +557,26 @@ function populateIssues(id){
 
         function stop(){
             clearInterval(interval);
-            console.log(issues.length);
-            Issue.collection.insert(issues, function(err){
+            for(var issue of issues){
+                saveIssue(issue);
+            }
+
+            //100 issues are saved in about 1 second. So each should take about 10 ms.
+            var commentDelay = 10 * issues.length;
+            setTimeout(function (){
+                console.log("Comments now!");
+                populateIssuesComments(id, sinceUrl);
+            }, commentDelay);
+        }
+
+        function saveIssue(issue) {
+            Issue.update({_id: issue._id}, issue, {upsert:true})
+              .exec(function(err){
                 if(err){
                     console.log(err);
                 } else {
-                    console.log('Issues created!');
+                    console.log("Issue #" + issue.number + " saved.");
                 }
-                issues = null;
-                populateIssuesComments(id, sinceUrl);
             });
         }
     });
@@ -690,6 +709,8 @@ function populateIssuesComments(projectId, sinceUrl){
                 number: parseInt(result.issue_url.split('/').pop())
             }
 
+            // console.log(filter);
+
             Issue.update(filter, updateFields).exec(function(err){
                 if(err){
                     console.log(err);
@@ -773,21 +794,21 @@ function gitHubPopulate(option, specificUrl, callback){
             pageCounter++;
             populated[option].pagesAdded = pageCounter;
             console.log(option + ': page ' + pageCounter + ' populated');
-            if(next){
-                var begin = next.indexOf('<');
-                var end = next.indexOf('>');
-
-                //This gets string = [begin, end)
-                var new_uri = next.substring(begin + 1, end);
-
-                options.uri = new_uri;
-
-                request(options, requestCallback);
-            } else {
+            // if(next){
+            //     var begin = next.indexOf('<');
+            //     var end = next.indexOf('>');
+            //
+            //     //This gets string = [begin, end)
+            //     var new_uri = next.substring(begin + 1, end);
+            //
+            //     options.uri = new_uri;
+            //
+            //     request(options, requestCallback);
+            // } else {
                 setTimeout(function () {
                     populated[option].status = READY;
                 }, 1000);
-            }
+            // }
         } else {
             console.log(response, body, error)
         }
