@@ -873,10 +873,12 @@ function soPopulate(option, specificUrl, callback) {
                     request(options, requestCallback);
                 }, 100);
             } else {
-                // console.log(option + ' done!')
+                console.log(option + ' done!');
             }
 
         } else if(!error && (response.statusCode === 502 || response.statusCode === 400)){
+            console.log("Error. Trying different token");
+            console.log(body);
             next_token = (next_token + 1) % ACCESS_TOKENS.length;
             if(next_token == 0){
                 stopRequests = true;
