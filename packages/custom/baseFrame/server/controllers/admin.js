@@ -259,11 +259,12 @@ function writeDevs(){
 
     var options = {
         delimiter: '\t',
-        headers: true
+        headers: ['_id', 'email', 'repositories', 'soId', 'tags']
     }
     var answerCsvStream = csv.createWriteStream(options);
     answerCsvStream.pipe(answerStream);
 
+    options.headers = true;
     var questionCsvStream = csv.createWriteStream(options);
     questionCsvStream.pipe(questionStream);
 
@@ -273,6 +274,7 @@ function writeDevs(){
     var counter = 0;
     dbStream.on('data', function (dev) {
         counter++;
+        dev.email = dev.ghProfile.email;
         if(dev.soProfile){
             for(var question of dev.soProfile.questions){
                 question.body = question.body.replace(/\t/g, '        ');
@@ -290,13 +292,13 @@ function writeDevs(){
                 answerCsvStream.write(answer);
             }
 
+            dev.soId = dev.soProfile._id;
+
             dev.tags = dev.soProfile.tags.map(function (tag) {
                 return tag._id;
             });
-            dev.soId = dev.soProfile._id;
         }
 
-        dev.email = dev.ghProfile.email;
 
         delete dev.ghProfile;
         delete dev.soProfile;

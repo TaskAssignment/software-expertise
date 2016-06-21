@@ -756,22 +756,21 @@ function gitHubPopulate(option, specificUrl, callback, etag = undefined){
 
             pageCounter++;
             populated[option].pagesAdded = pageCounter;
-            // if(next){
-            //     var begin = next.indexOf('<');
-            //     var end = next.indexOf('>');
-            //
-            //     //This gets string = [begin, end)
-            //     var new_uri = next.substring(begin + 1, end);
-            //
-            //     options.uri = new_uri;
-            //
-            //     request(options, requestCallback);
-            // } else {
-                console.log(option);
+            if(next){
+                var begin = next.indexOf('<');
+                var end = next.indexOf('>');
+
+                //This gets string = [begin, end)
+                var new_uri = next.substring(begin + 1, end);
+
+                options.uri = new_uri;
+
+                request(options, requestCallback);
+            } else {
                 setTimeout(function () {
                     populated[option].status = READY;
                 }, 1000);
-            // }
+            }
         } else {
             console.log(body, error);
         }
