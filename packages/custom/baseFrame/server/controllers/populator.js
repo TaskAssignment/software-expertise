@@ -730,7 +730,7 @@ function gitHubPopulate(option, specificUrl, callback, etag = undefined){
         },
         uri: uri,
         auth:{
-            bearer: 'ab441f93f9d317b41966cc8b75d8531629036039'
+            bearer: '19e383c976807df0359e36ba05938027e4a20c45'
         }
     };
 
