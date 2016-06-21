@@ -3,14 +3,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var CommentSchema = new Schema({
-    _id: String,
-    body: String,
-    user: String,
-    createdAt: Date,
-    updatedAt: Date
-});
-
 var CommitSchema = new Schema({
     _id: String,
     message: String,
@@ -20,8 +12,7 @@ var CommitSchema = new Schema({
         ref: 'Project',
     },
     createdAt: Date,
-    url: String,
-    comments: [CommentSchema]
+    url: String
 });
 
 mongoose.model('Commit', CommitSchema);

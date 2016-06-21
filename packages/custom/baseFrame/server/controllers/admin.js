@@ -31,7 +31,8 @@ module.exports = function (BaseFrame){
             switch (query.option) {
                 case 'StopProject':
                 case 'Developer':
-                // case 'CoOccurrence':
+                case 'CoOccurrence':
+                case 'Tag':
                     readFile(query.option);
                     break;
                 case 'Project':
@@ -171,7 +172,7 @@ module.exports = function (BaseFrame){
 *
 * @param option - The Model that will be exported. The file will be the name of this model pluralized.
 **/
-function writeFile(option, headers = true, items = '-updatedAt -createdAt -__v'){
+function writeFile(option, headers = true, items = '-updatedAt -createdAt -__v', tranform = null){
     var MongooseModel = mongoose.model(option);
     var stream = fs.createWriteStream('files/' + option + 's.tsv');
 
@@ -183,6 +184,9 @@ function writeFile(option, headers = true, items = '-updatedAt -createdAt -__v')
     }
 
     var csvStream = csv.createWriteStream(options);
+    if(transform){
+        cvsStream.transform(transform);
+    }
     csvStream.pipe(stream);
 
     var counter = 0;
@@ -193,7 +197,7 @@ function writeFile(option, headers = true, items = '-updatedAt -createdAt -__v')
             delete model._id;
         } else if (option == 'Project'){
             model.languages = model.languages.map(function (lang) {
-                return lang._id;
+                return lang._id + ' ' + lang.count;
             });
         }
 
@@ -280,7 +284,7 @@ function populate(option, project = undefined){
     if(project){
         var repo = JSON.parse(project);
         populator.GitHub([repo._id]);
-        populator.StackOverflow('Developer', repo._id);
+        // populator.StackOverflow('Developer', repo._id);
     } else {
         populated[option].status = READY;
         populator.StackOverflow(option);

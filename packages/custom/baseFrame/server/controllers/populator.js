@@ -6,7 +6,7 @@ var mongoose = require('mongoose');
 var READY = true; //Status code to be sent when ready.
 var NOT_READY = false; //Send accepted status code
 
-var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit', 'IssueComment', 'CommitComment', 'Language', 'Project', 'IssueEvent'];
+var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit', 'Comment', 'Language', 'Project', 'IssueEvent'];
 
 var populated = {};
 for(var model of models){
@@ -43,6 +43,8 @@ module.exports = function (BaseFrame) {
                     populateEvents(id);
                     populateContributors(id);
                     populateCommits(id);
+                    populateComments(id, 'issue');
+                    populateComments(id, 'commit');
 
                     var interval = setInterval(function () {
                         if(populated.Language.status === READY){
@@ -538,21 +540,6 @@ function populateIssues(id){
         }
 
         gitHubPopulate('Issue', url, buildModels);
-
-        var interval = setInterval(function () {
-            if(populated.Issue.status === READY){
-                stop();
-            }
-        }, 10000);
-
-        function stop(){
-            clearInterval(interval);
-
-            //Wait one second to be sure all issues are saved
-            setTimeout(function (){
-                populateIssuesComments(id, sinceUrl);
-            }, 1000);
-        }
     });
 }
 
@@ -642,64 +629,7 @@ function populateCommits(projectId){
             });
         }
         gitHubPopulate('Commit', url, buildModels);
-
-        var interval = setInterval(function () {
-            if(populated.Commit.status === READY){
-                stop();
-            }
-        }, 10000);
-
-        function stop(){
-            clearInterval(interval);
-            populateCommitsComments(projectId);
-        }
     });
-}
-
-function populateIssuesComments(projectId, sinceUrl){
-    var url = projectId + '/issues/comments'
-    if(sinceUrl){
-        url += '?' + sinceUrl;
-    }
-    var Issue = mongoose.model('Issue');
-
-    function saveComment(comment, issueNumber){
-        var updateFields = {
-            $addToSet: {
-                comments: comment
-            }
-        };
-
-        var filter = {
-            projectId: projectId,
-            number: issueNumber
-        }
-
-        Issue.update(filter, updateFields).exec(function(err){
-            if(err){
-                console.log('=== Error IssueComment: ' + err.message);
-            } else {
-                console.log('Add comment to issue #' + filter.number);
-            }
-        });
-
-    }
-
-    var buildModels = function(results){
-        for (var result of results) {
-            var comment = {
-                _id: result.id,
-                body: result.body,
-                createdAt: result.created_at,
-                updatedAt: result.updated_at,
-                user: result.user.login
-            }
-
-            saveComment(comment, parseInt(result.issue_url.split('/').pop()));
-        }
-
-    }
-    gitHubPopulate('IssueComment', url, buildModels);
 }
 
 function populateEvents(projectId){
@@ -709,27 +639,29 @@ function populateEvents(projectId){
     var buildModels = function(results){
         var issueEvents = [];
         for (var result of results) {
-            var issueEvent = {
-                _id: result.id,
-                projectId: projectId,
-                issueId: result.issue.id,
-                issueNumber: result.issue.number,
-                typeOfEvent: result.event,
-                createdAt: new Date(result.created_at)
-            }
-            if(result.actor){
-                issueEvent.actor = result.actor.login;
-            }
+            if(result.issue){
+                var issueEvent = {
+                    _id: result.id,
+                    projectId: projectId,
+                    issueId: result.issue.id,
+                    issueNumber: result.issue.number,
+                    typeOfEvent: result.event,
+                    createdAt: new Date(result.created_at)
+                }
+                if(result.actor){
+                    issueEvent.actor = result.actor.login;
+                }
 
-            if(result.commit_id){
-                issueEvent.commitId = result.commit_id;
-            }
+                if(result.commit_id){
+                    issueEvent.commitId = result.commit_id;
+                }
 
-            if(result.assignee){
-                issueEvent.assigneeId = result.assignee.login;
-            }
+                if(result.assignee){
+                    issueEvent.assigneeId = result.assignee.login;
+                }
 
-            issueEvents.push(issueEvent)
+                issueEvents.push(issueEvent);
+            }
         }
 
         IssueEvent.create(issueEvents, function(err){
@@ -744,49 +676,53 @@ function populateEvents(projectId){
     gitHubPopulate('IssueEvent', url, buildModels);
 }
 
+function populateComments(projectId, type){
+    var url = projectId;
+    if(type === 'issue'){
+        url += '/issues'
+    }
+    url += '/comments';
 
-function populateCommitsComments(projectId){
-    var url = projectId + '/comments';
+    var Comment = mongoose.model('Comment');
 
-    var Commit = mongoose.model('Commit');
-
-    var buildModels = function(results, projectId){
-        for (var i in results) {
-            var result = results[i];
+    var buildModels = function(results){
+        var comments = [];
+        for (var result of results) {
             var comment = {
                 _id: result.id,
                 body: result.body,
                 createdAt: result.created_at,
                 updatedAt: result.updated_at,
-                user: result.user.login
-            }
-
-            var updateFields = {
-                $addToSet: {
-                    comments: comment
-                }
-            };
-
-            var filter = {
+                user: result.user.login,
                 projectId: projectId,
-                _id: result.commit_id
+                type: type
             }
 
-            Commit.update(filter, updateFields, function(err){
-                if(err){
-                    console.log('=== Error Comment: ' + err.message);
-                }
-            });
+            if(type === 'commit'){
+                comment.commitSha = result.commit_id;
+            } else {
+                comment.issueNumber = result.issue_url.split('/').pop();
+            }
+
+            comments.push(comment);
         }
+
+        Comment.create(comments, function(err){
+            if(err){
+                console.log('=== Error Comment (' + type + '): ' + err.message);
+            } else {
+                console.log('Add ' + type + ' comments');
+            }
+        });
     }
 
-    gitHubPopulate('CommitComment', url, buildModels);
+    gitHubPopulate('Comment', url, buildModels);
 }
 
 function gitHubPopulate(option, specificUrl, callback, etag = undefined){
     var uri = 'https://api.github.com/repositories/' + specificUrl
     uri += specificUrl.lastIndexOf('?') < 0 ? '?' : '&';
-    uri += 'per_page=100';
+    uri += 'per_page=2';
 
     var options = {
         headers: {
@@ -821,23 +757,24 @@ function gitHubPopulate(option, specificUrl, callback, etag = undefined){
 
             pageCounter++;
             populated[option].pagesAdded = pageCounter;
-            if(next){
-                var begin = next.indexOf('<');
-                var end = next.indexOf('>');
-
-                //This gets string = [begin, end)
-                var new_uri = next.substring(begin + 1, end);
-
-                options.uri = new_uri;
-
-                request(options, requestCallback);
-            } else {
+            // if(next){
+            //     var begin = next.indexOf('<');
+            //     var end = next.indexOf('>');
+            //
+            //     //This gets string = [begin, end)
+            //     var new_uri = next.substring(begin + 1, end);
+            //
+            //     options.uri = new_uri;
+            //
+            //     request(options, requestCallback);
+            // } else {
+                console.log(option);
                 setTimeout(function () {
                     populated[option].status = READY;
                 }, 1000);
-            }
+            // }
         } else {
-            console.log(response, body, error)
+            console.log(body, error);
         }
     }
 

@@ -3,14 +3,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var CommentSchema = new Schema({
-    _id: String,
-    body: String,
-    user: String,
-    createdAt: Date,
-    updatedAt: Date
-});
-
 var TagSchema = new Schema({
     _id: String,
     issueCount: Number,
@@ -43,7 +35,6 @@ var IssueSchema = new Schema({
     updatedAt: Date,
     url: String,
     tags: [TagSchema],
-    comments: [CommentSchema]
 });
 
 mongoose.model('Issue', IssueSchema);
