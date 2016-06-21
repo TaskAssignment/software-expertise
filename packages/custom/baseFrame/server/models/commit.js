@@ -20,6 +20,7 @@ var CommitSchema = new Schema({
         ref: 'Project',
     },
     createdAt: Date,
+    url: String,
     comments: [CommentSchema]
 });
 

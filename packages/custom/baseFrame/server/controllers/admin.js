@@ -9,8 +9,6 @@ var csv = require('fast-csv');
 var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
 
-//TODO: Use a for loop here!!
-
 var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit', 'IssueComment', 'CommitComment', 'Language', 'Project', 'IssueEvent'];
 
 var populated = {};
@@ -25,6 +23,7 @@ for(var model of models){
         pagesAdded: 0
     };
 }
+
 module.exports = function (BaseFrame){
     return {
         populate: function (req, res) {
@@ -60,8 +59,8 @@ module.exports = function (BaseFrame){
                 case 'Issue':
                     var headers = {
                         main: ['_id', 'projectId', 'number', 'title',
-                          'body', 'pullRequest', 'labels', 'state',
-                          'reporterLogin', 'assigneeLogin', 'createdAt'],
+                          'body', 'type', 'labels', 'state',
+                          'reporterLogin', 'assigneeLogin', 'createdAt', 'url'],
                         comments: ['_id', 'projectId', 'issueId', 'body',
                           'commenterLogin', 'createdAt'],
                     };
@@ -92,7 +91,7 @@ module.exports = function (BaseFrame){
                     break;
                 case 'Commit':
                     var headers = {
-                        main: ['sha', 'message', 'commenterId', 'projectId', 'createdAt'],
+                        main: ['sha', 'message', 'committerId', 'projectId', 'createdAt', 'url'],
                         comments: ['_id', 'projectId', 'commitSha', 'body', 'commenterLogin', 'createdAt'],
                     };
 
@@ -104,13 +103,14 @@ module.exports = function (BaseFrame){
                               .replace(/(?:\r\n|\r|\n)/g, '                ');
                             row.message = row.message
                               .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
-                            row.commenterLogin = row.user;
                             row.sha = row._id;
+                            row.committerLogin = row.user;
                             delete row.user;
                             delete row._id;
                             return row;
                         },
                         comments: function (row) {
+                            row.commenterLogin = row.user;
                             row.commitSha = row.modelId;
                             return row;
                         }

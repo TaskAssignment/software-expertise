@@ -509,10 +509,11 @@ function populateIssues(id){
                     state: result.state,
                     projectId: id,
                     parsed: false,
-                    pullRequest: false,
+                    type: 'IS',
                     tags: [],
                     comments: [],
                     labels: [],
+                    url: result.html_url,
                     createdAt: new Date(result.created_at),
                     updatedAt: new Date(result.updated_at),
                     reporterId: result.user.login
@@ -523,7 +524,7 @@ function populateIssues(id){
                 }
 
                 if(result.pull_request){
-                    issue.pullRequest = true;
+                    issue.type = 'PR';
                 }
 
                 if(result.labels){
@@ -608,6 +609,8 @@ function populateCommits(projectId){
                     _id: result.sha,
                     message: result.commit.message,
                     projectId: projectId,
+                    url: result.html_url,
+                    user: ' ',
                     comments: []
                 }
 
@@ -623,8 +626,8 @@ function populateCommits(projectId){
 
                 if(result.author){
                     commit.user = result.author.login;
-                }else if(result.commiter){
-                    commit.user = result.commiter.login;
+                }else if(result.committer){
+                    commit.user = result.committer.login;
                 }
 
                 commits.push(commit);
@@ -655,9 +658,9 @@ function populateCommits(projectId){
 
 function populateIssuesComments(projectId, sinceUrl){
     var url = projectId + '/issues/comments'
-    // if(sinceUrl){
-    //     url += '?' + sinceUrl;
-    // }
+    if(sinceUrl){
+        url += '?' + sinceUrl;
+    }
     var Issue = mongoose.model('Issue');
 
     function saveComment(comment, issueNumber){
@@ -708,20 +711,22 @@ function populateEvents(projectId){
         for (var result of results) {
             var issueEvent = {
                 _id: result.id,
-                actor: result.actor.login,
                 projectId: projectId,
                 issueId: result.issue.id,
                 issueNumber: result.issue.number,
                 typeOfEvent: result.event,
                 createdAt: new Date(result.created_at)
             }
+            if(result.actor){
+                issueEvent.actor = result.actor.login;
+            }
 
             if(result.commit_id){
-                issueEvent.commitId = result.commit_id
+                issueEvent.commitId = result.commit_id;
             }
 
             if(result.assignee){
-                issueEvent.assigneeId = result.assignee.login
+                issueEvent.assigneeId = result.assignee.login;
             }
 
             issueEvents.push(issueEvent)

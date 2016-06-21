@@ -32,15 +32,16 @@ var IssueSchema = new Schema({
     },
     body: String,
     title: String,
-    pullRequest: {
-        type: Boolean,
-        default: false
+    type: {
+        type: String,
+        default: 'IS'
     },
     labels: [String],
     state: String,
     parsed: Boolean,
     createdAt: Date,
     updatedAt: Date,
+    url: String,
     tags: [TagSchema],
     comments: [CommentSchema]
 });
