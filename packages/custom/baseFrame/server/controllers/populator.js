@@ -692,7 +692,6 @@ function populateComments(projectId, type){
                 _id: result.id,
                 body: result.body,
                 createdAt: result.created_at,
-                updatedAt: result.updated_at,
                 user: result.user.login,
                 projectId: projectId,
                 type: type

@@ -8,10 +8,15 @@ var CommentSchema = new Schema({
     body: String,
     user: String,
     createdAt: Date,
-    updatedAt: Date,
     issueNumber: Number,
-    commitSha: String,
-    projectId: Number,
+    commitSha: {
+        type: String,
+        ref: 'Commit'
+    },
+    projectId: {
+        type: Number,
+        ref: 'Issue'
+    },
     type: String //Issue comment or commit comment
 });
 

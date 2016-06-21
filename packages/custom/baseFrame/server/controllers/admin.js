@@ -9,7 +9,7 @@ var csv = require('fast-csv');
 var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
 
-var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit', 'IssueComment', 'CommitComment', 'Language', 'Project', 'IssueEvent'];
+var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit', 'Comment', 'Language', 'Project', 'IssueEvent'];
 
 var populated = {};
 var file = {};
@@ -57,66 +57,11 @@ module.exports = function (BaseFrame){
                 case 'StopWord':
                     file[option].status = READY;
                     break;
-                case 'Issue':
-                    var headers = {
-                        main: ['_id', 'projectId', 'number', 'title',
-                          'body', 'type', 'labels', 'state',
-                          'reporterLogin', 'assigneeLogin', 'createdAt', 'url'],
-                        comments: ['_id', 'projectId', 'issueId', 'body',
-                          'commenterLogin', 'createdAt'],
-                    };
-
-                    var transform = {
-                        main: function (row) {
-                            if(row.body){
-                                row.body = row.body
-                                .replace(/\t/g, '        ');
-                                row.body = row.body
-                                .replace(/(?:\r\n|\r|\n)/g, '                ');
-                                row.body = row.body
-                                .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
-                            }
-                            row.reporterLogin = row.reporterId;
-                            row.assigneeLogin = row.assigneeId;
-                            delete row.reporterId;
-                            delete row.assigneeId;
-                            return row;
-                        },
-                        comments: function (row) {
-                            row.issueId = row.modelId;
-                            return row;
-                        }
-                    }
-                    writeIssueOrCommit(option, headers, transform);
-                    writeFile('IssueEvent');
+                case 'IssueEvent':
+                    writeIssues();
                     break;
                 case 'Commit':
-                    var headers = {
-                        main: ['sha', 'message', 'committerId', 'projectId', 'createdAt', 'url'],
-                        comments: ['_id', 'projectId', 'commitSha', 'body', 'commenterLogin', 'createdAt'],
-                    };
-
-                    var transform = {
-                        main: function (row) {
-                            row.message = row.message
-                              .replace(/\t/g, '        ');
-                            row.message = row.message
-                              .replace(/(?:\r\n|\r|\n)/g, '                ');
-                            row.message = row.message
-                              .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
-                            row.sha = row._id;
-                            row.committerLogin = row.user;
-                            delete row.user;
-                            delete row._id;
-                            return row;
-                        },
-                        comments: function (row) {
-                            row.commenterLogin = row.user;
-                            row.commitSha = row.modelId;
-                            return row;
-                        }
-                    }
-                    writeIssueOrCommit(option, headers, transform);
+                    writeCommits();
                     break;
                 default:
                     file[option].status = NOT_READY;
@@ -172,11 +117,18 @@ module.exports = function (BaseFrame){
 *
 * @param option - The Model that will be exported. The file will be the name of this model pluralized.
 **/
-function writeFile(option, headers = true, items = '-updatedAt -createdAt -__v', tranform = null){
-    var MongooseModel = mongoose.model(option);
-    var stream = fs.createWriteStream('files/' + option + 's.tsv');
+function writeFile(option,
+            headers = true,
+            transform = undefined,
+            fileName = option + 's.tsv',
+            items = '-updatedAt -__v',
+            filter = {}){
+    var path = 'files/' + fileName;
 
-    var dbStream = MongooseModel.find().select(items).lean().stream();
+    var MongooseModel = mongoose.model(option);
+    var stream = fs.createWriteStream(path);
+
+    var dbStream = MongooseModel.find(filter).select(items).lean().stream();
 
     var options = {
         delimiter: '\t',
@@ -185,7 +137,7 @@ function writeFile(option, headers = true, items = '-updatedAt -createdAt -__v',
 
     var csvStream = csv.createWriteStream(options);
     if(transform){
-        cvsStream.transform(transform);
+        csvStream.transform(transform);
     }
     csvStream.pipe(stream);
 
@@ -197,8 +149,11 @@ function writeFile(option, headers = true, items = '-updatedAt -createdAt -__v',
             delete model._id;
         } else if (option == 'Project'){
             model.languages = model.languages.map(function (lang) {
-                return lang._id + ' ' + lang.count;
+                return lang._id + ':' + lang.amount;
             });
+        }
+        if(model.createdAt){
+            model.createdAt = model.createdAt.toISOString();
         }
 
         file[option].linesRead = counter;
@@ -212,6 +167,154 @@ function writeFile(option, headers = true, items = '-updatedAt -createdAt -__v',
         file[option].status = READY;
     });
 }
+
+
+function writeIssues(){
+    var headers = ['_id', 'projectId', 'number', 'title',
+      'body', 'type', 'labels', 'state', 'reporterLogin',
+      'assigneeLogin', 'createdAt', 'url'];
+
+    var transform = function (row) {
+        if(row.body){
+            row.body = row.body
+            .replace(/\t/g, '        ');
+            row.body = row.body
+            .replace(/(?:\r\n|\r|\n)/g, '                ');
+            row.body = row.body
+            .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
+        }
+        row.reporterLogin = row.reporterId;
+        row.assigneeLogin = row.assigneeId;
+        delete row.reporterId;
+        delete row.assigneeId;
+        return row;
+    }
+    writeFile('Issue', headers, transform);
+
+    headers = ['_id', 'issueNumber', 'projectId', 'body',
+      'commenterLogin', 'createdAt'];
+    transform = function (row) {
+        row.body = row.body
+          .replace(/\t/g, '        ');
+        row.body = row.body
+          .replace(/(?:\r\n|\r|\n)/g, '                ');
+        row.body = row.body
+          .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
+        row.commenterLogin = row.user;
+        return row;
+    }
+
+    writeFile('Comment', headers, transform, 'IssueComments.tsv',
+        '-updatedAt -__v', {type: 'issue'});
+
+    headers = ['_id', 'projectId', 'issueId', 'issueNumber',
+      'actor', 'commitId', 'typeOfEvent', 'assigneeId',
+      'createdAt'];
+    writeFile('IssueEvent', headers);
+}
+
+function writeCommits(){
+    var headers = ['sha', 'message', 'committerId', 'projectId', 'createdAt', 'url'];
+    var transform = function (row) {
+        row.message = row.message
+          .replace(/\t/g, '        ');
+        row.message = row.message
+          .replace(/(?:\r\n|\r|\n)/g, '                ');
+        row.message = row.message
+          .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
+        row.sha = row._id;
+        row.committerLogin = row.user;
+        delete row.user;
+        delete row._id;
+        return row;
+    }
+    writeFile('Commit', headers, transform);
+
+    headers = ['_id', 'commitSha', 'projectId', 'body',
+      'commenterLogin', 'createdAt'];
+    transform = function (row) {
+        row.body = row.body
+          .replace(/\t/g, '        ');
+        row.body = row.body
+          .replace(/(?:\r\n|\r|\n)/g, '                ');
+        row.body = row.body
+          .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
+        row.commenterLogin = row.user;
+        return row;
+    }
+
+    writeFile('Comment', headers, transform, 'CommitComments.tsv',
+      '-__v', {type: 'commit'});
+}
+
+function writeDevs(){
+    console.log('** Generating developers file **');
+    var items = '-updatedAt -createdAt -__v'
+    var Developer = mongoose.model('Developer');
+    var dbStream = Developer.find().select(items).lean().stream();
+
+    var devStream = fs.createWriteStream('files/Developers.tsv');
+    var questionStream = fs.createWriteStream('files/Questions.tsv');
+    var answerStream = fs.createWriteStream('files/Answers.tsv');
+
+    var options = {
+        delimiter: '\t',
+        headers: true
+    }
+    var answerCsvStream = csv.createWriteStream(options);
+    answerCsvStream.pipe(answerStream);
+
+    var questionCsvStream = csv.createWriteStream(options);
+    questionCsvStream.pipe(questionStream);
+
+    var devCsvStream = csv.createWriteStream(options);
+    devCsvStream.pipe(devStream);
+
+    var counter = 0;
+    dbStream.on('data', function (dev) {
+        counter++;
+        if(dev.soProfile){
+            for(var question of dev.soProfile.questions){
+                question.body = question.body.replace(/\t/g, '        ');
+                question.body = question.body.replace(/(?:\r\n|\r|\n)/g, '                ');
+                question.askerId = dev._id;
+                question.askerSoId = dev.soProfile._id;
+                questionCsvStream.write(question);
+            }
+
+            for(var answer of dev.soProfile.answers){
+                answer.body = answer.body.replace(/\t/g, '        ');
+                answer.body = answer.body.replace(/(?:\r\n|\r|\n)/g, '                ');
+                answer.answererId = dev._id;
+                answer.answererSoId = dev.soProfile._id;
+                answerCsvStream.write(answer);
+            }
+
+            dev.tags = dev.soProfile.tags.map(function (tag) {
+                return tag._id;
+            });
+            dev.soId = dev.soProfile._id;
+        }
+
+        dev.email = dev.ghProfile.email;
+
+        delete dev.ghProfile;
+        delete dev.soProfile;
+
+        devCsvStream.write(dev);
+        file.Developer.linesRead = counter;
+    }).on('error', function (err) {
+        console.log('========== AAAAHHHHHH')
+        console.log(err);
+    }).on('close', function (){
+        console.log('* Finished Developers! *');
+        devCsvStream.end();
+        answerCsvStream.end();
+        questionCsvStream.end();
+        file.Developer.status = READY;
+    });
+}
+
 
 /** Helper function to read the files
 *
@@ -289,134 +392,4 @@ function populate(option, project = undefined){
         populated[option].status = READY;
         populator.StackOverflow(option);
     }
-}
-
-function writeDevs(){
-    console.log('** Generating developers file **');
-    var items = '-updatedAt -createdAt -__v'
-    var Developer = mongoose.model('Developer');
-    var dbStream = Developer.find().select(items).lean().stream();
-
-    var devStream = fs.createWriteStream('files/Developers.tsv');
-    var questionStream = fs.createWriteStream('files/Questions.tsv');
-    var answerStream = fs.createWriteStream('files/Answers.tsv');
-
-    var options = {
-        delimiter: '\t',
-        headers: true
-    }
-    var answerCsvStream = csv.createWriteStream(options);
-    answerCsvStream.pipe(answerStream);
-
-    var questionCsvStream = csv.createWriteStream(options);
-    questionCsvStream.pipe(questionStream);
-
-    var devCsvStream = csv.createWriteStream(options);
-    devCsvStream.pipe(devStream);
-
-    var counter = 0;
-    dbStream.on('data', function (dev) {
-        counter++;
-        if(dev.soProfile){
-            for(var question of dev.soProfile.questions){
-                question.body = question.body.replace(/\t/g, '        ');
-                question.body = question.body.replace(/(?:\r\n|\r|\n)/g, '                ');
-                question.askerId = dev._id;
-                question.askerSoId = dev.soProfile._id;
-                questionCsvStream.write(question);
-            }
-
-            for(var answer of dev.soProfile.answers){
-                answer.body = answer.body.replace(/\t/g, '        ');
-                answer.body = answer.body.replace(/(?:\r\n|\r|\n)/g, '                ');
-                answer.answererId = dev._id;
-                answer.answererSoId = dev.soProfile._id;
-                answerCsvStream.write(answer);
-            }
-
-            dev.tags = dev.soProfile.tags.map(function (tag) {
-                return tag._id;
-            });
-            dev.soId = dev.soProfile._id;
-        }
-
-        dev.email = dev.ghProfile.email;
-
-        delete dev.ghProfile;
-        delete dev.soProfile;
-
-        devCsvStream.write(dev);
-        file.Developer.linesRead = counter;
-    }).on('error', function (err) {
-        console.log('========== AAAAHHHHHH')
-        console.log(err);
-    }).on('close', function (){
-        console.log('* Finished Developers! *');
-        devCsvStream.end();
-        answerCsvStream.end();
-        questionCsvStream.end();
-        file.Developer.status = READY;
-    });
-}
-
-function writeIssueOrCommit(option = 'Issue',
-            headers = {main: true, comments: true}, transform = {}){
-    console.log('** Generating file **');
-    var items = '-__v'
-    var Model = mongoose.model(option);
-    var dbStream = Model.find().select(items).lean().stream();
-
-    var mainStream = fs.createWriteStream('files/' + option + 's.tsv');
-    var commentStream = fs.createWriteStream('files/' + option + 'Comments.tsv');
-
-    var options = {
-        delimiter: '\t',
-        headers: headers.main
-    }
-
-    var mainCvsStream = csv.createWriteStream(options)
-    if(transform.main){
-        mainCvsStream.transform(transform.main);
-    }
-    mainCvsStream.pipe(mainStream);
-
-    options.headers = headers.comments;
-    var commentCsvStream = csv.createWriteStream(options);
-    if(transform.comments){
-        commentCsvStream.transform(transform.comments);
-    }
-    commentCsvStream.pipe(commentStream);
-
-    var counter = 0;
-    dbStream.on('data', function (model) {
-        counter++;
-        delete model.tags;
-        if(model.comments){
-            for(var comment of model.comments){
-                comment.body = comment.body
-                  .replace(/\t/g, '        ');
-                comment.body = comment.body
-                  .replace(/(?:\r\n|\r|\n)/g, '                ');
-                comment.body = comment.body
-                  .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
-                comment.modelId = model._id;
-                comment.projectId = model.projectId;
-                comment.createdAt = comment.createdAt.toISOString();
-                commentCsvStream.write(comment);
-            }
-        }
-
-        model.createdAt = model.createdAt.toISOString();
-
-        mainCvsStream.write(model);
-        file[option].linesRead = counter;
-    }).on('error', function (err) {
-        console.log('========== AAAAHHHHHH')
-        console.log(err);
-    }).on('close', function (){
-        console.log('* Finished ' + option + '! *');
-        mainCvsStream.end();
-        commentCsvStream.end();
-        file[option].status = READY;
-    });
 }

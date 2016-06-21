@@ -101,7 +101,7 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
         var delay = 1000;
         switch (option) {
             case 'Developer':
-            case 'Issue':
+            case 'IssueEvent':
             case 'Commit':
                 delay = 50000;
                 $scope.downloadStatus.message = "This will generate muliple files!";
@@ -125,9 +125,9 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
             if(option == 'Developer'){
                 $scope.download('Question');
                 $scope.download('Answer');
-            } else if (option == 'Issue') {
+            } else if (option == 'IssueEvent') {
                 $scope.download('IssueComment');
-                $scope.download('IssueEvent');
+                $scope.download('Issue');
             } else if (option == 'Commit') {
                 $scope.download('CommitComment');
             }
