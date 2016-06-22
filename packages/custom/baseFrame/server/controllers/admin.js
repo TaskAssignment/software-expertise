@@ -214,7 +214,7 @@ function writeIssues(){
 }
 
 function writeCommits(){
-    var headers = ['sha', 'message', 'committerId', 'projectId', 'createdAt', 'url'];
+    var headers = ['sha', 'message', 'committerLogin', 'projectId', 'createdAt', 'url'];
     var transform = function (row) {
         row.message = row.message
           .replace(/\t/g, '        ');

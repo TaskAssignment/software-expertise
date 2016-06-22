@@ -6,7 +6,7 @@ var mongoose = require('mongoose');
 var READY = true; //Status code to be sent when ready.
 var NOT_READY = false; //Send accepted status code
 
-var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit', 'Comment', 'Language', 'Project', 'IssueEvent'];
+var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit', 'CommitComment', 'IssueComment', 'Language', 'Project', 'IssueEvent'];
 
 var populated = {};
 for(var model of models){
@@ -43,17 +43,17 @@ module.exports = function (BaseFrame) {
                     populateEvents(id);
                     populateContributors(id);
                     populateCommits(id);
-                    populateComments(id, 'issue');
-                    populateComments(id, 'commit');
+                    populateComments(id, 'Issue');
+                    populateComments(id, 'Commit');
 
-                    var interval = setInterval(function () {
+                    var intervalLanguage = setInterval(function () {
                         if(populated.Language.status === READY){
-                            stop();
+                            stopLanguage();
                         }
                     }, 1000);
 
-                    function stop(){
-                        clearInterval(interval);
+                    function stopLanguage(){
+                        clearInterval(intervalLanguage);
                         populateIssues(id);
                     }
                 }
@@ -678,10 +678,11 @@ function populateEvents(projectId){
 
 function populateComments(projectId, type){
     var url = projectId;
-    if(type === 'issue'){
-        url += '/issues'
+    if(type === 'Issue'){
+        url += '/issues/comments?sort=updated&direction=asc'
+    } else {
+        url += '/comments';
     }
-    url += '/comments';
 
     var Comment = mongoose.model('Comment');
 
@@ -694,10 +695,10 @@ function populateComments(projectId, type){
                 createdAt: result.created_at,
                 user: result.user.login,
                 projectId: projectId,
-                type: type
+                type: type.toLowerCase()
             }
 
-            if(type === 'commit'){
+            if(type === 'Commit'){
                 comment.commitSha = result.commit_id;
             } else {
                 comment.issueNumber = result.issue_url.split('/').pop();
@@ -715,13 +716,13 @@ function populateComments(projectId, type){
         });
     }
 
-    gitHubPopulate('Comment', url, buildModels);
+    gitHubPopulate(type + 'Comment', url, buildModels);
 }
 
 function gitHubPopulate(option, specificUrl, callback, etag = undefined){
     var uri = 'https://api.github.com/repositories/' + specificUrl
     uri += specificUrl.lastIndexOf('?') < 0 ? '?' : '&';
-    uri += 'per_page=2';
+    uri += 'per_page=100';
 
     var options = {
         headers: {
@@ -741,7 +742,7 @@ function gitHubPopulate(option, specificUrl, callback, etag = undefined){
     var pageCounter = 0;
 
     var requestCallback = function (error, response, body){
-        if (!error && response.statusCode == 200) {
+        if (!error && response.statusCode === 200) {
             var results = JSON.parse(body);
             // results.etag = response.headers.etag;
             callback(results);
@@ -755,7 +756,6 @@ function gitHubPopulate(option, specificUrl, callback, etag = undefined){
             }
 
             pageCounter++;
-            populated[option].pagesAdded = pageCounter;
             if(next){
                 var begin = next.indexOf('<');
                 var end = next.indexOf('>');
@@ -767,10 +767,18 @@ function gitHubPopulate(option, specificUrl, callback, etag = undefined){
 
                 request(options, requestCallback);
             } else {
-                setTimeout(function () {
+                if(results.length > 0 && option === 'IssueComment'){
+                    var last = results.length - 1;
+                    var since = results[last].updated_at;
+                    options.uri = uri + '&since=' + since;
+                    request(options, requestCallback);
+                } else {
                     populated[option].status = READY;
-                }, 1000);
+                }
             }
+        } else if (!error &&
+          (response.statusCode === 500 || response.statusCode === 502)){
+            request(options, requestCallback);
         } else {
             console.log(body, error);
         }
