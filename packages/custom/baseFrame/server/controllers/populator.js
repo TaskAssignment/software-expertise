@@ -584,6 +584,7 @@ function populateCommits(projectId){
         var url = projectId + '/commits';
 
         if(lastCreated){
+            lastCreated.createdAt.setSeconds(lastCreated.createdAt.getSeconds() + 1);
             url += '?since=' + lastCreated.createdAt.toISOString();
         }
 
@@ -677,14 +678,11 @@ function populateEvents(projectId){
 }
 
 function populateComments(projectId, type){
-    var url = projectId;
-    if(type === 'Issue'){
-        url += '/issues/comments?sort=updated&direction=asc'
-    } else {
-        url += '/comments';
-    }
-
     var Comment = mongoose.model('Comment');
+    var filter = {
+        projectId: projectId,
+        type: type.toLowerCase()
+    };
 
     var buildModels = function(results){
         var comments = [];
@@ -716,17 +714,31 @@ function populateComments(projectId, type){
         });
     }
 
-    gitHubPopulate(type + 'Comment', url, buildModels);
+    Comment.findOne(filter, 'createdAt', {sort: '-createdAt', lean:true}, function (err, lastCreated){
+        var url = projectId;
+        if(type === 'Issue'){
+            url += '/issues/comments?sort=updated&direction=asc'
+        } else {
+            url += '/comments';
+        }
+
+        if(lastCreated && type === 'Issue'){
+            lastCreated.createdAt.setSeconds(lastCreated.createdAt.getSeconds() + 1);
+            url += '&since=' + lastCreated.createdAt.toISOString();
+        }
+
+        gitHubPopulate(type + 'Comment', url, buildModels);
+    });
 }
 
-function gitHubPopulate(option, specificUrl, callback, etag = undefined){
-    var uri = 'https://api.github.com/repositories/' + specificUrl
+function gitHubPopulate(option, specificUrl, callback){
+    var uri = 'https://api.github.com/repositories/' + specificUrl;
     uri += specificUrl.lastIndexOf('?') < 0 ? '?' : '&';
     uri += 'per_page=100';
 
     var options = {
         headers: {
-            'User-Agent': 'software-expertise',
+            'User-Agent': 'TaskAssignment/software-expertise',
             Accept: 'application/vnd.github.v3+json'
         },
         uri: uri,
@@ -735,52 +747,73 @@ function gitHubPopulate(option, specificUrl, callback, etag = undefined){
         }
     };
 
-    if(etag){
-        options.headers['If-None-Match'] = etag;
-    }
-
-    var pageCounter = 0;
-
     var requestCallback = function (error, response, body){
-        if (!error && response.statusCode === 200) {
-            var results = JSON.parse(body);
-            // results.etag = response.headers.etag;
-            callback(results);
+        if (!error) {
+            if(response.statusCode === 200) {
+                var results = JSON.parse(body);
+                // results.etag = response.headers.etag;
+                callback(results);
 
-            var links = response.headers.link || '';
-            var next = undefined;
-            for(var link of links.split(',')){
-                if(link.lastIndexOf('next') > 0){
-                    next = link;
+                var links = response.headers.link || '';
+                var next = undefined;
+                for(var link of links.split(',')){
+                    if(link.lastIndexOf('next') > 0){
+                        next = link;
+                    }
                 }
-            }
 
-            pageCounter++;
-            if(next){
-                var begin = next.indexOf('<');
-                var end = next.indexOf('>');
+                if(next){
+                    var begin = next.indexOf('<');
+                    var end = next.indexOf('>');
 
-                //This gets string = [begin, end)
-                var new_uri = next.substring(begin + 1, end);
+                    //This gets string = [begin, end)
+                    var new_uri = next.substring(begin + 1, end);
 
-                options.uri = new_uri;
+                    options.uri = new_uri;
 
-                request(options, requestCallback);
-            } else {
-                if(results.length > 0 && option === 'IssueComment'){
-                    var last = results.length - 1;
-                    var since = results[last].updated_at;
-                    options.uri = uri + '&since=' + since;
-                    request(options, requestCallback);
+                    setTimeout(function () {
+                        request(options, requestCallback);
+                    }, 10);
                 } else {
-                    populated[option].status = READY;
+                    if(option === 'IssueComment' && results.length > 0){
+                        var last = results.length - 1;
+                        console.log(results[last], results.length);
+                        var lastUpdated = new Date(results[last].updated_at);
+                        var yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        if(yesterday > lastUpdated){
+                            lastUpdated.setSeconds(lastUpdated.getSeconds() + 1);
+                            options.uri = uri + '&since=' + lastUpdated.toISOString();
+                            request(options, requestCallback);
+                        } else {
+                            console.log("*** DONE ***", option);
+                            populated[option].status = READY;
+                        }
+                    } else {
+                        console.log("*** DONE ***", option);
+                        populated[option].status = READY;
+                    }
                 }
+            } else if (response.statusCode === 500 || response.statusCode === 502){
+                console.log("Git Server Error. Trying again in one second");
+                setTimeout(function () {
+                    request(options, requestCallback);
+                }, 100);
+            } else if (response.statusCode === 403){
+                var gitResponse = JSON.parse(body);
+                if(gitResponse.documentation_url === "https://developer.github.com/v3#abuse-rate-limits") {
+                    console.log("Abuse Rate. Trying again in one second;");
+                    setTimeout(function () {
+                        request(options, requestCallback);
+                    }, 100);
+                } else {
+                    console.log(body, response.statusCode);
+                }
+            } else {
+                console.log(body, response.statusCode);
             }
-        } else if (!error &&
-          (response.statusCode === 500 || response.statusCode === 502)){
-            request(options, requestCallback);
         } else {
-            console.log(body, error);
+            console.log(body, error.message);
         }
     }
 
