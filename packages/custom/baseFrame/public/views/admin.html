@@ -27,7 +27,7 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
                     </select>
 
                     <button class="btn" ng-click="populate('Project')">
-                        Go
+                        Populate
                     </button>
                 </div>
             </div>
@@ -68,63 +68,41 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
 
         <div class="col-md-5 col-lg-5">
             <h2>
-                Status Downlad <small> {{ downloadStatus.option }}</small>
+                Status Downlad <small> {{ selectedExport }}</small>
             </h2>
-            <div class="row" ng-if="downloadStatus.option">
+            <ul class="nav nav-tabs" >
+                <li role="presentation" ng-repeat="(option, values) in exportStatus">
+                    <a href="" ng-click="selectExport(option)">{{option}}</a>
+                </li>
+            </ul>
+            <div class="row" ng-if="exportStatus[selectedExport]">
                 <div class="col-md-12 col-lg-12">
                     <div class="row">
-                        <h3 class="col-md-12 col-lg-12">
-                            <i class="fa fa-spinner fa-pulse fa-fw"
-                                ng-if="!downloadStatus.fileRequested"></i>
-                            <i class="fa fa-check"
-                                ng-if="downloadStatus.fileRequested"></i>
-                            File Requested
+                        <h3 class="col-md-12 col-lg-12" ng-if="!exportStatus[selectedExport].fileGenerated">
+                            <i class="fa fa-spinner fa-pulse fa-fw"></i>
+                            Generating File ...
+                            <small> {{ exportStatus[selectedExport].message }} </small>
                         </h3>
+                        <h3 class="col-md-12 col-lg-12" ng-if="exportStatus[selectedExport].fileGenerated">
+                            <i class="fa fa-check"></i>
+                            Files Generated
+                        </h3>
+                    </div>
+                    <div class="row" ng-if="exportStatus[selectedExport].linesRead > 0">
+                        <h4 class="col-lg-offset-1 col-md-offset-1 col-md-11 col-lg-11">
+                            <i class="fa fa-hand-o-right" aria-hidden="true"></i>
+                            Lines Written: {{exportStatus[selectedExport].linesRead}}
+                        </h4>
                     </div>
                     <div class="row">
-                        <h3 class="col-md-12 col-lg-12">
-                            <i class="fa fa-spinner fa-pulse fa-fw"
-                                ng-if="!downloadStatus.fileGenerated"></i>
-                            <i class="fa fa-check"
-                                ng-if="downloadStatus.fileGenerated"></i>
-                            Generating File
-                            <small> {{ downloadStatus.message }} </small>
+                        <h3 class="col-md-12 col-lg-12" ng-if="!exportStatus[selectedExport].completed &&
+                        exportStatus[selectedExport].fileGenerated">
+                            <i class="fa fa-spinner fa-pulse fa-fw"></i>
+                            Downloading
                         </h3>
-                    </div>
-                    <div class="row" ng-if="downloadStatus.linesRead > 0">
-                        <h3 class="col-md-12 col-lg-12">
-                            <i class="fa fa-spinner fa-pulse fa-fw"
-                                ng-if="!downloadStatus.fileGenerated"></i>
-                            <i class="fa fa-check"
-                                ng-if="downloadStatus.fileGenerated"></i>
-                            Lines Read: {{downloadStatus.linesRead}}
-                        </h3>
-                    </div>
-                    <div class="row">
-                        <h3 class="col-md-12 col-lg-12">
-                            <i class="fa fa-spinner fa-pulse fa-fw"
-                                ng-if="!downloadStatus.fileGenerated"></i>
-                            <i class="fa fa-check"
-                                ng-if="downloadStatus.fileGenerated"></i>
-                            File Generated
-                        </h3>
-                    </div>
-                    <div class="row">
-                        <h3 class="col-md-12 col-lg-12">
-                            <i class="fa fa-spinner fa-pulse fa-fw"
-                                ng-if="!downloadStatus.started"></i>
-                            <i class="fa fa-check"
-                                ng-if="downloadStatus.started"></i>
-                            Started Download
-                        </h3>
-                    </div>
-                    <div class="row">
-                        <h3 class="col-md-12 col-lg-12">
-                            <i class="fa fa-spinner fa-pulse fa-fw"
-                                ng-if="!downloadStatus.completed"></i>
-                            <i class="fa fa-check"
-                                ng-if="downloadStatus.completed"></i>
-                            Download Completed
+                        <h3 class="col-md-12 col-lg-12" ng-if="exportStatus[selectedExport].completed">
+                            <i class="fa fa-check"></i>
+                            Download Complete
                         </h3>
                     </div>
                 </div>
@@ -133,9 +111,14 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
 
         <div class="col-md-4 col-lg-4">
             <h2>
-                Status Populate <small> {{ populateStatus.option }}</small>
+                Status Populate
             </h2>
-            <h3 ng-if="selectedProject">
+            <ul class="nav nav-tabs" >
+                <li role="presentation" ng-repeat="(option, values) in populateStatus">
+                    <a href="" ng-click="selectPopulate(option)">{{option}}</a>
+                </li>
+            </ul>
+            <h3 ng-if="selectedPopulate === 'Project'">
                 {{ selectedProject.name }}
                 <small>
                     <p>
@@ -144,37 +127,33 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
                     <p>
                         It will also get the StackOverflow data (tags, questions and answers) for members that are in StackOverflow.
                     </p>
-            </small>
+                </small>
             </h3>
-            <div class="row" ng-if="populateStatus.option">
+            <div class="row" ng-if="selectedPopulate">
                 <div class="col-md-12 col-lg-12">
                     <div class="row">
-                        <h3 class="col-md-12 col-lg-12">
-                            <i class="fa fa-spinner fa-pulse fa-fw"
-                            ng-if="!populateStatus.started"></i>
-                            <i class="fa fa-check"
-                            ng-if="populateStatus.started"></i>
-                            Populate Started
-                            <small> {{ populateStatus.message }} </small>
+                        <h3 class="col-md-12 col-lg-12" ng-if="!populateStatus[selectedPopulate].completed">
+                            <i class="fa fa-spinner fa-pulse fa-fw"></i>
+                            Populating ...
+                            <small> {{ populateStatus[selectedPopulate].message }} </small>
+                        </h3>
+                        <h3 class="col-md-12 col-lg-12" ng-if="populateStatus[selectedPopulate].completed">
+                            <i class="fa fa-check"></i>
+                            Populated
                         </h3>
                     </div>
-                    <div class="row">
-                        <h3 class="col-md-12 col-lg-12">
-                            <i class="fa fa-spinner fa-pulse fa-fw"
-                            ng-if="!populateStatus.completed"></i>
-                            <i class="fa fa-check"
-                            ng-if="populateStatus.completed"></i>
-                            Lines Read: {{populateStatus.linesRead}}
-                        </h3>
+                    <div class="row" ng-if="populateStatus[selectedPopulate].linesRead">
+                        <h4 class="col-lg-offset-1 col-md-offset-1 col-md-11 col-lg-11">
+                            <i class="fa fa-hand-o-right" aria-hidden="true"></i>
+                            Entries Created: {{populateStatus[selectedPopulate].linesRead}}
+                        </h4>
                     </div>
-                    <div class="row">
-                        <h3 class="col-md-12 col-lg-12">
-                            <i class="fa fa-spinner fa-pulse fa-fw"
-                            ng-if="!populateStatus.completed"></i>
-                            <i class="fa fa-check"
-                            ng-if="populateStatus.completed"></i>
-                            Populate Completed
-                        </h3>
+                    <div class="row" ng-repeat="(item, status) in populateStatus[selectedPopulate].data.items">
+                        <h4 class="col-lg-offset-1 col-md-offset-1 col-md-11 col-lg-11">
+                            <i class="fa fa-spinner fa-pulse fa-fw" ng-if="!status"></i>
+                            <i class="fa fa-check" ng-if="status"></i>
+                            {{item}}
+                        </h4>
                     </div>
                 </div>
             </div>

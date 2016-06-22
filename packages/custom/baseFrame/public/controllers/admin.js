@@ -4,6 +4,18 @@ var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('AdminController', function ($scope, $interval, $http, $location){
     findProjects();
     $scope.selectedProject = undefined;
+    $scope.selectedPopulate = undefined;
+    $scope.selectedExport = undefined;
+
+    $scope.selectPopulate = function(option){
+        $scope.selectedPopulate = option;
+    }
+
+
+    $scope.selectExport = function(option){
+        $scope.selectedExport = option;
+    }
+
 
     $scope.oauth = function () {
         var code = $location.search().code;
@@ -15,14 +27,15 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
         });
     }
 
+    $scope.populateStatus = {};
     $scope.populate = function(option){
-        $scope.populateStatus = {
-            option: option,
+        $scope.populateStatus[option] = {
             linesRead: 0,
-            started: true,
             completed: false,
             message: "This can take a while!"
         };
+        $scope.selectedPopulate = option;
+
         var params = {
             params: {
                 option: option,
@@ -37,19 +50,18 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
         });
     }
 
+    $scope.exportStatus = {};
     $scope.generate = function (option) {
-        $scope.downloadStatus = {
-            option: option,
-            fileRequested: false,
+        $scope.exportStatus[option] = {
             fileGenerated: false,
             linesRead: 0,
-            started: false,
             completed: false,
             message: ''
         };
+        $scope.selectedExport = option;
         $http.get('/api/baseFrame/generate', {params:{resource: option}})
         .then(function (response) {
-            $scope.downloadStatus.fileRequested = true;
+            $scope.exportStatus[option].fileRequested = true;
             checkDownload(option);
         });
     }
@@ -66,7 +78,7 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
             a.download = option + 's.tsv';
             a.click();
             window.URL.revokeObjectURL(url);
-            $scope.downloadStatus.completed = true;
+            $scope.exportStatus[option].completed = true;
         }, function (response) {
             console.log(response);
         });
@@ -84,7 +96,9 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
             };
 
             $http.get('/api/baseFrame/check', params).then(function (response) {
-                $scope.populateStatus.linesRead = response.data.linesRead;
+                $scope.populateStatus[option].linesRead = response.data.linesRead;
+                console.log(response);
+                $scope.populateStatus[option].data = response.data;
                 if(response.status == 200){
                     stop();
                 }
@@ -93,7 +107,7 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
 
         function stop(){
             $interval.cancel(interval);
-            $scope.populateStatus.completed = true;
+            $scope.populateStatus[option].completed = true;
         }
     }
 
@@ -104,16 +118,16 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
             case 'IssueEvent':
             case 'Commit':
                 delay = 50000;
-                $scope.downloadStatus.message = "This will generate muliple files!";
+                $scope.exportStatus[option].message = "This will generate muliple files!";
                 break;
         }
 
         var interval = $interval(function () {
             $http.get('/api/baseFrame/check', {params:{resource: option}})
             .then(function (response) {
-                $scope.downloadStatus.linesRead = response.data.linesRead;
+                $scope.exportStatus[option].linesRead = response.data.linesRead;
                 if(response.status == 200){
-                    $scope.downloadStatus.fileGenerated = true;
+                    $scope.exportStatus[option].fileGenerated = true;
                     stop();
                 }
             })
@@ -131,7 +145,6 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
             } else if (option == 'Commit') {
                 $scope.download('CommitComment');
             }
-            $scope.downloadStatus.started = true;
         }
     }
 

@@ -9,7 +9,8 @@ var csv = require('fast-csv');
 var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
 
-var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit', 'Comment', 'Language', 'Project', 'IssueEvent'];
+var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit', 'Comment',
+  'Language', 'Project', 'IssueEvent', 'StopWord'];
 
 var populated = {};
 var file = {};
@@ -36,7 +37,6 @@ module.exports = function (BaseFrame){
                     readFile(query.option);
                     break;
                 case 'Project':
-                    populated.Project.status = READY;
                     populate(query.option, query.project);
                     break;
                 default:
@@ -48,10 +48,10 @@ module.exports = function (BaseFrame){
 
         generate: function (req, res) {
             var option = req.query.resource;
+            file[option].status = NOT_READY;
 
             switch (option) {
                 case 'Developer':
-                    file[option].status = NOT_READY;
                     writeDevs();
                     break;
                 case 'StopWord':
@@ -64,7 +64,6 @@ module.exports = function (BaseFrame){
                     writeCommits();
                     break;
                 default:
-                    file[option].status = NOT_READY;
                     writeFile(option);
                     break;
             }
@@ -107,7 +106,27 @@ module.exports = function (BaseFrame){
             if(!populate){
                 res.status(file[option].status).send(file[option]);
             } else {
-                res.status(populated[option].status).send(populated[option]);
+                if(option === 'Project'){
+                    var populator = require('../controllers/populator')();
+                    var projectStatus = populator.check(option.toLowerCase());
+                    var amountKeys = 0;
+                    var amountReady = 0;
+
+                    for(var key in projectStatus.items){
+                        amountKeys++;
+                        var keyStatus = projectStatus.items[key];
+                        if(keyStatus){
+                            amountReady++;
+                        }
+                    }
+
+                    if(amountReady === amountKeys){
+                        populated[option].status = READY;
+                    }
+                    res.status(populated[option].status).send(projectStatus);
+                } else {
+                    res.status(populated[option].status).send(populated[option]);
+                }
             }
         }
     }
@@ -167,7 +186,6 @@ function writeFile(option,
         file[option].status = READY;
     });
 }
-
 
 function writeIssues(){
     var headers = ['_id', 'projectId', 'number', 'title',

@@ -6,14 +6,12 @@ var mongoose = require('mongoose');
 var READY = true; //Status code to be sent when ready.
 var NOT_READY = false; //Send accepted status code
 
-var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit', 'CommitComment', 'IssueComment', 'Language', 'Project', 'IssueEvent'];
+var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit',
+  'CommitComment', 'IssueComment', 'Language', 'Project', 'IssueEvent'];
 
-var populated = {};
+var populated = {project: {items: {}}};
 for(var model of models){
-    populated[model] = {
-        status: NOT_READY,
-        pagesAdded: 0
-    }
+    populated[model] = NOT_READY;
 }
 
 var next_token = 0;
@@ -47,7 +45,7 @@ module.exports = function (BaseFrame) {
                     populateComments(id, 'Commit');
 
                     var intervalLanguage = setInterval(function () {
-                        if(populated.Language.status === READY){
+                        if(populated.Language === READY){
                             stopLanguage();
                         }
                     }, 1000);
@@ -63,7 +61,7 @@ module.exports = function (BaseFrame) {
             switch (option) {
                 case 'Developer':
                     var interval = setInterval(function () {
-                        if(populated.Developer.status === READY){
+                        if(populated.Developer === READY){
                             stop();
                         }
                     }, 1000);
@@ -82,6 +80,13 @@ module.exports = function (BaseFrame) {
             }
         },
         check: function (option) {
+            for(var model of models){
+                populated.project.items[model] = populated[model];
+            }
+
+            delete populated.project.items.Tag;
+            delete populated.project.items.CoOccurrence;
+            delete populated.project.items.Project;
             return populated[option];
         }
     }
@@ -787,11 +792,11 @@ function gitHubPopulate(option, specificUrl, callback){
                             request(options, requestCallback);
                         } else {
                             console.log("*** DONE ***", option);
-                            populated[option].status = READY;
+                            populated[option] = READY;
                         }
                     } else {
                         console.log("*** DONE ***", option);
-                        populated[option].status = READY;
+                        populated[option] = READY;
                     }
                 }
             } else if (response.statusCode === 500 || response.statusCode === 502){
@@ -807,7 +812,8 @@ function gitHubPopulate(option, specificUrl, callback){
                         request(options, requestCallback);
                     }, 100);
                 } else {
-                    console.log(body, response.statusCode);
+                    console.log(body, response.
+                        Code);
                 }
             } else {
                 console.log(body, response.statusCode);
