@@ -389,7 +389,7 @@ function populate(option, project = undefined){
     if(project){
         var repo = JSON.parse(project);
         populator.GitHub([repo._id]);
-        // populator.StackOverflow('Developer', repo._id);
+        populator.StackOverflow('Developer', repo._id);
     } else {
         populated[option].status = READY;
         populator.StackOverflow(option);
