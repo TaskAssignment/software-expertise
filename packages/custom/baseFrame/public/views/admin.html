@@ -1,34 +1,76 @@
 <section ng-controller="AdminController"
 class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
+<div class="row">
+    <div class="col-md-12 col-lg-12">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th class="col-md-3 col-lg-3"> Option </th>
+                    <th class="col-md-1 col-lg-1"> Populate </th>
+                    <th class="col-md-3 col-lg-3"> Last Populated </th>
+                    <th class="col-md-2 col-lg-2"> lines </th>
+                    <th class="col-md-1 col-lg-1"> Download </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="(model, label) in generalOptions">
+                    <td> {{ label }} </td>
+                    <td>
+                        <button ng-if="model !== 'Project'" ng-click="populate(model)" class="btn">
+                            Populate
+                        </button>
+                    </td>
+                    <td> timestamp </td>
+                    <td> lines </td>
+                    <td>
+                        <button ng-click="generate(model)" class="btn">
+                            Download
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th> Option </th>
-            <th> Populate </th>
-            <th> Last Populated </th>
-            <th> lines </th>
-            <th> Download </th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr ng-repeat="(model, label) in generalOptions">
-            <td> {{ label }} </td>
-            <td>
-                <button ng-click="populate(model)" class="btn">
-                    Populate
-                </button>
-            </td>
-            <td> timestamp </td>
-            <td> lines </td>
-            <td>
-                <button ng-click="generate(model)" class="btn">
-                    Download
-                </button>
-            </td>
-        </tr>
-    </tbody>
-</table>
+<div class="form-inline">
+    Select Project:
+    <select ng-model="selectedProject" ng-options="project.name for project in projects" class="form-control">
+    </select>
+</div>
+
+<div class="row" ng-if="selectedProject">
+    <div class="col-md-12 col-lg-12">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th class="col-md-3 col-lg-3"> Option </th>
+                    <th class="col-md-1 col-lg-1"> Populate </th>
+                    <th class="col-md-3 col-lg-3"> Last Populated </th>
+                    <th class="col-md-2 col-lg-2"> lines </th>
+                    <th class="col-md-1 col-lg-1"> Download </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="(model, label) in projectOptions">
+                    <td> {{ label }} </td>
+                    <td>
+                        <button ng-click="populate(model)" class="btn">
+                            Populate
+                        </button>
+                    </td>
+                    <td> timestamp </td>
+                    <td> lines </td>
+                    <td>
+                        <button ng-click="generate(model)" class="btn">
+                            Download
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
     <!-- <div class="row">
         <div class="col-md-3 col-lg-3">
             <div class="row">
@@ -51,14 +93,7 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
                     </button>
                 </div>
 
-                <div class="form-inline">
-                    <select ng-model="selectedProject" ng-options="project.name for project in projects" class="form-control">
-                    </select>
 
-                    <button class="btn" ng-click="populate('Project')">
-                        Populate
-                    </button>
-                </div>
             </div>
 
             <div class="row">

@@ -10,7 +10,7 @@ var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
 
 var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit', 'Comment',
-  'Language', 'Project', 'IssueEvent', 'StopWord'];
+  'Language', 'Project', 'IssueEvent', 'StopWord', 'Contributor'];
 
 var populated = {};
 var file = {};
@@ -36,11 +36,8 @@ module.exports = function (BaseFrame){
                 case 'Tag':
                     readFile(query.option);
                     break;
-                case 'Project':
-                    populate(query.option, query.project);
-                    break;
                 default:
-                    populate(query.option);
+                    populate(query.option, query.project);
             }
 
             res.status(NOT_READY).send(populated[query.option]);
@@ -52,17 +49,27 @@ module.exports = function (BaseFrame){
 
             switch (option) {
                 case 'Developer':
+                case 'Contributor':
                     writeDevs();
                     break;
                 case 'StopWord':
                     file[option].status = READY;
                     break;
                 case 'IssueEvent':
+                    var headers = ['_id', 'projectId', 'issueId', 'issueNumber',
+                      'actor', 'commitId', 'typeOfEvent', 'assigneeId',
+                      'createdAt'];
+                    writeFile('IssueEvent', headers);
+                    break;
                 case 'IssueComment':
+                    writeIssueComments();
+                    break;
                 case 'Issue':
                     writeIssues();
                     break;
                 case 'Commit':
+                    writeCommitComments();
+                    break;
                 case 'CommitComment':
                     writeCommits();
                     break;
@@ -211,27 +218,24 @@ function writeIssues(){
         return row;
     }
     writeFile('Issue', headers, transform);
+}
 
+function writeIssueComments(){
     headers = ['_id', 'issueNumber', 'projectId', 'body',
-      'commenterLogin', 'createdAt'];
+    'commenterLogin', 'createdAt'];
     transform = function (row) {
         row.body = row.body
-          .replace(/\t/g, '        ');
+        .replace(/\t/g, '        ');
         row.body = row.body
-          .replace(/(?:\r\n|\r|\n)/g, '                ');
+        .replace(/(?:\r\n|\r|\n)/g, '                ');
         row.body = row.body
-          .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
+        .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
         row.commenterLogin = row.user;
         return row;
     }
 
     writeFile('Comment', headers, transform, 'IssueComments.tsv',
-        '-updatedAt -__v', {type: 'issue'});
-
-    headers = ['_id', 'projectId', 'issueId', 'issueNumber',
-      'actor', 'commitId', 'typeOfEvent', 'assigneeId',
-      'createdAt'];
-    writeFile('IssueEvent', headers);
+    '-updatedAt -__v', {type: 'issue'});
 }
 
 function writeCommits(){
@@ -250,7 +254,9 @@ function writeCommits(){
         return row;
     }
     writeFile('Commit', headers, transform);
+}
 
+function writeCommitComments() {
     headers = ['_id', 'commitSha', 'projectId', 'body',
       'commenterLogin', 'createdAt'];
     transform = function (row) {
@@ -335,9 +341,9 @@ function writeDevs(){
         answerCsvStream.end();
         questionCsvStream.end();
         file.Developer.status = READY;
+        file.Contributor.status = READY;
     });
 }
-
 
 /** Helper function to read the files
 *
@@ -409,8 +415,12 @@ function populate(option, project = undefined){
     var populator = require('../controllers/populator')();
     if(project){
         var repo = JSON.parse(project);
-        populator.GitHub([repo._id]);
-        populator.StackOverflow('Developer', repo._id);
+        if(option === 'Contributor'){
+            populator.GitHub('Developer', repo._id);
+            populator.StackOverflow('Developer', repo._id);
+        } else {
+            populator.GitHub(option, repo._id);
+        }
     } else {
         populated[option].status = READY;
         populator.StackOverflow(option);

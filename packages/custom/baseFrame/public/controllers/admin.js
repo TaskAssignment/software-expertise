@@ -12,11 +12,15 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
         Developer: 'Common Users (SO/GH)',
         StopWord: 'StopWords',
         Project: 'Projects',
+    }
+
+    $scope.projectOptions = {
+        Contributor: 'Contributors',
         Commit: 'Commit',
         CommitComment: 'Commit Comments',
         Issue: 'Issues',
         IssueEvent: 'Issue Events',
-        IssueComment: 'Issue Comments'
+        IssueComment: 'Issue Comments',
     }
 
     $scope.selectPopulate = function(option){
@@ -54,7 +58,7 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
         }
         $http.get('/api/baseFrame/populate', params)
         .then(function (response){
-            checkPopulate(option);
+            // checkPopulate(option);
         }, function(response){
             console.log(response);
         });
