@@ -142,6 +142,15 @@ module.exports = function (BaseFrame){
     }
 }
 
+function saveTimestamp(option, path){
+    var GenerateFileLog = mongoose.model('GenerateFileLog');
+    var update = {
+        filePath: path,
+        timestamp: new Date(),
+    };
+    GenerateFileLog.update({model: option}, update, {upsert: true}).exec();
+}
+
 /** This is responsible for writing the file with the StackOverflow data.
 *
 * @param option - The Model that will be exported. The file will be the name of this model pluralized.
@@ -192,8 +201,10 @@ function writeFile(option,
         console.log('========== AAAAHHHHHH')
         console.log(err);
     }).on('close', function (){
+        csvStream.end();
         console.log('* Finished! *');
         file[option].status = READY;
+        saveTimestamp(option, path);
     });
 }
 
@@ -205,11 +216,11 @@ function writeIssues(){
     var transform = function (row) {
         if(row.body){
             row.body = row.body
-            .replace(/\t/g, '        ');
+              .replace(/\t/g, '        ');
             row.body = row.body
-            .replace(/(?:\r\n|\r|\n)/g, '                ');
+              .replace(/(?:\r\n|\r|\n)/g, '                ');
             row.body = row.body
-            .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
+              .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
         }
         row.reporterLogin = row.reporterId;
         row.assigneeLogin = row.assigneeId;
@@ -229,7 +240,7 @@ function writeIssueComments(){
         row.body = row.body
         .replace(/(?:\r\n|\r|\n)/g, '                ');
         row.body = row.body
-        .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
+        .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
         row.commenterLogin = row.user;
         return row;
     }
@@ -246,7 +257,7 @@ function writeCommits(){
         row.message = row.message
           .replace(/(?:\r\n|\r|\n)/g, '                ');
         row.message = row.message
-          .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
+          .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
         row.sha = row._id;
         row.committerLogin = row.user;
         delete row.user;
@@ -265,7 +276,7 @@ function writeCommitComments() {
         row.body = row.body
           .replace(/(?:\r\n|\r|\n)/g, '                ');
         row.body = row.body
-          .replace(/[\x00-\x1F\x7F-\x9F]/gu, ' ');
+          .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
         row.commenterLogin = row.user;
         return row;
     }
@@ -280,42 +291,73 @@ function writeDevs(){
     var Developer = mongoose.model('Developer');
     var dbStream = Developer.find().select(items).lean().stream();
 
-    var devStream = fs.createWriteStream('files/Developers.tsv');
-    var questionStream = fs.createWriteStream('files/Questions.tsv');
-    var answerStream = fs.createWriteStream('files/Answers.tsv');
+    var devFilePath = 'files/Developers.tsv';
+    var questionFilePath = 'files/Questions.tsv';
+    var answerFilePath = 'files/Answers.tsv';
+    var devStream = fs.createWriteStream(devFilePath);
+    var questionStream = fs.createWriteStream(questionFilePath);
+    var answerStream = fs.createWriteStream(answerFilePath);
 
     var options = {
         delimiter: '\t',
         headers: ['_id', 'email', 'repositories', 'soId', 'tags']
     }
-    var answerCsvStream = csv.createWriteStream(options);
-    answerCsvStream.pipe(answerStream);
-
-    options.headers = true;
-    var questionCsvStream = csv.createWriteStream(options);
-    questionCsvStream.pipe(questionStream);
 
     var devCsvStream = csv.createWriteStream(options);
     devCsvStream.pipe(devStream);
+
+    options.headers = true;
+
+    var questionCsvStream = csv.createWriteStream(options);
+    questionCsvStream.pipe(questionStream);
+
+    var answerCsvStream = csv.createWriteStream(options);
+    answerCsvStream.pipe(answerStream);
 
     var counter = 0;
     dbStream.on('data', function (dev) {
         counter++;
         dev.email = dev.ghProfile.email;
+        dev.repositories = dev.ghProfile.repositories;
         if(dev.soProfile){
             for(var question of dev.soProfile.questions){
-                question.body = question.body.replace(/\t/g, '        ');
-                question.body = question.body.replace(/(?:\r\n|\r|\n)/g, '                ');
+                question.body = question.body
+                  .replace(/\t/g, '        ');
+                question.body = question.body
+                  .replace(/(?:\r\n|\r|\n)/g, '                ');
+                question.body = question.body
+                  .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
                 question.askerId = dev._id;
                 question.askerSoId = dev.soProfile._id;
+
+                if(question.createdAt){
+                    question.createdAt = question.createdAt.toISOString();
+                }
+
+                if(question.updatedAt){
+                    question.updatedAt = question.updatedAt.toISOString();
+                }
                 questionCsvStream.write(question);
             }
 
             for(var answer of dev.soProfile.answers){
-                answer.body = answer.body.replace(/\t/g, '        ');
-                answer.body = answer.body.replace(/(?:\r\n|\r|\n)/g, '                ');
+                answer.body = answer.body
+                  .replace(/\t/g, '        ');
+                answer.body = answer.body
+                  .replace(/(?:\r\n|\r|\n)/g, '                ');
+                answer.body = answer.body
+                  .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
                 answer.answererId = dev._id;
                 answer.answererSoId = dev.soProfile._id;
+
+                if(answer.createdAt){
+                    answer.createdAt = answer.createdAt.toISOString();
+                }
+
+                if(answer.updatedAt){
+                    answer.updatedAt = answer.updatedAt.toISOString();
+                }
+
                 answerCsvStream.write(answer);
             }
 
@@ -326,6 +368,13 @@ function writeDevs(){
             });
         }
 
+        if(dev.createdAt){
+            dev.createdAt = dev.createdAt.toISOString();
+        }
+
+        if(dev.updatedAt){
+            dev.updatedAt = dev.updatedAt.toISOString();
+        }
 
         delete dev.ghProfile;
         delete dev.soProfile;
@@ -342,6 +391,10 @@ function writeDevs(){
         questionCsvStream.end();
         file.Developer.status = READY;
         file.Contributor.status = READY;
+        saveTimestamp('Developer', devFilePath);
+        saveTimestamp('Contributor', devFilePath);
+        saveTimestamp('Answer', answerFilePath);
+        saveTimestamp('Question', questionFilePath);
     });
 }
 

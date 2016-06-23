@@ -797,23 +797,23 @@ function gitHubPopulate(option, specificUrl, callback){
                             options.uri = uri + '&since=' + lastUpdated.toISOString();
                             request(options, requestCallback);
                         } else {
-                            console.log("*** DONE ***", option);
+                            console.log('*** DONE ***', option);
                             populated[option] = READY;
                         }
                     } else {
-                        console.log("*** DONE ***", option);
+                        console.log('*** DONE ***', option);
                         populated[option] = READY;
                     }
                 }
             } else if (response.statusCode === 500 || response.statusCode === 502){
-                console.log("Git Server Error. Trying again in one second");
+                console.log('Git Server Error. Trying again in one second');
                 setTimeout(function () {
                     request(options, requestCallback);
                 }, 100);
             } else if (response.statusCode === 403){
                 var gitResponse = JSON.parse(body);
-                if(gitResponse.documentation_url === "https://developer.github.com/v3#abuse-rate-limits") {
-                    console.log("Abuse Rate. Trying again in one second;");
+                if(gitResponse.documentation_url === 'https://developer.github.com/v3#abuse-rate-limits') {
+                    console.log('Abuse Rate. Trying again in one second;');
                     setTimeout(function () {
                         request(options, requestCallback);
                     }, 100);
@@ -871,7 +871,7 @@ function soPopulate(option, specificUrl, callback) {
                 case 402:
                 case 406:
                 case 502:
-                    console.log("Error Related to token. Trying a different one");
+                    console.log('Error Related to token. Trying a different one');
                     console.log(body);
                     next_token = (next_token + 1) % ACCESS_TOKENS.length;
                     if(next_token == 0){
@@ -882,9 +882,10 @@ function soPopulate(option, specificUrl, callback) {
                         request(options, requestCallback);
                     }
                     break;
+                case 400:
                 case 500:
                 case 503:
-                    console.log("SE Server Error. Trying again in one second");
+                    console.log('SE Server Error. Trying again in one second');
                     setTimeout(function () {
                         request(options, requestCallback);
                     }, 1000);

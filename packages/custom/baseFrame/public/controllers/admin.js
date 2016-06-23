@@ -4,31 +4,59 @@ var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('AdminController', function ($scope, $interval, $http, $location){
     findProjects();
     $scope.selectedProject = undefined;
-    $scope.selectedPopulate = undefined;
-    $scope.selectedExport = undefined;
     $scope.generalOptions = {
-        Tag: 'SO Tags',
-        CoOccurrence: 'CoOccurrences',
-        Developer: 'Common Users (SO/GH)',
-        StopWord: 'StopWords',
-        Project: 'Projects',
-    }
-
-    $scope.projectOptions = {
-        Contributor: 'Contributors',
-        Commit: 'Commit',
-        CommitComment: 'Commit Comments',
-        Issue: 'Issues',
-        IssueEvent: 'Issue Events',
-        IssueComment: 'Issue Comments',
-    }
-
-    $scope.selectPopulate = function(option){
-        $scope.selectedPopulate = option;
-    }
-
-    $scope.selectExport = function(option){
-        $scope.selectedExport = option;
+        StopWord: {
+            label: 'StopWords',
+            projectSpecific: false
+        },
+        Tag: {
+            label: 'SO Tags',
+            projectSpecific: false
+        },
+        CoOccurrence: {
+            label: 'CoOccurrences',
+            projectSpecific: false
+        },
+        Developer: {
+            label: 'Common Users (SO/GH)',
+            projectSpecific: false
+        },
+        Project: {
+            label: 'Projects',
+            projectSpecific: true
+        },
+        Contributor: {
+            label: 'Contributors',
+            projectSpecific: true
+        },
+        Answer: {
+            label: 'SO Answers',
+            projectSpecific: true
+        },
+        Question: {
+            label: 'SO Questions',
+            projectSpecific: true
+        },
+        Commit: {
+            label: 'Commit',
+            projectSpecific: true
+        },
+        CommitComment: {
+            label: 'Commit Comments',
+            projectSpecific: true
+        },
+        Issue: {
+            label: 'Issues',
+            projectSpecific: true
+        },
+        IssueEvent: {
+            label: 'Issue Events',
+            projectSpecific: true
+        },
+        IssueComment: {
+            label: 'Issue Comments',
+            projectSpecific: true
+        },
     }
 
     $scope.oauth = function () {
@@ -41,15 +69,7 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
         });
     }
 
-    $scope.populateStatus = {};
     $scope.populate = function(option){
-        $scope.populateStatus[option] = {
-            linesRead: 0,
-            completed: false,
-            message: "This can take a while!"
-        };
-        $scope.selectedPopulate = option;
-
         var params = {
             params: {
                 option: option,
@@ -58,29 +78,25 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
         }
         $http.get('/api/baseFrame/populate', params)
         .then(function (response){
-            // checkPopulate(option);
+            checkPopulate(option);
         }, function(response){
             console.log(response);
         });
     }
 
-    $scope.exportStatus = {};
     $scope.generate = function (option) {
-        $scope.exportStatus[option] = {
-            fileGenerated: false,
-            linesRead: 0,
-            completed: false,
-            message: ''
-        };
-        $scope.selectedExport = option;
         $http.get('/api/baseFrame/generate', {params:{resource: option}})
         .then(function (response) {
-            $scope.exportStatus[option].fileRequested = true;
             checkDownload(option);
         });
     }
 
     $scope.download = function(option){
+        $scope.generalOptions[option].downloaded = false;
+        if(option === 'Contributor'){
+            $scope.generalOptions[option].downloaded = true;
+            option = 'Developer';
+        }
         $http.get('/api/baseFrame/download', {params:{resource: option}})
         .then(function (response) {
             var a = document.createElement("a");
@@ -92,7 +108,8 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
             a.download = option + 's.tsv';
             a.click();
             window.URL.revokeObjectURL(url);
-            $scope.exportStatus[option].completed = true;
+
+            $scope.generalOptions[option].downloaded = true;
         }, function (response) {
             console.log(response);
         });

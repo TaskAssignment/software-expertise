@@ -7,25 +7,38 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
                 <tr>
                     <th class="col-md-3 col-lg-3"> Option </th>
                     <th class="col-md-1 col-lg-1"> Populate </th>
-                    <th class="col-md-3 col-lg-3"> Last Populated </th>
-                    <th class="col-md-2 col-lg-2"> lines </th>
+                    <th class="col-md-3 col-lg-3"> Last Generated File (timestamp) </th>
+                    <th class="col-md-2 col-lg-2"> Regenerate File </th>
                     <th class="col-md-1 col-lg-1"> Download </th>
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="(model, label) in generalOptions">
-                    <td> {{ label }} </td>
+                <tr ng-repeat="(model, option) in generalOptions">
+                    <td> {{ option.label }} </td>
                     <td>
-                        <button ng-if="model !== 'Project'" ng-click="populate(model)" class="btn">
+                        <button ng-if="!option.projectSpecific"
+                           ng-click="populate(model)" class="btn">
                             Populate
                         </button>
                     </td>
                     <td> timestamp </td>
-                    <td> lines </td>
                     <td>
                         <button ng-click="generate(model)" class="btn">
+                            Generate
+                        </button>
+                        <i class="fa fa-spinner fa-pulse fa-fw"
+                        ng-if="generalOptions[model].generated === false"></i>
+                        <i class="fa fa-check"
+                        ng-if="generalOptions[model].generated"></i>
+                    </td>
+                    <td>
+                        <button ng-click="download(model)" class="btn">
                             Download
                         </button>
+                        <i class="fa fa-spinner fa-pulse fa-fw"
+                        ng-if="generalOptions[model].downloaded === false"></i>
+                        <i class="fa fa-check"
+                        ng-if="generalOptions[model].downloaded"></i>
                     </td>
                 </tr>
             </tbody>
@@ -38,189 +51,4 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
     <select ng-model="selectedProject" ng-options="project.name for project in projects" class="form-control">
     </select>
 </div>
-
-<div class="row" ng-if="selectedProject">
-    <div class="col-md-12 col-lg-12">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th class="col-md-3 col-lg-3"> Option </th>
-                    <th class="col-md-1 col-lg-1"> Populate </th>
-                    <th class="col-md-3 col-lg-3"> Last Populated </th>
-                    <th class="col-md-2 col-lg-2"> lines </th>
-                    <th class="col-md-1 col-lg-1"> Download </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr ng-repeat="(model, label) in projectOptions">
-                    <td> {{ label }} </td>
-                    <td>
-                        <button ng-click="populate(model)" class="btn">
-                            Populate
-                        </button>
-                    </td>
-                    <td> timestamp </td>
-                    <td> lines </td>
-                    <td>
-                        <button ng-click="generate(model)" class="btn">
-                            Download
-                        </button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-    <!-- <div class="row">
-        <div class="col-md-3 col-lg-3">
-            <div class="row">
-                <h2>Populate</h2>
-                <div class="list-group">
-                    <button class="list-group-item" ng-click="populate('Tag')">
-                        SO Tags
-                    </button>
-
-                    <button class="list-group-item" ng-click="populate('CoOccurrence')">
-                        CoOccurrences
-                    </button>
-
-                    <button class="list-group-item" ng-click="populate('Developer')">
-                        Developers
-                    </button>
-
-                    <button class="list-group-item" ng-click="populate('StopWord')">
-                        Stop Words
-                    </button>
-                </div>
-
-
-            </div>
-
-            <div class="row">
-                <h2>Export</h2>
-                <div class="list-group">
-                    <button class="list-group-item" ng-click="generate('Tag')">
-                        SO Tags
-                    </button>
-
-                    <button class="list-group-item" ng-click="generate('CoOccurrence')">
-                        CoOccurrences
-                    </button>
-
-                    <button class="list-group-item" ng-click="generate('Developer')">
-                        Developers
-                    </button>
-
-                    <button class="list-group-item" ng-click="generate('StopWord')">
-                        Stop Words
-                    </button>
-
-                    <button class="list-group-item" ng-click="generate('Project')">
-                        Projects
-                    </button>
-
-                    <button class="list-group-item" ng-click="generate('IssueEvent')">
-                        Issues
-                    </button>
-
-                    <button class="list-group-item" ng-click="generate('Commit')">
-                        Commits
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-5 col-lg-5">
-            <h2>
-                Status Downlad <small> {{ selectedExport }}</small>
-            </h2>
-            <ul class="nav nav-tabs" >
-                <li role="presentation" ng-repeat="(option, values) in exportStatus">
-                    <a href="" ng-click="selectExport(option)">{{option}}</a>
-                </li>
-            </ul>
-            <div class="row" ng-if="exportStatus[selectedExport]">
-                <div class="col-md-12 col-lg-12">
-                    <div class="row">
-                        <h3 class="col-md-12 col-lg-12" ng-if="!exportStatus[selectedExport].fileGenerated">
-                            <i class="fa fa-spinner fa-pulse fa-fw"></i>
-                            Generating File ...
-                            <small> {{ exportStatus[selectedExport].message }} </small>
-                        </h3>
-                        <h3 class="col-md-12 col-lg-12" ng-if="exportStatus[selectedExport].fileGenerated">
-                            <i class="fa fa-check"></i>
-                            Files Generated
-                        </h3>
-                    </div>
-                    <div class="row" ng-if="exportStatus[selectedExport].linesRead > 0">
-                        <h4 class="col-lg-offset-1 col-md-offset-1 col-md-11 col-lg-11">
-                            <i class="fa fa-hand-o-right" aria-hidden="true"></i>
-                            Lines Written: {{exportStatus[selectedExport].linesRead}}
-                        </h4>
-                    </div>
-                    <div class="row">
-                        <h3 class="col-md-12 col-lg-12" ng-if="!exportStatus[selectedExport].completed &&
-                        exportStatus[selectedExport].fileGenerated">
-                            <i class="fa fa-spinner fa-pulse fa-fw"></i>
-                            Downloading
-                        </h3>
-                        <h3 class="col-md-12 col-lg-12" ng-if="exportStatus[selectedExport].completed">
-                            <i class="fa fa-check"></i>
-                            Download Complete
-                        </h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 col-lg-4">
-            <h2>
-                Status Populate
-            </h2>
-            <ul class="nav nav-tabs" >
-                <li role="presentation" ng-repeat="(option, values) in populateStatus">
-                    <a href="" ng-click="selectPopulate(option)">{{option}}</a>
-                </li>
-            </ul>
-            <h3 ng-if="selectedPopulate === 'Project'">
-                {{ selectedProject.name }}
-                <small>
-                    <p>
-                        Selecting this will populate all the contributors, issues, commits and comments from this repository.
-                    </p>
-                    <p>
-                        It will also get the StackOverflow data (tags, questions and answers) for members that are in StackOverflow.
-                    </p>
-                </small>
-            </h3>
-            <div class="row" ng-if="selectedPopulate">
-                <div class="col-md-12 col-lg-12">
-                    <div class="row">
-                        <h3 class="col-md-12 col-lg-12" ng-if="!populateStatus[selectedPopulate].completed">
-                            <i class="fa fa-spinner fa-pulse fa-fw"></i>
-                            Populating ...
-                            <small> {{ populateStatus[selectedPopulate].message }} </small>
-                        </h3>
-                        <h3 class="col-md-12 col-lg-12" ng-if="populateStatus[selectedPopulate].completed">
-                            <i class="fa fa-check"></i>
-                            Populated
-                        </h3>
-                    </div>
-                    <div class="row" ng-if="populateStatus[selectedPopulate].linesRead">
-                        <h4 class="col-lg-offset-1 col-md-offset-1 col-md-11 col-lg-11">
-                            <i class="fa fa-hand-o-right" aria-hidden="true"></i>
-                            Entries Created: {{populateStatus[selectedPopulate].linesRead}}
-                        </h4>
-                    </div>
-                    <div class="row" ng-repeat="(item, status) in populateStatus[selectedPopulate].data.items">
-                        <h4 class="col-lg-offset-1 col-md-offset-1 col-md-11 col-lg-11">
-                            <i class="fa fa-spinner fa-pulse fa-fw" ng-if="!status"></i>
-                            <i class="fa fa-check" ng-if="status"></i>
-                            {{item}}
-                        </h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div> -->
 </section>
