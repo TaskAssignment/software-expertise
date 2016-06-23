@@ -6,8 +6,8 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
             <thead>
                 <tr>
                     <th class="col-md-3 col-lg-3"> Option </th>
-                    <th class="col-md-2 col-lg-2"> Last Generated File (timestamp) </th>
                     <th class="col-md-2 col-lg-2"> Populate </th>
+                    <th class="col-md-2 col-lg-2"> Last Generated File (timestamp) </th>
                     <th class="col-md-2 col-lg-2"> Regenerate File </th>
                     <th class="col-md-1 col-lg-1"> Download </th>
                 </tr>
@@ -15,15 +15,40 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
             <tbody>
                 <tr ng-repeat="(model, option) in generalOptions">
                     <td> {{ option.label }} </td>
-                    <td> {{ option.timestamp }} </td>
                     <td ng-if="!option.projectSpecific">
                         <button ng-click="populate(model)" class="btn btn-default">
                             Populate
                         </button>
+                        <i class="fa fa-spinner fa-pulse fa-fw"
+                        ng-if="generalOptions[model].populated === false"></i>
+                        <i class="fa fa-check"
+                        ng-if="generalOptions[model].populated"></i>
                     </td>
                     <td ng-if="option.projectSpecific">
-                        This is project specific. Populate it below.
+                        <div class="form-inline">
+                            <select ng-if="model === 'Project'" ng-model="selected"
+                              ng-options="project.name for project in projects"
+                              class="form-control" ng-change="select(selected)">
+                              <option value="">---Please select---</option>
+                            </select>
+                        </div>
+                        <div ng-if="model !== 'Project'">
+                        <button ng-if="projectSelected() && !option.noModel"
+                          ng-click="populate(model)" class="btn btn-default">
+                            Populate {{ model }} for {{ selectedProject.name }}
+                        </button>
+                        <i class="fa fa-spinner fa-pulse fa-fw"
+                        ng-if="generalOptions[model].populated === false"></i>
+                        <i class="fa fa-check"
+                        ng-if="generalOptions[model].populated"></i>
+                        <p ng-if="!projectSelected()">
+                            This is project specific. Select a project to populate it.
+                        </p>
+                        <p ng-if="option.noModel">
+                            This is populated with contributors
+                        </p>
                     </td>
+                    <td> {{ option.timestamp }} </td>
                     <td ng-if="!option.noModel">
                         <button ng-click="generate(model)" class="btn btn-default">
                             Generate
@@ -50,17 +75,5 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
         </table>
     </div>
 </div>
-
-<div class="form-inline">
-    Select Project:
-    <select ng-model="selectProject"
-      ng-options="project.name for project in projects"
-      class="form-control">
-    </select>
-</div>
-<!-- <button ng-if="option.projectSpecific && selectedProject"
-   ng-click="populate(model)" class="btn btn-default">
-    Populate
-</button> -->
 
 </section>

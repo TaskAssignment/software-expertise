@@ -73,6 +73,15 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
         },
     }
 
+    $scope.select = function (project) {
+        console.log(project);
+        $scope.selectedProject = project
+    }
+
+    $scope.projectSelected = function () {
+        return $scope.selectedProject;
+    }
+
     $scope.oauth = function () {
         var code = $location.search().code;
         $http.get('/api/baseFrame/oauth', {params: {code: code}})
@@ -132,6 +141,7 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
 
     function checkPopulate(option){
         var delay = 5000;
+        $scope.generalOptions[option].populated = false;
 
         var interval = $interval(function () {
             var params = {
@@ -150,6 +160,8 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
 
         function stop(){
             $interval.cancel(interval);
+            $scope.generalOptions[option].populated = true;
+
         }
     }
 

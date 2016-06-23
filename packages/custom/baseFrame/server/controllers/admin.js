@@ -114,7 +114,19 @@ module.exports = function (BaseFrame){
             if(!populate){
                 res.status(file[option].status).send(file[option]);
             } else {
-                res.status(populated[option].status).send(populated[option]);
+                var populator = require('../controllers/populator')();
+                switch (option) {
+                    case 'Contributor':
+                        res.sendStatus(populator.check('Developer'));
+                        break;
+                    case 'StopWord':
+                    case 'Developer':
+                    case 'CoOccurrence':
+                    case 'Tag':
+                        res.sendStatus(populated[option].status);
+                    default:
+                        res.sendStatus(populator.check(option));
+                }
             }
         },
 
@@ -123,7 +135,7 @@ module.exports = function (BaseFrame){
             GenerateFileLog.find({}).select('model timestamp').exec(function (err, logs) {
                 var generatedLogs = {};
                 for(var log of logs){
-                    generatedLogs[log.model] = log.timestamp.toString();
+                    generatedLogs[log.model] = log.timestamp.toLocaleString();
                 }
                 delete generatedLogs.Comment;
                 res.send(generatedLogs);

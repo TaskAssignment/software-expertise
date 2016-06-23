@@ -3,8 +3,8 @@
 var request = require('request');
 var mongoose = require('mongoose');
 
-var READY = true; //Status code to be sent when ready.
-var NOT_READY = false; //Send accepted status code
+var READY = 200; //Status code to be sent when ready.
+var NOT_READY = 202; //Send accepted status code
 
 var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit',
   'CommitComment', 'IssueComment', 'Language', 'Project', 'IssueEvent'];
@@ -91,13 +91,6 @@ module.exports = function (BaseFrame) {
             }
         },
         check: function (option) {
-            for(var model of models){
-                populated.project.items[model] = populated[model];
-            }
-
-            delete populated.project.items.Tag;
-            delete populated.project.items.CoOccurrence;
-            delete populated.project.items.Project;
             return populated[option];
         }
     }
@@ -845,6 +838,8 @@ function soPopulate(option, specificUrl, callback) {
         uri: uri
     };
 
+    var firstTime = true;
+
     var requestCallback = function (error, response, body){
         if (!error){
             switch (response.statusCode) {
@@ -886,9 +881,11 @@ function soPopulate(option, specificUrl, callback) {
                 case 500:
                 case 503:
                     console.log('SE Server Error. Trying again in one second');
-                    setTimeout(function () {
-                        request(options, requestCallback);
-                    }, 1000);
+                    if(firstTime){
+                        setTimeout(function () {
+                            request(options, requestCallback);
+                        }, 1000);
+                    }
                 default:
                     console.log(body);
             }
