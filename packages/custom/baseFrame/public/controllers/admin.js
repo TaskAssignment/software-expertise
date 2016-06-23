@@ -3,59 +3,73 @@
 var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('AdminController', function ($scope, $interval, $http, $location){
     findProjects();
+    getLastTimestamps();
     $scope.selectedProject = undefined;
     $scope.generalOptions = {
         StopWord: {
             label: 'StopWords',
-            projectSpecific: false
+            projectSpecific: false,
+            noModel: false,
         },
         Tag: {
             label: 'SO Tags',
-            projectSpecific: false
+            projectSpecific: false,
+            noModel: false,
         },
         CoOccurrence: {
             label: 'CoOccurrences',
-            projectSpecific: false
+            projectSpecific: false,
+            noModel: false,
         },
         Developer: {
             label: 'Common Users (SO/GH)',
-            projectSpecific: false
+            projectSpecific: false,
+            noModel: false,
         },
         Project: {
             label: 'Projects',
-            projectSpecific: true
+            projectSpecific: true,
+            noModel: false,
         },
         Contributor: {
             label: 'Contributors',
-            projectSpecific: true
+            projectSpecific: true,
+            noModel: false,
         },
         Answer: {
             label: 'SO Answers',
-            projectSpecific: true
+            projectSpecific: true,
+            noModel: true,
         },
         Question: {
             label: 'SO Questions',
-            projectSpecific: true
+            projectSpecific: true,
+            noModel: true,
         },
         Commit: {
             label: 'Commit',
-            projectSpecific: true
+            projectSpecific: true,
+            noModel: false,
         },
         CommitComment: {
             label: 'Commit Comments',
-            projectSpecific: true
+            projectSpecific: true,
+            noModel: false,
         },
         Issue: {
             label: 'Issues',
-            projectSpecific: true
+            projectSpecific: true,
+            noModel: false,
         },
         IssueEvent: {
             label: 'Issue Events',
-            projectSpecific: true
+            projectSpecific: true,
+            noModel: false,
         },
         IssueComment: {
             label: 'Issue Comments',
-            projectSpecific: true
+            projectSpecific: true,
+            noModel: false,
         },
     }
 
@@ -85,6 +99,7 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
     }
 
     $scope.generate = function (option) {
+        $scope.generalOptions[option].generated = false;
         $http.get('/api/baseFrame/generate', {params:{resource: option}})
         .then(function (response) {
             checkDownload(option);
@@ -127,10 +142,7 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
             };
 
             $http.get('/api/baseFrame/check', params).then(function (response) {
-                $scope.populateStatus[option].linesRead = response.data.linesRead;
-                console.log(response);
-                $scope.populateStatus[option].data = response.data;
-                if(response.status == 200){
+                if(response.status === 200){
                     stop();
                 }
             })
@@ -138,27 +150,16 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
 
         function stop(){
             $interval.cancel(interval);
-            $scope.populateStatus[option].completed = true;
         }
     }
 
     function checkDownload(option) {
-        var delay = 1000;
-        switch (option) {
-            case 'Developer':
-            case 'IssueEvent':
-            case 'Commit':
-                delay = 50000;
-                $scope.exportStatus[option].message = "This will generate muliple files!";
-                break;
-        }
+        var delay = 5000;
 
         var interval = $interval(function () {
             $http.get('/api/baseFrame/check', {params:{resource: option}})
             .then(function (response) {
-                $scope.exportStatus[option].linesRead = response.data.linesRead;
-                if(response.status == 200){
-                    $scope.exportStatus[option].fileGenerated = true;
+                if(response.status === 200){
                     stop();
                 }
             })
@@ -166,15 +167,13 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
 
         function stop(){
             $interval.cancel(interval);
+            getLastTimestamps();
+            $scope.generalOptions[option].generated = true;
+
             $scope.download(option);
-            if(option == 'Developer'){
+            if(option === 'Contributor'){
                 $scope.download('Question');
                 $scope.download('Answer');
-            } else if (option == 'IssueEvent') {
-                $scope.download('IssueComment');
-                $scope.download('Issue');
-            } else if (option == 'Commit') {
-                $scope.download('CommitComment');
             }
         }
     }
@@ -185,5 +184,15 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
         }, function (response){
             $scope.projects = undefined;
         })
+    }
+
+    function getLastTimestamps(){
+        $http.get('api/baseFrame/timestamps').then(function (response){
+            for(var model in response.data){
+                $scope.generalOptions[model].timestamp = response.data[model];
+            }
+        }, function (response){
+            console.log(response);
+        });
     }
 });

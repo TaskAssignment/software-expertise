@@ -7,27 +7,29 @@ module.exports = function (BaseFrame, app, database) {
 
     var projects = require(controllers + 'projects')(BaseFrame);
     app.route(base + 'project/get/:name')
-        .get(projects.get);
+      .get(projects.get);
     app.route(base + 'project/find')
-        .get(projects.find);
+      .get(projects.find);
     app.route(base + 'project/new/')
-        .get(projects.save);
+      .get(projects.save);
     app.route(base + ':projectId/issues')
-        .get(projects.findIssues);
+      .get(projects.findIssues);
     app.route(base + ':projectId/users')
-        .get(projects.findUsers);
+      .get(projects.findUsers);
 
     var admin = require(controllers + 'admin')(BaseFrame);
     app.route(base + 'generate')
-        .get(admin.generate);
+      .get(admin.generate);
     app.route(base + 'populate')
-        .get(admin.populate);
+      .get(admin.populate);
     app.route(base + 'download')
-        .get(admin.download);
+      .get(admin.download);
     app.route(base + 'check')
-        .get(admin.check);
+      .get(admin.check);
+    app.route(base + 'timestamps')
+      .get(admin.timestamps);
     app.route(base + 'oauth')
-        .get(admin.oauth);
+      .get(admin.oauth);
 
     /** My idea here is to be able to fetch data from different places.
     * The modes, for now, will be 'default' and 'default' to fetch data from our
@@ -35,11 +37,11 @@ module.exports = function (BaseFrame, app, database) {
     **/
     var graph = require(controllers + 'graph')(BaseFrame);
     app.route(base + ':modeIssue/:modeUser/graphData')
-        .get(graph.getDataForGraph);
+      .get(graph.getDataForGraph);
     app.route(base + 'calculate/:similarity/')
-        .get(graph.calculateSimilarity);
+      .get(graph.calculateSimilarity);
     app.route(base + 'find/:issueId/matches')
-        .get(graph.findMatches);
+      .get(graph.findMatches);
     app.route(base + ':projectId/calculate/matches/averages')
-        .get(graph.findMatchAverage);
+      .get(graph.findMatchAverage);
 };

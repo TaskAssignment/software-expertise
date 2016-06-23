@@ -10,7 +10,7 @@ var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
 
 var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit', 'Comment',
-  'Language', 'Project', 'IssueEvent', 'StopWord', 'Contributor'];
+  'Language', 'Project', 'IssueEvent', 'StopWord', 'Contributor', 'IssueComment', 'CommitComment'];
 
 var populated = {};
 var file = {};
@@ -45,15 +45,11 @@ module.exports = function (BaseFrame){
 
         generate: function (req, res) {
             var option = req.query.resource;
-            file[option].status = NOT_READY;
 
             switch (option) {
                 case 'Developer':
                 case 'Contributor':
                     writeDevs();
-                    break;
-                case 'StopWord':
-                    file[option].status = READY;
                     break;
                 case 'IssueEvent':
                     var headers = ['_id', 'projectId', 'issueId', 'issueNumber',
@@ -63,15 +59,17 @@ module.exports = function (BaseFrame){
                     break;
                 case 'IssueComment':
                     writeIssueComments();
+                    saveTimestamp(option, 'files/IssueComments.tsv');
                     break;
                 case 'Issue':
                     writeIssues();
                     break;
                 case 'Commit':
-                    writeCommitComments();
+                    writeCommits();
                     break;
                 case 'CommitComment':
-                    writeCommits();
+                    writeCommitComments();
+                    saveTimestamp(option, 'files/CommitComments.tsv');
                     break;
                 default:
                     writeFile(option);
@@ -116,28 +114,20 @@ module.exports = function (BaseFrame){
             if(!populate){
                 res.status(file[option].status).send(file[option]);
             } else {
-                if(option === 'Project'){
-                    var populator = require('../controllers/populator')();
-                    var projectStatus = populator.check(option.toLowerCase());
-                    var amountKeys = 0;
-                    var amountReady = 0;
-
-                    for(var key in projectStatus.items){
-                        amountKeys++;
-                        var keyStatus = projectStatus.items[key];
-                        if(keyStatus){
-                            amountReady++;
-                        }
-                    }
-
-                    if(amountReady === amountKeys){
-                        populated[option].status = READY;
-                    }
-                    res.status(populated[option].status).send(projectStatus);
-                } else {
-                    res.status(populated[option].status).send(populated[option]);
-                }
+                res.status(populated[option].status).send(populated[option]);
             }
+        },
+
+        timestamps: function (req, res) {
+            var GenerateFileLog = mongoose.model('GenerateFileLog');
+            GenerateFileLog.find({}).select('model timestamp').exec(function (err, logs) {
+                var generatedLogs = {};
+                for(var log of logs){
+                    generatedLogs[log.model] = log.timestamp.toString();
+                }
+                delete generatedLogs.Comment;
+                res.send(generatedLogs);
+            });
         }
     }
 }
@@ -232,9 +222,9 @@ function writeIssues(){
 }
 
 function writeIssueComments(){
-    headers = ['_id', 'issueNumber', 'projectId', 'body',
+    var headers = ['_id', 'issueNumber', 'projectId', 'body',
     'commenterLogin', 'createdAt'];
-    transform = function (row) {
+    var transform = function (row) {
         row.body = row.body
         .replace(/\t/g, '        ');
         row.body = row.body
@@ -268,9 +258,9 @@ function writeCommits(){
 }
 
 function writeCommitComments() {
-    headers = ['_id', 'commitSha', 'projectId', 'body',
+    var headers = ['_id', 'commitSha', 'projectId', 'body',
       'commenterLogin', 'createdAt'];
-    transform = function (row) {
+    var transform = function (row) {
         row.body = row.body
           .replace(/\t/g, '        ');
         row.body = row.body

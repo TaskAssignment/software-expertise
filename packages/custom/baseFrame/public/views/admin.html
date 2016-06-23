@@ -6,8 +6,8 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
             <thead>
                 <tr>
                     <th class="col-md-3 col-lg-3"> Option </th>
-                    <th class="col-md-1 col-lg-1"> Populate </th>
-                    <th class="col-md-3 col-lg-3"> Last Generated File (timestamp) </th>
+                    <th class="col-md-2 col-lg-2"> Last Generated File (timestamp) </th>
+                    <th class="col-md-2 col-lg-2"> Populate </th>
                     <th class="col-md-2 col-lg-2"> Regenerate File </th>
                     <th class="col-md-1 col-lg-1"> Download </th>
                 </tr>
@@ -15,15 +15,17 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
             <tbody>
                 <tr ng-repeat="(model, option) in generalOptions">
                     <td> {{ option.label }} </td>
-                    <td>
-                        <button ng-if="!option.projectSpecific"
-                           ng-click="populate(model)" class="btn">
+                    <td> {{ option.timestamp }} </td>
+                    <td ng-if="!option.projectSpecific">
+                        <button ng-click="populate(model)" class="btn btn-default">
                             Populate
                         </button>
                     </td>
-                    <td> timestamp </td>
-                    <td>
-                        <button ng-click="generate(model)" class="btn">
+                    <td ng-if="option.projectSpecific">
+                        This is project specific. Populate it below.
+                    </td>
+                    <td ng-if="!option.noModel">
+                        <button ng-click="generate(model)" class="btn btn-default">
                             Generate
                         </button>
                         <i class="fa fa-spinner fa-pulse fa-fw"
@@ -31,8 +33,11 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
                         <i class="fa fa-check"
                         ng-if="generalOptions[model].generated"></i>
                     </td>
+                    <td ng-if="option.noModel">
+                        This is generated with Contributors.
+                    </td>
                     <td>
-                        <button ng-click="download(model)" class="btn">
+                        <button ng-click="download(model)" class="btn btn-default">
                             Download
                         </button>
                         <i class="fa fa-spinner fa-pulse fa-fw"
@@ -48,7 +53,14 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
 
 <div class="form-inline">
     Select Project:
-    <select ng-model="selectedProject" ng-options="project.name for project in projects" class="form-control">
+    <select ng-model="selectProject"
+      ng-options="project.name for project in projects"
+      class="form-control">
     </select>
 </div>
+<!-- <button ng-if="option.projectSpecific && selectedProject"
+   ng-click="populate(model)" class="btn btn-default">
+    Populate
+</button> -->
+
 </section>
