@@ -293,9 +293,6 @@ function populateUserTags(ids, projectId, filter = 'default', site = 'stackoverf
 
 /** Populates all the user answers from stackoverflow using the
 * soPopulate function.
-*
-* @param req - Express request.
-* @param res - Express response.
 **/
 function populateAnswers(ids, projectId, filter = 'default', obj = 'users/', site = 'stackoverflow'){
 
@@ -346,9 +343,6 @@ function populateAnswers(ids, projectId, filter = 'default', obj = 'users/', sit
 
 /** Populates all the user questions from stackoverflow using the
 * soPopulate function.
-*
-* @param req - Express request.
-* @param res - Express response.
 **/
 function populateQuestions(ids, projectId, filter = 'default', obj = 'users/', site = 'stackoverflow'){
 
@@ -850,39 +844,55 @@ function soPopulate(option, specificUrl, callback) {
         gzip: true,
         uri: uri
     };
+
     var requestCallback = function (error, response, body){
-        if (!error && response.statusCode == 200) {
-            var results = JSON.parse(body);
-            callback(results.items);
+        if (!error){
+            switch (response.statusCode) {
+                case 200:
+                    var results = JSON.parse(body);
+                    callback(results.items);
 
-            console.log(option + ': Page ' + results.page);
-            // Check for next page
-            if(results.has_more){
-                var new_uri = uri + ACCESS_TOKENS[next_token] + '&page=' +
-                (parseInt(results.page) + 1);
-                options.uri = new_uri;
+                    console.log(option + ': Page ' + results.page);
+                    // Check for next page
+                    if(results.has_more){
+                        var new_uri = uri + ACCESS_TOKENS[next_token] + '&page=' +
+                        (parseInt(results.page) + 1);
+                        options.uri = new_uri;
 
-                //To avoid exceed rate limit
-                setTimeout(function () {
-                    request(options, requestCallback);
-                }, 100);
-            } else {
-                console.log(option + ' done!');
-            }
-
-        } else if(!error && (response.statusCode === 502 || response.statusCode === 400)){
-            console.log("Error. Trying different token");
-            console.log(body);
-            next_token = (next_token + 1) % ACCESS_TOKENS.length;
-            if(next_token == 0){
-                stopRequests = true;
-            } else {
-                var page = '&' + options.uri.split('&').pop();
-                options.uri = uri + ACCESS_TOKENS[next_token] + page;
-                request(options, requestCallback);
+                        //To avoid exceed rate limit
+                        setTimeout(function () {
+                            request(options, requestCallback);
+                        }, 100);
+                    } else {
+                        console.log(option + ' done!');
+                    }
+                    break;
+                case 401:
+                case 402:
+                case 406:
+                case 502:
+                    console.log("Error Related to token. Trying a different one");
+                    console.log(body);
+                    next_token = (next_token + 1) % ACCESS_TOKENS.length;
+                    if(next_token == 0){
+                        stopRequests = true;
+                    } else {
+                        var page = '&' + options.uri.split('&').pop();
+                        options.uri = uri + ACCESS_TOKENS[next_token] + page;
+                        request(options, requestCallback);
+                    }
+                    break;
+                case 500:
+                case 503:
+                    console.log("SE Server Error. Trying again in one second");
+                    setTimeout(function () {
+                        request(options, requestCallback);
+                    }, 1000);
+                default:
+                    console.log(body);
             }
         } else {
-            console.log(body, error);
+            console.log(error.message, body);
         }
     }
 
