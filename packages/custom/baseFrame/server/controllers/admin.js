@@ -58,9 +58,12 @@ module.exports = function (BaseFrame){
                     file[option].status = READY;
                     break;
                 case 'IssueEvent':
+                case 'IssueComment':
+                case 'Issue':
                     writeIssues();
                     break;
                 case 'Commit':
+                case 'CommitComment':
                     writeCommits();
                     break;
                 default:

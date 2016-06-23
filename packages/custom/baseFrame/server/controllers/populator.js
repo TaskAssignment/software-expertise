@@ -30,32 +30,43 @@ var stopWords = [];
 
 module.exports = function (BaseFrame) {
     return {
-        GitHub: function (ids = []) {
-            var StopWord = mongoose.model('StopWord');
-            StopWord.find().lean().exec(function (err, words) {
-                stopWords = words.map(function (word){
-                    return word._id;
-                });
-                for(var id of ids){
-                    populateLanguages(id);
-                    populateEvents(id);
+        GitHub: function (option, ids = []) {
+            switch (option) {
+                case 'Developer':
                     populateContributors(id);
-                    populateCommits(id);
-                    populateComments(id, 'Issue');
-                    populateComments(id, 'Commit');
+                    break;
+                case 'Issue':
+                    var StopWord = mongoose.model('StopWord');
+                    StopWord.find().lean().exec(function (err, words) {
+                        stopWords = words.map(function (word){
+                            return word._id;
+                        });
+                        populateLanguages(id);
+                        var intervalLanguage = setInterval(function () {
+                            if(populated.Language === READY){
+                                stopLanguage();
+                            }
+                        }, 1000);
 
-                    var intervalLanguage = setInterval(function () {
-                        if(populated.Language === READY){
-                            stopLanguage();
+                        function stopLanguage(){
+                            clearInterval(intervalLanguage);
+                            populateIssues(id);
                         }
-                    }, 1000);
-
-                    function stopLanguage(){
-                        clearInterval(intervalLanguage);
-                        populateIssues(id);
-                    }
-                }
-            });
+                    });
+                    break;
+                case 'IssueEvent':
+                    populateEvents(id);
+                    break;
+                case 'IssueComment':
+                    populateComments(id, 'Issue');
+                    break;
+                case 'Commit':
+                    populateCommits(id);
+                    break;
+                case 'CommitComment':
+                    populateComments(id, 'Commit');
+                    break;
+            }
         },
         StackOverflow: function (option, projectId = '') {
             switch (option) {

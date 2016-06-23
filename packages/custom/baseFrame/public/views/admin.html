@@ -1,6 +1,35 @@
 <section ng-controller="AdminController"
 class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
-    <div class="row">
+
+<table class="table">
+    <thead>
+        <tr>
+            <th> Option </th>
+            <th> Populate </th>
+            <th> Last Populated </th>
+            <th> lines </th>
+            <th> Download </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="(model, label) in generalOptions">
+            <td> {{ label }} </td>
+            <td>
+                <button ng-click="populate(model)" class="btn">
+                    Populate
+                </button>
+            </td>
+            <td> timestamp </td>
+            <td> lines </td>
+            <td>
+                <button ng-click="generate(model)" class="btn">
+                    Download
+                </button>
+            </td>
+        </tr>
+    </tbody>
+</table>
+    <!-- <div class="row">
         <div class="col-md-3 col-lg-3">
             <div class="row">
                 <h2>Populate</h2>
@@ -158,5 +187,5 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 </section>

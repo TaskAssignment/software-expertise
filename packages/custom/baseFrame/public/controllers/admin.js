@@ -6,16 +6,26 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
     $scope.selectedProject = undefined;
     $scope.selectedPopulate = undefined;
     $scope.selectedExport = undefined;
+    $scope.generalOptions = {
+        Tag: 'SO Tags',
+        CoOccurrence: 'CoOccurrences',
+        Developer: 'Common Users (SO/GH)',
+        StopWord: 'StopWords',
+        Project: 'Projects',
+        Commit: 'Commit',
+        CommitComment: 'Commit Comments',
+        Issue: 'Issues',
+        IssueEvent: 'Issue Events',
+        IssueComment: 'Issue Comments'
+    }
 
     $scope.selectPopulate = function(option){
         $scope.selectedPopulate = option;
     }
 
-
     $scope.selectExport = function(option){
         $scope.selectedExport = option;
     }
-
 
     $scope.oauth = function () {
         var code = $location.search().code;
