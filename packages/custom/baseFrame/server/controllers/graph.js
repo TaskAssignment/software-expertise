@@ -267,7 +267,6 @@ module.exports = function (BaseFrame){
                 } else {
                     user.assignee = false;
                 }
-
                 similarities.push(user);
             }
 
@@ -464,7 +463,7 @@ module.exports = function (BaseFrame){
 
                 var filter = {
                     projectId: req.params.projectId,
-                    pullRequest: false,
+                    type: 'IS',
                     parsed: true,
                     assigneeId: { $in: dev_ids }
                 };

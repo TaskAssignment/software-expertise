@@ -9,7 +9,6 @@ function hideLoadingScreen(){
 }
 var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('RepositoryController',
-['$scope', '$http', '$location', '$resource',
 function ($scope,  $http, $location, $resource) {
     $scope.repoSearch = {
         name: '',
@@ -111,6 +110,7 @@ function ($scope,  $http, $location, $resource) {
     $scope.selectIssue = function (issue) {
         $scope.selectedIssue = issue;
         sendToTable();
+        sendToGraph();
     }
     // *************** HELPER FUNCTIONS ***************//
 
@@ -179,7 +179,7 @@ function ($scope,  $http, $location, $resource) {
 
     function sendToTable(){
         hideLoadingScreen();
-        if($scope.selectedTab == '.tabTable'){
+        if($scope.selectedTab === '.tabTable'){
             var args = {};
             if($scope.selectedIssue){
                 args.issueId = $scope.selectedIssue._id;
@@ -190,7 +190,7 @@ function ($scope,  $http, $location, $resource) {
 
     function sendToGraph(){
         hideLoadingScreen();
-        if($scope.selectedTab == '.tabGraph'){
+        if($scope.selectedTab === '.tabGraph'){
             var ids = {};
             if($scope.selectedIssue){
                 ids.issueId = $scope.selectedIssue._id;
@@ -201,4 +201,4 @@ function ($scope,  $http, $location, $resource) {
             $scope.$broadcast('fetchGraphData', ids);
         }
     }
-}]);
+});

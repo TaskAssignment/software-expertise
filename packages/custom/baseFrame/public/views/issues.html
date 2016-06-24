@@ -9,9 +9,10 @@
         </button>
     </div>
 
-    <a class="btn btn-default" ng-if="selectedRepo.emptyissues" ng-click=populateRepoResources('issues')> Get All Issues</a>
-    <a class="btn btn-default" ng-click=populateRepoResources('issues')> Get New Issues</a>
-
+    <p ng-if="issues.length === 0">
+        It looks like we don't have any data from this repository. Go to Manage Data
+        and populate it! If you already populated, try to change your filter.
+    </p>
     <!-- TODO: Add pagination here. It takes too long to load all the issues!!!
     <nav>
         <ul class="pager">
@@ -20,5 +21,4 @@
         </ul>
     </nav>
     -->
-
 </div>

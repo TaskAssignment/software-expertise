@@ -26,7 +26,7 @@ var IssueSchema = new Schema({
     title: String,
     type: {
         type: String,
-        default: 'IS'
+        default: 'IS' // 'IS' for issue and 'PR' for pull_request
     },
     labels: [String],
     state: String,

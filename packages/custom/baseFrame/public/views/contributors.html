@@ -11,6 +11,8 @@
             <span ng-if="selectedIssue.assigneeId == user._id" class="badge">Assignee</span>
         </button>
     </div>
-    <a class="btn btn-default" ng-if="selectedRepo.emptyusers" ng-click=populateRepoResources('users')> Get All Developers</a>
-    <a class="btn btn-default" ng-click=populateRepoResources('users')> Get New Developers</a>
+    <p ng-if="users.length === 0">
+        It looks like we don't have any data from this repository. Go to Manage Data
+        and populate it! If you already populated, try to change your filter.
+    </p>
 </div>

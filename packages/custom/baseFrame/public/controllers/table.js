@@ -35,10 +35,12 @@ var controllerCallback = function ($scope, $resource, $uibModal) {
 
             MatchAverage.get({projectId: projectId}).$promise.then(function (result){
                 $scope.averages = result.averages;
+                console.log(result);
                 $scope.averages.project = projectId;
                 hideLoadingScreen();
             }, function (err){
                 console.log(err);
+                hideLoadingScreen();
             });
         } else {
             alert("This project already has the averages");

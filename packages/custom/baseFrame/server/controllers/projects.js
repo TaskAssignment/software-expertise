@@ -80,9 +80,9 @@ module.exports = function (BaseFrame){
 
             var filter = {
                 projectId: req.params.projectId,
-                pullRequest: false
+                type: 'IS',
             };
-            var items = '_id title parsed assigneeId';
+            var items = '_id title assigneeId';
             var options = {lean: true, limit: 500};
 
             var soAssigned = JSON.parse(req.query.soAssigned);
@@ -95,10 +95,9 @@ module.exports = function (BaseFrame){
                 };
 
                 Developer.find(devFilter, '_id', {lean: true}).sort('-updatedAt').exec(function (err, users){
-                    var soUsers = [];
-                    for(let user of users){
-                        soUsers.push(user._id);
-                    }
+                    var soUsers = users.map(function (user) {
+                        return user._id;
+                    });
 
                     filter.assigneeId = { $in: soUsers };
 
