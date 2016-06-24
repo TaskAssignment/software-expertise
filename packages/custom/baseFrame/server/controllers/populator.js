@@ -7,7 +7,7 @@ var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
 
 var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit',
-  'CommitComment', 'IssueComment', 'Language', 'Project', 'IssueEvent'];
+  'CommitComment', 'IssueComment', 'Language', 'Project', 'IssueEvent', 'Contributor'];
 
 var populated = {project: {items: {}}};
 for(var model of models){
@@ -550,33 +550,37 @@ function populateIssues(id){
 
 function populateContributors(projectId){
     var url = projectId + '/contributors';
+    var Developer = mongoose.model('Developer');
+
+    var buildContributor = function (result){
+        var filter = {
+            _id: result.login,
+        };
+
+        var updateFields = {
+            'ghProfile.email': result.email,
+            $addToSet: {
+                'ghProfile.repositories': projectId,
+            },
+            $setOnInsert: {
+                ghProfile: {
+                    _id: result.login,
+                    repositories: [projectId],
+                    email: result.email,
+                }
+            }
+        };
+
+        Developer.update(filter, updateFields, {upsert: true}).exec(function (err){
+            if(err){
+                console.log('=== Error Developer: ' + err.message);
+            }
+        });
+    }
 
     var buildModels = function(results){
-        var Developer = mongoose.model('Developer');
-        for (var i in results) {
-            var result = results[i];
-
-            var filter = {
-                _id: result.login,
-            };
-
-            var updateFields = {
-                $addToSet: {
-                    'ghProfile.repositories': projectId
-                },
-                $setOnInsert: {
-                    ghProfile: {
-                        _id: result.login,
-                        repositories: [projectId]
-                    }
-                }
-            };
-
-            Developer.update(filter, updateFields, {upsert: true}).exec(function (err){
-                if(err){
-                    console.log('=== Error Developer: ' + err.message);
-                }
-            });
+        for (var result of results) {
+            gitHubPopulate('Contributor', result.url, buildContributor, true);
         }
     }
 
@@ -736,10 +740,13 @@ function populateComments(projectId, type){
     });
 }
 
-function gitHubPopulate(option, specificUrl, callback){
-    var uri = 'https://api.github.com/repositories/' + specificUrl;
-    uri += specificUrl.lastIndexOf('?') < 0 ? '?' : '&';
-    uri += 'per_page=100';
+function gitHubPopulate(option, specificUrl, callback, finalUrl = false){
+    var uri = specificUrl;
+    if(!finalUrl) {
+        uri = 'https://api.github.com/repositories/' + specificUrl;
+        uri += specificUrl.lastIndexOf('?') < 0 ? '?' : '&';
+        uri += 'per_page=100';
+    }
 
     var options = {
         headers: {
@@ -885,6 +892,8 @@ function soPopulate(option, specificUrl, callback) {
                         setTimeout(function () {
                             request(options, requestCallback);
                         }, 1000);
+                    } else {
+                        console.log("Stopping here to avoid abuse. Check for error details");
                     }
                 default:
                     console.log(body);
