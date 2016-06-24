@@ -201,7 +201,7 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
     function getLastTimestamps(){
         $http.get('api/baseFrame/timestamps').then(function (response){
             for(var model in response.data){
-                $scope.generalOptions[model].timestamp = response.data[model];
+                $scope.generalOptions[model].timestamp = new Date(response.data[model]).toLocaleString();
             }
         }, function (response){
             console.log(response);

@@ -135,7 +135,7 @@ module.exports = function (BaseFrame){
             GenerateFileLog.find({}).select('model timestamp').exec(function (err, logs) {
                 var generatedLogs = {};
                 for(var log of logs){
-                    generatedLogs[log.model] = log.timestamp.toLocaleString();
+                    generatedLogs[log.model] = log.timestamp;
                 }
                 delete generatedLogs.Comment;
                 res.send(generatedLogs);
