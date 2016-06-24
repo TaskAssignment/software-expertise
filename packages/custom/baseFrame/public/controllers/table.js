@@ -43,7 +43,7 @@ var controllerCallback = function ($scope, $resource, $uibModal) {
                 hideLoadingScreen();
             });
         } else {
-            alert("This project already has the averages");
+            alert('This project already has the averages');
         }
     }
 

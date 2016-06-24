@@ -96,10 +96,10 @@ function drawGraph(graphData){
         .size([width, height])
         .charge(-400)
         .linkDistance(calculateDistance)
-        .on("tick", tick);
+        .on('tick', tick);
 
     var drag = force.drag()
-        .on("dragstart", dragstart);
+        .on('dragstart', dragstart);
 
     d3.select('svg').remove(); //Remove old svg before adding a new one.
 
@@ -107,8 +107,8 @@ function drawGraph(graphData){
         .attr('width', width)
         .attr('height', height);
 
-    var link = svg.selectAll(".link");
-    var node = svg.selectAll(".node");
+    var link = svg.selectAll('.link');
+    var node = svg.selectAll('.node');
 
     /* In order to draw the graph, force must receive an ARRAY of nodes.
     * Each node must have at least a name.
@@ -123,8 +123,8 @@ function drawGraph(graphData){
         .start();
 
     link = link.data(graphData.links)
-        .enter().append("line")
-        .attr("class", "link");
+        .enter().append('line')
+        .attr('class', 'link');
 
     /* Force graphs don't accept a circle with any other data, like a label.
     * To show any other information, a 'g' tag is necessary (group)
@@ -133,14 +133,14 @@ function drawGraph(graphData){
         .data(graphData.nodes)
         .enter().append('g')
         .attr('class', 'node')
-        .on("dblclick", dblclick)
+        .on('dblclick', dblclick)
         .call(drag);
 
     node.append('text')
         .attr('dx', 12)
         .text(function(d) { return d._id });
 
-    node.append("circle")
+    node.append('circle')
         .attr('r', function(d) { return calculateCircleRatio(d.soCount); })
         .style('fill', function (d) {
             if(d.commonCount > 0){
@@ -153,10 +153,10 @@ function drawGraph(graphData){
         });
 
     function tick() {
-        link.attr("x1", function(d) { return d.source.x; })
-            .attr("y1", function(d) { return d.source.y; })
-            .attr("x2", function(d) { return d.target.x; })
-            .attr("y2", function(d) { return d.target.y; });
+        link.attr('x1', function(d) { return d.source.x; })
+            .attr('y1', function(d) { return d.source.y; })
+            .attr('x2', function(d) { return d.target.x; })
+            .attr('y2', function(d) { return d.target.y; });
 
         node.attr('transform', function(d) {
             return 'translate(' + d.x + ',' + d.y + ')';
@@ -164,11 +164,11 @@ function drawGraph(graphData){
     }
 
     function dblclick(d) {
-        d3.select(this).classed("fixed", d.fixed = false);
+        d3.select(this).classed('fixed', d.fixed = false);
     }
 
     function dragstart(d) {
-        d3.select(this).classed("fixed", d.fixed = true);
+        d3.select(this).classed('fixed', d.fixed = true);
     }
 }
 

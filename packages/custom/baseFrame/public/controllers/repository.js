@@ -26,9 +26,9 @@ function ($scope,  $http, $location, $resource) {
         angular.element('.tab').removeClass('active');
         angular.element('.tab-pane').addClass('hidden');
         $scope.selectedTab = tab;
-        if(tab == '.tabTable'){
+        if(tab === '.tabTable'){
             sendToTable();
-        } else if(tab == '.tabGraph'){
+        } else if(tab === '.tabGraph'){
             sendToGraph();
         }
 
@@ -90,7 +90,7 @@ function ($scope,  $http, $location, $resource) {
         $scope.selectedUser = user;
 
         if(!user.soProfile){
-            alert("User is not in StackOverflow.");
+            alert('User is not in StackOverflow.');
         }
         showLoadingScreen();
         sendToGraph();

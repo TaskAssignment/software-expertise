@@ -76,9 +76,6 @@ module.exports = function (BaseFrame){
         Model.findOne({_id: id}, selectItems, {lean: true}, function (err, model){
             if(err){
                 console.log(err);
-                if(!res.headersSent){
-                    res.sendStatus(500);
-                }
             }
             callbackParams[Model.modelName] = model || {tags: []};
             callback(callbackParams);
@@ -89,9 +86,6 @@ module.exports = function (BaseFrame){
         Model.find(filter, selectItems, {lean: true}, function (err, models){
             if(err){
                 console.log(err);
-                if(!res.headersSent){
-                    res.sendStatus(500);
-                }
             }
             callbackParams[Model.modelName] = models;
             callback(callbackParams);
@@ -106,7 +100,7 @@ module.exports = function (BaseFrame){
         for(let i in nodesJson){
             var node = nodesJson[i];
             if(typeof(node) === 'string'){
-                var node = JSON.parse(node);
+                node = JSON.parse(node);
             }
 
             num += (node.issueCount * node.userCount) || 0;
@@ -124,7 +118,7 @@ module.exports = function (BaseFrame){
         for(let i in nodesJson){
             var node = nodesJson[i];
             if(typeof(node) === 'string'){
-                var node = JSON.parse(node);
+                node = JSON.parse(node);
             }
 
             var issueWeight = 0;
@@ -149,7 +143,7 @@ module.exports = function (BaseFrame){
             denominator += issueWeight;
         }
 
-        if(denominator == 0){
+        if(denominator === 0){
             return 0;
         }
 
@@ -262,7 +256,7 @@ module.exports = function (BaseFrame){
                 user.ssaZScore = ssaZSimilarity(params.user, params.issueTags);
                 user.repos = params.user.repos;
 
-                if(params.assignee == params.user.id){
+                if(params.assignee === params.user.id){
                     user.assignee = true;
                 } else {
                     user.assignee = false;
@@ -306,7 +300,7 @@ module.exports = function (BaseFrame){
                     }
 
                     function sort(value1, value2, username1, username2){
-                        if(value1 == value2){
+                        if(value1 === value2){
                             if(username1 <  username2)
                                 return -1;
                             else{
@@ -372,6 +366,37 @@ module.exports = function (BaseFrame){
                 params.user.jaccard = jaccardSimilarity(params.tags);
             }
 
+            function sort(value1, value2, username1, username2){
+                if(value1 === value2){
+                    if(username1 <  username2){
+                        return -1;
+                    }else{
+                        return 1;
+                    }
+                }
+                //Desc order!
+                return value2 - value1;
+            }
+
+            //Sort jaccard desc order.
+            var sortJaccard = function (a, b){
+                return sort(a.jaccard, b.jaccard, a._id.toLowerCase(), b._id.toLowerCase());
+            }
+
+            //Sort cosine desc order.
+            var sortCosine = function (a, b){
+                return sort(a.cosine, b.cosine, a._id.toLowerCase(), b._id.toLowerCase());
+            }
+
+            // Sort ssaZ desc order.
+            var sortSsaZ = function (a, b){
+                return sort(a.ssaZScore, b.ssaZScore, a._id.toLowerCase(), b._id.toLowerCase());
+            }
+
+            var findAssignee = function (element, index, array){
+                return element.assignee;
+            }
+
             var issuesCallback = function(params){
                 for(var issue of params.Issue){
                     var similarities = [];
@@ -383,44 +408,13 @@ module.exports = function (BaseFrame){
 
                         user.ssaZScore = ssaZSimilarity(user.soProfile || {answers: [], questions: []}, tag_array);
 
-                        if(issue.assigneeId == user._id){
+                        if(issue.assigneeId === user._id){
                             user.assignee = true;
                         } else {
                             user.assignee = false;
                         }
 
                         similarities.push(user);
-                    }
-
-                    function sort(value1, value2, username1, username2){
-                        if(value1 == value2){
-                            if(username1 <  username2){
-                                return -1;
-                            }else{
-                                return 1;
-                            }
-                        }
-                        //Desc order!
-                        return value2 - value1;
-                    }
-
-                    //Sort jaccard desc order.
-                    var sortJaccard = function (a, b){
-                        return sort(a.jaccard, b.jaccard, a._id.toLowerCase(), b._id.toLowerCase());
-                    }
-
-                    //Sort cosine desc order.
-                    var sortCosine = function (a, b){
-                        return sort(a.cosine, b.cosine, a._id.toLowerCase(), b._id.toLowerCase());
-                    }
-
-                    // Sort ssaZ desc order.
-                    var sortSsaZ = function (a, b){
-                        return sort(a.ssaZScore, b.ssaZScore, a._id.toLowerCase(), b._id.toLowerCase());
-                    }
-
-                    var findAssignee = function (element, index, array){
-                        return element.assignee;
                     }
 
                     similarities.sort(sortCosine);

@@ -123,10 +123,10 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
         }
         $http.get('/api/baseFrame/download', {params:{resource: option}})
         .then(function (response) {
-            var a = document.createElement("a");
+            var a = document.createElement('a');
             document.body.appendChild(a);
-            a.style = "display: none";
-            var blob = new Blob([response.data], {type: "plain/text"}),
+            a.style = 'display: none';
+            var blob = new Blob([response.data], {type: 'plain/text'}),
             url = window.URL.createObjectURL(blob);
             a.href = url;
             a.download = option + 's.tsv';

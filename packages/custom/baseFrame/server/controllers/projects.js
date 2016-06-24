@@ -3,8 +3,6 @@
 var mongoose = require('mongoose');
 var Project  = mongoose.model('Project');
 
-var request = require('request');
-
 module.exports = function (BaseFrame){
     return {
 

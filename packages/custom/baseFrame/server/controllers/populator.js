@@ -25,8 +25,9 @@ var ACCESS_TOKENS = [
 ]
 var stopRequests = false;
 var delay = 34; // 34 ms to assure that there will be no more than 30 requests per second.
-var selectedProject = undefined;
+var selectedProject;
 var stopWords = [];
+var firstTime = true;
 
 module.exports = function (BaseFrame) {
     return {
@@ -252,13 +253,11 @@ function populateUserTags(ids, projectId, filter = 'default', site = 'stackoverf
                 'soProfile.soPopulated': true
             };
 
-            console.log(filter);
-
             Developer.update(filter, updateFields).exec(function(err){
                 if(err){
                     console.log('=== Error UserTags: ' + err.message);
                 } else {
-                    console.log(result.user_id + ' tags updated!');
+                    console.log('User ' + result.user_id + ': tags updated!');
                 }
             });
         });
@@ -419,11 +418,9 @@ function populateIssues(id){
     Issue.findOne({projectId: id}, '-_id createdAt', {sort: '-createdAt', lean:true},function (err, lastCreated){
         var url = id + '/issues?state=all&sort=created&direction=asc'
 
-        var sinceUrl = undefined;
         if(lastCreated){
             lastCreated.createdAt.setSeconds(lastCreated.createdAt.getSeconds() + 1);
-            sinceUrl = 'since=' + lastCreated.createdAt.toISOString();
-            url += '&' + sinceUrl;
+            url +='&since=' + lastCreated.createdAt.toISOString();
         }
 
         function saveIssue(issue) {
@@ -761,68 +758,72 @@ function gitHubPopulate(option, specificUrl, callback, finalUrl = false){
 
     var requestCallback = function (error, response, body){
         if (!error) {
-            if(response.statusCode === 200) {
-                var results = JSON.parse(body);
-                // results.etag = response.headers.etag;
-                callback(results);
+            switch (response.statusCode) {
+                case 200:
+                    var results = JSON.parse(body);
+                    // results.etag = response.headers.etag;
+                    callback(results);
 
-                var links = response.headers.link || '';
-                var next = undefined;
-                for(var link of links.split(',')){
-                    if(link.lastIndexOf('next') > 0){
-                        next = link;
+                    var links = response.headers.link || '';
+                    var next;
+                    for(var link of links.split(',')){
+                        if(link.lastIndexOf('next') > 0){
+                            next = link;
+                        }
                     }
-                }
 
-                if(next){
-                    var begin = next.indexOf('<');
-                    var end = next.indexOf('>');
+                    if(next){
+                        var begin = next.indexOf('<');
+                        var end = next.indexOf('>');
 
-                    //This gets string = [begin, end)
-                    var new_uri = next.substring(begin + 1, end);
+                        //This gets string = [begin, end)
+                        var new_uri = next.substring(begin + 1, end);
 
-                    options.uri = new_uri;
+                        options.uri = new_uri;
 
-                    setTimeout(function () {
-                        request(options, requestCallback);
-                    }, 10);
-                } else {
-                    if(option === 'IssueComment' && results.length > 0){
-                        var last = results.length - 1;
-                        var lastUpdated = new Date(results[last].updated_at);
-                        var yesterday = new Date();
-                        yesterday.setDate(yesterday.getDate() - 1);
-                        if(yesterday > lastUpdated){
-                            lastUpdated.setSeconds(lastUpdated.getSeconds() + 1);
-                            options.uri = uri + '&since=' + lastUpdated.toISOString();
+                        setTimeout(function () {
                             request(options, requestCallback);
+                        }, 10);
+                    } else {
+                        if(option === 'IssueComment' && results.length > 0){
+                            var last = results.length - 1;
+                            var lastUpdated = new Date(results[last].updated_at);
+                            var yesterday = new Date();
+                            yesterday.setDate(yesterday.getDate() - 1);
+                            if(yesterday > lastUpdated){
+                                lastUpdated.setSeconds(lastUpdated.getSeconds() + 1);
+                                options.uri = uri + '&since=' + lastUpdated.toISOString();
+                                request(options, requestCallback);
+                            } else {
+                                console.log('*** DONE ***', option);
+                                populated[option] = READY;
+                            }
                         } else {
                             console.log('*** DONE ***', option);
                             populated[option] = READY;
                         }
-                    } else {
-                        console.log('*** DONE ***', option);
-                        populated[option] = READY;
                     }
-                }
-            } else if (response.statusCode === 500 || response.statusCode === 502){
-                console.log('Git Server Error. Trying again in one second');
-                setTimeout(function () {
-                    request(options, requestCallback);
-                }, 100);
-            } else if (response.statusCode === 403){
-                var gitResponse = JSON.parse(body);
-                if(gitResponse.documentation_url === 'https://developer.github.com/v3#abuse-rate-limits') {
+                    break;
+                case 400:
+                case 401:
+                case 402:
+                case 406:
+                case 502:
+                case 500:
+                case 502:
+                case 503:
+                    console.log('Git Server Error. Trying again in one second');
+                    console.log(body, response.statusCode);
+                    remakeRequest(options, requestCallback);
+                    break;
+                case 403:
+                    var gitResponse = JSON.parse(body);
                     console.log('Abuse Rate. Trying again in one second;');
-                    setTimeout(function () {
-                        request(options, requestCallback);
-                    }, 100);
-                } else {
-                    console.log(body, response.
-                        Code);
-                }
-            } else {
-                console.log(body, response.statusCode);
+                    console.log(body, response.statusCode);
+                    remakeRequest(options, requestCallback);
+                    break;
+                default:
+                    console.log(body, response.statusCode);
             }
         } else {
             console.log(body, error.message);
@@ -830,7 +831,7 @@ function gitHubPopulate(option, specificUrl, callback, finalUrl = false){
     }
 
     request(options, requestCallback);
-};
+}
 
 function soPopulate(option, specificUrl, callback) {
     var uri = 'https://api.stackexchange.com/2.2/' + specificUrl +
@@ -844,8 +845,6 @@ function soPopulate(option, specificUrl, callback) {
         gzip: true,
         uri: uri
     };
-
-    var firstTime = true;
 
     var requestCallback = function (error, response, body){
         if (!error){
@@ -876,7 +875,7 @@ function soPopulate(option, specificUrl, callback) {
                     console.log('Error Related to token. Trying a different one');
                     console.log(body);
                     next_token = (next_token + 1) % ACCESS_TOKENS.length;
-                    if(next_token == 0){
+                    if(next_token === 0){
                         stopRequests = true;
                     } else {
                         var page = '&' + options.uri.split('&').pop();
@@ -888,13 +887,9 @@ function soPopulate(option, specificUrl, callback) {
                 case 500:
                 case 503:
                     console.log('SE Server Error. Trying again in one second');
-                    if(firstTime){
-                        setTimeout(function () {
-                            request(options, requestCallback);
-                        }, 1000);
-                    } else {
-                        console.log("Stopping here to avoid abuse. Check for error details");
-                    }
+                    console.log(body);
+                    remakeRequest(options, requestCallback);
+                    break;
                 default:
                     console.log(body);
             }
@@ -904,4 +899,15 @@ function soPopulate(option, specificUrl, callback) {
     }
 
     request(options, requestCallback);
+}
+
+function remakeRequest(options, requestCallback){
+    if(firstTime){
+        setTimeout(function () {
+            request(options, requestCallback);
+            firstTime = false;
+        }, 1000);
+    } else {
+        console.log('Stopping here to avoid abuse. Check for error details');
+    }
 }

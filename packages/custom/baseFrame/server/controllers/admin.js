@@ -79,7 +79,7 @@ module.exports = function (BaseFrame){
         },
 
         oauth: function (req, res) {
-            var req = {
+            var config = {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -92,8 +92,7 @@ module.exports = function (BaseFrame){
                     'redirect_uri': 'http://localhost:3000/admin'
                 }
             };
-            request(req, function (err, response, body){
-                console.log(body);
+            request(config, function (err, response, body){
                 res.send(body);
             });
         },
@@ -124,6 +123,7 @@ module.exports = function (BaseFrame){
                     case 'CoOccurrence':
                     case 'Tag':
                         res.sendStatus(populated[option].status);
+                        break;
                     default:
                         res.sendStatus(populator.check(option));
                 }
@@ -185,9 +185,9 @@ function writeFile(option,
 
     dbStream.on('data', function (model) {
         counter++;
-        if(option == 'CoOccurrence'){
+        if(option === 'CoOccurrence'){
             delete model._id;
-        } else if (option == 'Project'){
+        } else if (option === 'Project'){
             model.languages = model.languages.map(function (lang) {
                 return lang._id + ':' + lang.amount;
             });
@@ -409,7 +409,7 @@ function readFile(option){
     var MongooseModel = mongoose.model(option);
 
     var countCallback = function (err, dbCount) {
-        if(dbCount == 0) {
+        if(dbCount === 0) {
             var path = 'files/' + option + 's.tsv';
             var options = {
                 delimiter: '\t',
@@ -423,7 +423,7 @@ function readFile(option){
             var counter = 0;
             csv.fromStream(readable, options)
             .on('data', function(model){
-                if(option == 'Developer'){
+                if(option === 'Developer'){
                     delete model.tags;
                     if(model.soId){
                         model.soProfile = {
