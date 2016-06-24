@@ -203,7 +203,7 @@ function populateStackOverflowUserData(projectId){
 
         ids = ids.slice(0, -1);
 
-        if(!stopRequests){
+        if(ids.length > 0 && !stopRequests){
             populateAnswers(ids, projectId, '!FcbKgR9VoP8kZFhRg5uitziPRm');
             populateQuestions(ids, projectId, '!.FjwPG4rNrCRp8_giA4)OJE9BA8N-');
             populateUserTags(ids, projectId, '!bMMRSq0xzD.9EI');
@@ -549,35 +549,50 @@ function populateContributors(projectId){
     var url = projectId + '/contributors';
     var Developer = mongoose.model('Developer');
 
-    var buildContributor = function (result){
+    var buildContributor = function(result){
         var filter = {
-            _id: result.login,
-        };
-
+            'ghProfile._id': result.login,
+        }
         var updateFields = {
             'ghProfile.email': result.email,
-            $addToSet: {
-                'ghProfile.repositories': projectId,
-            },
-            $setOnInsert: {
-                ghProfile: {
-                    _id: result.login,
-                    repositories: [projectId],
-                    email: result.email,
-                }
-            }
         };
 
-        Developer.update(filter, updateFields, {upsert: true}).exec(function (err){
+        var findCallback = function (err) {
             if(err){
                 console.log('=== Error Developer: ' + err.message);
             }
-        });
+        }
+
+        Developer.update(filter, updateFields, findCallback);
     }
 
     var buildModels = function(results){
         for (var result of results) {
-            gitHubPopulate('Contributor', result.url, buildContributor, true);
+            var updateFields = {
+                'ghProfile._id': result.login,
+                'ghProfile.email': result.email,
+                $addToSet: {
+                    'ghProfile.repositories': projectId,
+                },
+            };
+
+            var options = {
+                upsert: true,
+                new: true,
+            }
+
+            var findCallback = function (err, dev) {
+                if(err){
+                    console.log('=== Error Developer: ' + err.message);
+                } else {
+                    var user_url = 'https://api.github.com/users/' + dev._id;
+                    if(!dev.ghProfile.email){
+                        gitHubPopulate('Contributor', user_url, buildContributor, true);
+                    }
+                }
+            }
+
+            Developer.findByIdAndUpdate(result.login, updateFields, options, findCallback);
         }
     }
 

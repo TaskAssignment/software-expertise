@@ -111,7 +111,7 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
         $scope.generalOptions[option].generated = false;
         $http.get('/api/baseFrame/generate', {params:{resource: option}})
         .then(function (response) {
-            checkDownload(option);
+            checkGenerate(option);
         });
     }
 
@@ -165,7 +165,7 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
         }
     }
 
-    function checkDownload(option) {
+    function checkGenerate(option) {
         var delay = 5000;
 
         var interval = $interval(function () {
@@ -181,12 +181,6 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
             $interval.cancel(interval);
             getLastTimestamps();
             $scope.generalOptions[option].generated = true;
-
-            $scope.download(option);
-            if(option === 'Contributor'){
-                $scope.download('Question');
-                $scope.download('Answer');
-            }
         }
     }
 
