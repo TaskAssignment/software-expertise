@@ -21,35 +21,11 @@ var controllerCallback = function ($scope, $resource, $uibModal) {
 
             Match.get(params).$promise.then(function (matches){
                 $scope.bestUsers = matches.similarities;
-                $scope.assigneePosition = matches.assigneePosition;
                 hideLoadingScreen();
             });
             $scope.selectedUsers = [];
         }
     }
-
-    $scope.calculateMatchAverages = function (projectId) {
-        if(projectId !== $scope.averages.project){
-            showLoadingScreen();
-            var MatchAverage = $resource('api/baseFrame/:projectId/calculate/matches/averages');
-
-            MatchAverage.get({projectId: projectId}).$promise.then(function (result){
-                $scope.averages = result.averages;
-                console.log(result);
-                $scope.averages.project = projectId;
-                hideLoadingScreen();
-            }, function (err){
-                console.log(err);
-                hideLoadingScreen();
-            });
-        } else {
-            alert('This project already has the averages');
-        }
-    }
-
-    $scope.averages = {
-        project: undefined
-    };
 
     $scope.parameter = '-cosine';
     $scope.selectedUsers = [];

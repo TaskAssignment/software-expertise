@@ -83,31 +83,10 @@ module.exports = function (BaseFrame){
             var items = '_id title assigneeId';
             var options = {lean: true, limit: 500};
 
-            var soAssigned = JSON.parse(req.query.soAssigned);
-            if(soAssigned){
-                var devFilter = {
-                    'ghProfile.repositories': filter.projectId,
-                    soProfile: {
-                        $exists: true
-                    }
-                };
-
-                Developer.find(devFilter, '_id', {lean: true}).sort('-updatedAt').exec(function (err, users){
-                    var soUsers = users.map(function (user) {
-                        return user._id;
-                    });
-
-                    filter.assigneeId = { $in: soUsers };
-
-                    Issue.find(filter, items, options).sort('-updatedAt').exec(function(err, issues){
-                        res.send(issues);
-                    });
-                });
-            } else {
-                Issue.find(filter, items, options).sort('-updatedAt').exec(function(err, issues){
-                    res.send(issues);
-                });
-            }
+            console.log(filter);
+            Issue.find(filter, items, options).sort('-updatedAt').exec(function(err, issues){
+                res.send(issues);
+            });
         }
     }
 }
