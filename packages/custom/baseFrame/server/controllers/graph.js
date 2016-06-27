@@ -174,6 +174,37 @@ module.exports = function (BaseFrame){
         return numerator/denominator;
     }
 
+    function sort(value1, value2, username1, username2){
+        if(value1 === value2){
+            if(username1 <  username2){
+                return -1;
+            }else{
+                return 1;
+            }
+        }
+        //Desc order!
+        return value2 - value1;
+    }
+
+    //Sort jaccard desc order.
+    var sortJaccard = function (a, b){
+        return sort(a.jaccard, b.jaccard, a._id.toLowerCase(), b._id.toLowerCase());
+    }
+
+    //Sort cosine desc order.
+    var sortCosine = function (a, b){
+        return sort(a.cosine, b.cosine, a._id.toLowerCase(), b._id.toLowerCase());
+    }
+
+    // Sort ssaZ desc order.
+    var sortSsaZ = function (a, b){
+        return sort(a.ssaZScore, b.ssaZScore, a._id.toLowerCase(), b._id.toLowerCase());
+    }
+
+    var findAssignee = function (element, index, array){
+        return element.assignee;
+    }
+
     return {
         /** Gets and formats the graph data.
         *
@@ -250,11 +281,20 @@ module.exports = function (BaseFrame){
             var mergeCallback = function (params){
                 var user = {};
 
-                user.username = params.user.id;
+                user._id = params.user.id;
                 user.jaccard = jaccardSimilarity(params.tags);
                 user.cosine = cosineSimilarity(params.tags);
                 user.ssaZScore = ssaZSimilarity(params.user, params.issueTags);
                 user.repos = params.user.repos;
+                user.tags = [];
+                for(var key in params.tags){
+                    var tag = params.tags[key];
+                    if(tag.userCount > 0) {
+                        user.tags.push(tag._id);
+                    }
+                }
+                user.amountQuestions = params.user.questions.length;
+                user.amountAnswers = params.user.answers.length;
 
                 if(params.assignee === params.user.id){
                     user.assignee = true;
@@ -283,60 +323,47 @@ module.exports = function (BaseFrame){
                             assignee: params.Issue.assigneeId,
                             issueTags: tag_array
                         };
+                        callbackParams.user.repos = [];
+
+                        for(var repo of user.ghProfile.repositories){
+                            callbackParams.user.repos.push(repo.name);
+                        }
 
                         if(user.soProfile){
                             params.Developer = {tags: user.soProfile.tags};
                             callbackParams.user.questions = user.soProfile.questions;
                             callbackParams.user.answers = user.soProfile.answers;
-                            callbackParams.user.repos = [];
-                            for(var repo of user.ghProfile.repositories){
-                                callbackParams.user.repos.push(repo.name);
-                            }
                         } else {
+                            callbackParams.user.questions = [];
+                            callbackParams.user.answers = [];
                             params.Developer = {tags: []};
                         }
 
                         mergeTags(params, mergeCallback, callbackParams);
                     }
 
-                    function sort(value1, value2, username1, username2){
-                        if(value1 === value2){
-                            if(username1 <  username2)
-                                return -1;
-                            else{
-                                return 1;
-                            }
-                        }
-                        //Desc order!
-                        return value2 - value1;
-                    }
-
-                    //Sort jaccard desc order.
-                    var sortJaccard = function (a, b){
-                        return sort(a.jaccard, b.jaccard, a.username.toLowerCase(), b.username.toLowerCase());
-                    }
-                    //Sort cosine desc order.
-                    var sortCosine = function (a, b){
-                        return sort(a.cosine, b.cosine, a.username.toLowerCase(), b.username.toLowerCase());
-                    }
-                    //Sort ssaZ desc order.
-                    var sortSsaZ = function (a, b){
-                        return sort(a.ssaZScore, b.ssaZScore, a.username.toLowerCase(), b.username.toLowerCase());
-                    }
-
-                    var findAssignee = function (element, index, array){
-                        return element.assignee;
-                    }
-
                     var position = {};
 
                     similarities.sort(sortCosine);
+                    for(var i = 0; i < similarities.length; i++){
+                        var user = similarities[i];
+                        user.cosineIndex = i + 1;
+                    }
+                    //TODO: I probably don't need this anymore.
                     position.cosine = similarities.findIndex(findAssignee);
 
                     similarities.sort(sortJaccard);
+                    for(var i = 0; i < similarities.length; i++){
+                        var user = similarities[i];
+                        user.jaccardIndex = i + 1;
+                    }
                     position.jaccard = similarities.findIndex(findAssignee);
 
                     similarities.sort(sortSsaZ);
+                    for(var i = 0; i < similarities.length; i++){
+                        var user = similarities[i];
+                        user.ssazIndex = i + 1;
+                    }
                     position.ssaZ = similarities.findIndex(findAssignee);
 
                     res.json({
@@ -364,37 +391,6 @@ module.exports = function (BaseFrame){
             var mergeCallback = function(params){
                 params.user.cosine = cosineSimilarity(params.tags);
                 params.user.jaccard = jaccardSimilarity(params.tags);
-            }
-
-            function sort(value1, value2, username1, username2){
-                if(value1 === value2){
-                    if(username1 <  username2){
-                        return -1;
-                    }else{
-                        return 1;
-                    }
-                }
-                //Desc order!
-                return value2 - value1;
-            }
-
-            //Sort jaccard desc order.
-            var sortJaccard = function (a, b){
-                return sort(a.jaccard, b.jaccard, a._id.toLowerCase(), b._id.toLowerCase());
-            }
-
-            //Sort cosine desc order.
-            var sortCosine = function (a, b){
-                return sort(a.cosine, b.cosine, a._id.toLowerCase(), b._id.toLowerCase());
-            }
-
-            // Sort ssaZ desc order.
-            var sortSsaZ = function (a, b){
-                return sort(a.ssaZScore, b.ssaZScore, a._id.toLowerCase(), b._id.toLowerCase());
-            }
-
-            var findAssignee = function (element, index, array){
-                return element.assignee;
             }
 
             var issuesCallback = function(params){
