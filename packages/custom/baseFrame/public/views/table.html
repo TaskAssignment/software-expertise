@@ -38,16 +38,19 @@
                         <p>{{ user._id }}</p>
                     </td>
                     <td>
-                        {{ user.cosine.toFixed(2) }}
-                        <p class="pull-right badge" ng-if="parameter === '-cosine'">{{ $index + 1 }}</p>
+
+                        <!-- <p class="pull-left badge" ng-if="parameter === '-cosine'">{{ $index + 1 }}</p> -->
+                        <p class="pull-right">{{ user.cosine.toFixed(2) }}</p>
                     </td>
                     <td>
-                        {{ user.jaccard.toFixed(2) }}
-                        <p class="pull-right badge" ng-if="parameter === '-jaccard'">{{ $index + 1 }}</p>
+
+                        <!-- <p class="pull-left badge" ng-if="parameter === '-jaccard'">{{ $index + 1 }}</p> -->
+                        <p class="pull-right">{{ user.jaccard.toFixed(2) }}</p>
                     </td>
                     <td>
-                        {{ user.ssaZScore.toFixed(2) }}
-                        <p class="pull-right badge" ng-if="parameter === '-ssaZScore'">{{ $index + 1 }}</p>
+
+                        <!-- <p class="pull-left badge" ng-if="parameter === '-ssaZScore'">{{ $index + 1 }}</p> -->
+                        <p class="pull-right">{{ user.ssaZScore.toFixed(2) }}</p>
                     </td>
                 </tr>
             </tbody>
@@ -67,18 +70,18 @@
         <table class="table table-bordered" >
             <thead>
                 <tr>
-                    <th class="col-lg-3 col-md-3">
+                    <th class="col-lg-6 col-md-6">
                         Username
                     </th>
-                    <th class="col-lg-3 col-md-3">
+                    <th class="col-lg-2 col-md-2">
                         <a href="" ng-click="sort('-cosine')">Cosine Score</a>
                         <i ng-if="parameter === '-cosine'" class="fa fa-caret-down" aria-hidden="true"></i>
                     </th>
-                    <th class="col-lg-3 col-md-3">
+                    <th class="col-lg-2 col-md-2">
                         <a href="" ng-click="sort('-jaccard')">Jaccard Score</a>
                         <i ng-if="parameter === '-jaccard'" class="fa fa-caret-down" aria-hidden="true"></i>
                     </th>
-                    <th class="col-lg-3 col-md-3">
+                    <th class="col-lg-2 col-md-2">
                         <a href="" ng-click="sort('-ssaZScore')">SSA Z Score</a>
                         <i ng-if="parameter === '-ssaZScore'" class="fa fa-caret-down" aria-hidden="true"></i>
                     </th>
@@ -97,16 +100,16 @@
                         </small>
                     </td>
                     <td>
-                        {{ user.cosine.toFixed(2) }}
-                        <p> Position for Cosine: {{ user.cosineIndex }} </p>
+                        <p class="pull-left badge">{{ user.cosineIndex }}</p>
+                        <p class="pull-right">{{ user.cosine.toFixed(2) }}</p>
                     </td>
                     <td>
-                        {{ user.jaccard.toFixed(2) }}
-                        <p> Position for Jaccard: {{ user.jaccardIndex }} </p>
+                        <p class="pull-left badge">{{ user.jaccardIndex }}</p>
+                        <p class="pull-right">{{ user.jaccard.toFixed(2) }}</p>
                     </td>
                     <td>
-                        {{ user.ssaZScore.toFixed(2) }}
-                        <p> Position for SSA_Z: {{ user.ssazIndex }} </p>
+                        <p class="pull-left badge">{{ user.ssazIndex }}</p>
+                        <p class="pull-right">{{ user.ssaZScore.toFixed(2) }}</p>
                     </td>
                 </tr>
             </tbody>
