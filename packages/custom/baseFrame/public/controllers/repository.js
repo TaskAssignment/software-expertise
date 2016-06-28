@@ -20,51 +20,6 @@ var RepositoryController = function ($scope,  $http, $location, $resource) {
 
     // *************** SCOPE FUNCTIONS ***************//
 
-    $scope.fullPopulateRepo = function(){
-        var items = [
-            'issues',
-            'users',
-            'languages',
-            'commits',
-            'issues/comments',
-            'commits/comments',
-        ]
-
-        for(var i in items){
-            var item = items[i];
-            showLoadingScreen();
-            var Resource = $resource('/api/baseFrame/:projectId/populate/' +
-                item);
-            var filter = {
-                projectId: $scope.selectedRepo._id
-            }
-            Resource.get(filter).$promise.then(function (response){
-                hideLoadingScreen();
-            });
-        }
-    }
-
-    $scope.getAllSOData = function (){
-        for(var i in $scope.users){
-            var user = $scope.users[i];
-            if(user.soProfile && !user.soProfile.soPopulated) {
-                populateSOData(user.soProfile._id);
-            }
-        }
-    }
-
-    $scope.makeIssuesTags = function (){
-        showLoadingScreen();
-        var Resource = $resource('/api/baseFrame/:projectId/makeIssuesTags');
-        var filter = {
-            projectId: $scope.selectedRepo._id,
-            project: $scope.selectedRepo
-        }
-        Resource.get(filter).$promise.then(function (response){
-            hideLoadingScreen();
-        });
-    }
-
     /** Looks for repositories with the given filters
      **/
     $scope.queryRepos = function () {
@@ -109,59 +64,14 @@ var RepositoryController = function ($scope,  $http, $location, $resource) {
         });
     }
 
-
-    $scope.populateRepoResources = function (resource){
-        showLoadingScreen();
-        var Resource = $resource('/api/baseFrame/:projectId/populate/' + resource);
-        var filter = {
-            projectId: $scope.selectedRepo._id
-        }
-        Resource.get(filter).$promise.then(function (response){
-            $scope.selectedRepo['empty' + resource] = false;
-            hideLoadingScreen();
-            getRepoInformation($scope.selectedRepo);
-        }, function(response){console.log(response);});
-    }
-
     /**
     * display information based on issues
     *
     * @param issue - Dictionary with id, title and body from github issue
     **/
     $scope.selectIssue = function (issue) {
-        showLoadingScreen();
         $scope.selectedIssue = issue;
-
-        if(!issue.parsed){
-            var filter = {
-                projectId: $scope.selectedRepo._id,
-                _id: issue._id,
-                project: $scope.selectedRepo
-            };
-
-            var Issue = $resource('/api/baseFrame/:projectId/makeIssuesTags');
-            Issue.get(filter);
-        }
         sendToTable();
-    }
-
-    function populateSOData(soId) {
-        showLoadingScreen();
-        var filter = {
-            soId: soId,
-        }
-        var url = '/api/baseFrame/user/:soId/populate/';
-        var Resource = $resource(url + 'answers');
-        Resource.get(filter);
-
-        Resource = $resource(url + 'questions');
-        Resource.get(filter);
-
-        Resource = $resource(url + 'tags');
-        Resource.get(filter).$promise.then(function (){
-            hideLoadingScreen();
-            $scope.selectedUser.soPopulated = true;
-        });
     }
 
     // *************** HELPER FUNCTIONS ***************//
@@ -206,7 +116,7 @@ var RepositoryController = function ($scope,  $http, $location, $resource) {
 
     function findProject(){
         $scope.search = true;
-        var Project = $resource('/api/baseFrame/project/find/:name');
+        var Project = $resource('/api/baseFrame/project/get/:name');
         var repoName = $location.search().repoName;
         if(repoName){
             Project.get({name: repoName}).$promise.then(function(project){

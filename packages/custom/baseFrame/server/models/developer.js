@@ -6,17 +6,19 @@ var Schema = mongoose.Schema;
 /************** SUBDOCUMENTS *******************/
 
 var QuestionSchema = new Schema({
-    _id: String,
+    _id: Number,
     title: String,
     body: String,
     tags: [String],
     score: Number,
+    title: String,
     createdAt: Date,
     updatedAt: Date
 });
 
 var AnswerSchema = new Schema({
-    _id: String,
+    _id: Number,
+    title: String,
     body: String,
     questionId: String,
     tags: [String],
@@ -27,13 +29,14 @@ var AnswerSchema = new Schema({
 });
 
 var TagSchema = new Schema({
-    _id: String,
+    _id: String, //tag Name
+    synonyms: [String],
     count: Number,
     soCount: Number
 });
 
 var SoProfileSchema = new Schema({
-    _id: String,
+    _id: Number,
     displayName: String,
     soPopulated: {
         type: Boolean,
@@ -54,7 +57,7 @@ var GitHubProfileSchema = new Schema({
     },
     email: String,
     repositories: [{
-        type: String,
+        type: Number,
         ref: 'Project',
         unique: true
     }]

@@ -6,61 +6,42 @@ module.exports = function (BaseFrame, app, database) {
     var controllers = '../controllers/';
 
     var projects = require(controllers + 'projects')(BaseFrame);
-    app.route(base + 'project/find/:name')
-        .get(projects.find);
+    app.route(base + 'project/get/:name')
+      .get(projects.get);
+    app.route(base + 'project/find')
+      .get(projects.find);
     app.route(base + 'project/new/')
-        .get(projects.save);
-    app.route(base + ':projectId/populate/users')
-        .get(projects.populateContributors);
-    app.route(base + ':projectId/populate/issues')
-        .get(projects.populateIssues);
-    app.route(base + ':projectId/populate/commits')
-        .get(projects.populateCommits);
-    app.route(base + ':projectId/populate/languages')
-        .get(projects.populateLanguages);
-    app.route(base + ':projectId/populate/issues/comments')
-        .get(projects.populateIssuesComments);
-    app.route(base + ':projectId/populate/commits/comments')
-        .get(projects.populateCommitsComments);
-
-    var issues = require(controllers + 'issues')(BaseFrame);
+      .get(projects.save);
     app.route(base + ':projectId/issues')
-        .get(issues.find);
-
-    var users = require(controllers + 'users')(BaseFrame);
+      .get(projects.findIssues);
     app.route(base + ':projectId/users')
-        .get(users.find);
-    app.route(base + 'user/:soId/populate/tags')
-        .get(users.populateTags);
-    app.route(base + 'user/:soId/populate/answers')
-        .get(users.populateAnswers);
-    app.route(base + 'user/:soId/populate/questions')
-        .get(users.populateQuestions);
-
-    var tags = require(controllers + 'tags')(BaseFrame);
-    app.route(base + ':projectId/makeIssuesTags')
-        .get(tags.makeIssuesTags);
+      .get(projects.findUsers);
 
     var admin = require(controllers + 'admin')(BaseFrame);
     app.route(base + 'generate')
-        .get(admin.generate);
+      .get(admin.generate);
     app.route(base + 'populate')
-        .get(admin.populate);
+      .get(admin.populate);
     app.route(base + 'download')
-        .get(admin.download);
+      .get(admin.download);
     app.route(base + 'check')
-        .get(admin.check);
+      .get(admin.check);
+    app.route(base + 'timestamps')
+      .get(admin.timestamps);
+    app.route(base + 'oauth')
+      .get(admin.oauth);
+
     /** My idea here is to be able to fetch data from different places.
     * The modes, for now, will be 'default' and 'default' to fetch data from our
     * database (populated from github/SO).
     **/
     var graph = require(controllers + 'graph')(BaseFrame);
     app.route(base + ':modeIssue/:modeUser/graphData')
-        .get(graph.getDataForGraph);
+      .get(graph.getDataForGraph);
     app.route(base + 'calculate/:similarity/')
-        .get(graph.calculateSimilarity);
+      .get(graph.calculateSimilarity);
     app.route(base + 'find/:issueId/matches')
-        .get(graph.findMatches);
+      .get(graph.findMatches);
     app.route(base + ':projectId/calculate/matches/averages')
-        .get(graph.findMatchAverage);
+      .get(graph.findMatchAverage);
 };

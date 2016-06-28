@@ -8,4 +8,9 @@
             <p>{{ issue.title }}</p>
         </button>
     </div>
+
+    <p ng-if="issues.length === 0">
+        It looks like we don't have any data from this repository. Go to Manage Data
+        and populate it! If you already populated, try to change your filter.
+    </p>
 </div>

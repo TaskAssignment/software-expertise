@@ -5,7 +5,7 @@ var Schema = mongoose.Schema;
 
 var ProjectSchema = new Schema({
     _id: {
-        type: String,
+        type: Number,
     },
     name: {
         type: String,

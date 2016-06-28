@@ -3,14 +3,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var CommentSchema = new Schema({
-    _id: String,
-    body: String,
-    user: String,
-    createdAt: Date,
-    updatedAt: Date
-});
-
 var TagSchema = new Schema({
     _id: String,
     issueCount: Number,
@@ -21,27 +13,28 @@ var IssueSchema = new Schema({
     //Using number here to sort properly. I'll think of something else.
     _id: Number,
     projectId: {
-        type: String,
+        type: Number,
         ref: 'Project',
     },
+    number: Number,
     reporterId: String,
     assigneeId: {
         type: String,
         default: undefined
     },
-    number: String,
     body: String,
     title: String,
-    pull_request: {
-        type: Boolean,
-        default: false
+    type: {
+        type: String,
+        default: 'IS' // 'IS' for issue and 'PR' for pull_request
     },
+    labels: [String],
     state: String,
     parsed: Boolean,
     createdAt: Date,
     updatedAt: Date,
+    url: String,
     tags: [TagSchema],
-    comments: [CommentSchema]
 });
 
 mongoose.model('Issue', IssueSchema);
