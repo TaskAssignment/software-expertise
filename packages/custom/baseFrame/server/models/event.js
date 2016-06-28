@@ -3,7 +3,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var IssueEventSchema = new Schema({
+var EventSchema = new Schema({
     //Using number here to sort properly. I'll think of something else.
     _id: Number,
     projectId: {
@@ -19,7 +19,11 @@ var IssueEventSchema = new Schema({
     commitId: String,
     typeOfEvent: String,
     assigneeId: String,
-    createdAt: Date
+    createdAt: Date,
+    isPrEvent: {
+        type: Boolean,
+        default: false, //IssueEvent or Pull Request Event
+    },
 });
 
-mongoose.model('IssueEvent', IssueEventSchema);
+mongoose.model('Event', EventSchema);

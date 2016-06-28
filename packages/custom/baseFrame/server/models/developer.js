@@ -4,6 +4,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var DeveloperSchema = new Schema({
+    email: String,
     profiles: {
         gh: {
             type: Number,

@@ -4,7 +4,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var GitHubProfileSchema = new Schema({
-    _id: { //GitHub username
+    _id: { //GitHub id
         type: Number,
         required: true,
         unique: true,
