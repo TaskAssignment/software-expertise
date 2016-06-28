@@ -30,7 +30,7 @@ module.exports = function (BaseFrame){
         populate: function (req, res) {
             var query = req.query;
             switch (query.option) {
-                case 'StopProject':
+                case 'StopWord':
                 case 'Developer':
                 case 'CoOccurrence':
                 case 'Tag':
