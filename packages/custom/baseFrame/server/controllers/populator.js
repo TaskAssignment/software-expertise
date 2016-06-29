@@ -566,35 +566,42 @@ function populateIssues(projectId){
         gitHubPopulate('Bug', url, buildModels);
     });
 }
-
+/** Create the 'GitHubProfile' for the contributors of the project.
+* If the developer is already on the database, add it as contributor.
+*
+* @param projectId - Id of a GitHub repository.
+**/
 function populateContributors(projectId){
     var url = projectId + '/contributors';
-    var Developer = mongoose.model('Developer');
+    var GitHubProfile = mongoose.model('GitHubProfile');
 
-    var buildContributor = function(result){
-        var filter = {
-            'ghProfile._id': result.login,
-        }
-        var updateFields = {
-            'ghProfile.email': result.email,
-        };
-
-        var findCallback = function (err) {
-            if(err){
-                console.log('=== Error Developer: ' + err.message);
+    var updateEmail = function (result) {
+        if(resutl.email){
+            var filter = {
+                _id: result.id,
             }
-        }
 
-        Developer.update(filter, updateFields, findCallback);
+            var updateFields = {
+                email: result.email,
+            };
+
+            var findCallback = function (err) {
+                if(err){
+                    console.log('=== Error GitHubProfile: ' + err.message);
+                }
+            }
+
+            GitHubProfile.update(filter, updateFields, findCallback);
+        }
     }
 
-    var buildModels = function(results){
+    var buildModels = function (results) {
         for (var result of results) {
             var updateFields = {
-                'ghProfile._id': result.login,
-                'ghProfile.email': result.email,
+                _id: result.id,
+                username: result.login,
                 $addToSet: {
-                    'ghProfile.repositories': projectId,
+                    repositories: projectId,
                 },
             };
 
@@ -605,16 +612,17 @@ function populateContributors(projectId){
 
             var findCallback = function (err, dev) {
                 if(err){
-                    console.log('=== Error Developer: ' + err.message);
-                } else {
-                    var user_url = 'https://api.github.com/users/' + dev._id;
-                    if(!dev.ghProfile.email){
-                        gitHubPopulate('Contributor', user_url, buildContributor, true);
-                    }
+                    console.log('=== Error GitHubProfile: ' + err.message);
+                    return null;
+                }
+
+                var user_url = 'https://api.github.com/users/' + dev.username;
+                if(!dev.email){
+                    gitHubPopulate('Contributor', user_url, updateEmail, true);
                 }
             }
 
-            Developer.findByIdAndUpdate(result.login, updateFields, options, findCallback);
+            GitHubProfile.findByIdAndUpdate(result.id, updateFields, options, findCallback);
         }
     }
 
