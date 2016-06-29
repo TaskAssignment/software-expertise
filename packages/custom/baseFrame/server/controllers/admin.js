@@ -17,11 +17,9 @@ var file = {};
 for(var model of models){
     populated[model] = {
         status: NOT_READY,
-        pagesAdded: 0
     };
     file[model] = {
         status: NOT_READY,
-        pagesAdded: 0
     };
 }
 
@@ -181,8 +179,6 @@ function writeFile(option,
     }
     csvStream.pipe(stream);
 
-    var counter = 0;
-
     dbStream.on('data', function (model) {
         counter++;
         if(option === 'CoOccurrence'){
@@ -195,8 +191,6 @@ function writeFile(option,
         if(model.createdAt){
             model.createdAt = model.createdAt.toISOString();
         }
-
-        file[option].linesRead = counter;
 
         csvStream.write(model);
     }).on('error', function (err) {
@@ -382,7 +376,6 @@ function writeDevs(){
         delete dev.soProfile;
 
         devCsvStream.write(dev);
-        file.Developer.linesRead = counter;
     }).on('error', function (err) {
         console.log('========== AAAAHHHHHH')
         console.log(err);
@@ -400,66 +393,66 @@ function writeDevs(){
     });
 }
 
-/** Helper function to read the files
+/** Basic flow to read files. It's assumed that, whatever the file name, it's
+* located on 'files/' (from the root of the project).
 *
-*  @param option - The Model that will be exported. The file will be the name of this model pluralized.
+*  @param {string} option - The Model name that will be import.
+*  @param {function} transform - The function that will transform the data before
+    writing it to the database.
+*  @param {boolean|array} headers - If true, it will consider the first line
+    of the file as headers. If an array is given, each entry will be a header.
+*  @param fileName - The name of file to be read. This should be a .tsv.
+    Default is option pluralized. E.g: option = Issue, fileName = Issues.tsv
 **/
+function readFile(option,
+            transform = undefined,
+            headers = true,
+            fileName = option + 's.tsv'){
 
-function readFile(option){
+    var MongooseModel = mongoose.model(option);
+
+    var path = 'files/' + fileName;
+    var options = {
+        delimiter: '\t',
+        headers: headers,
+        ignoreEmpty: true
+    }
+    var readable = fs.createReadStream(path, {encoding: 'utf8'});
+
+    console.log('** Reading file! **');
+    var models = [];
+    var readStream = csv.fromStream(readable, options);
+    if(transform){
+        readStream.transform(transform);
+    }
+    readStream.on('data', function(model){
+        models.push(model)
+    }).on('end', function(){
+        MongooseModel.collection.insert(models, function (err) {
+            if(err){
+                console.log(err.message);
+            } else {
+                console.log(option + 's populated');
+                console.log('***** DONE *****');
+            }
+            populated[option].status = READY;
+        });
+    });
+}
+
+/** Checks if the there are records of the given model in the database. If true,
+* just sets the status to READY. If false, reads a file and populate the DB.
+*
+* @param {string} option - The name of the to be checked
+**/
+function checkDatabase(option){
     var MongooseModel = mongoose.model(option);
 
     var countCallback = function (err, dbCount) {
         if(dbCount === 0) {
-            var path = 'files/' + option + 's.tsv';
-            var options = {
-                delimiter: '\t',
-                headers: true,
-                ignoreEmpty: true
-            }
-            var readable = fs.createReadStream(path, {encoding: 'utf8'});
-
-            console.log('** Reading file! **');
-            var models = [];
-            var counter = 0;
-            csv.fromStream(readable, options)
-            .on('data', function(model){
-                if(option === 'Developer'){
-                    delete model.tags;
-                    if(model.soId){
-                        model.soProfile = {
-                            _id: parseInt(model.soId),
-                            tags: [],
-                            questions: [],
-                            answers: [],
-                            soPopulated: false
-                        }
-                    }
-                    model.ghProfile = {
-                        _id: model._id,
-                        repositories: [],
-                        email: model.email
-                    }
-                    delete model.email;
-                    delete model.soId;
-                }
-
-                models.push(model)
-                counter++;
-                populated[option].linesRead = counter;
-            }).on('end', function(){
-                MongooseModel.collection.insert(models, function (err) {
-                    if(err){
-                        console.log(err);
-                    } else {
-                        console.log(option + 's populated');
-                        console.log('***** DONE *****');
-                    }
-                });
-                populated[option].status = READY;
-            });
+            readFile(option);
         } else {
             populated[option].status = READY;
-            populated[option].linesRead = dbCount;
         }
     }
 
