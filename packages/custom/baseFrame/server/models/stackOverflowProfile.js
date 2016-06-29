@@ -33,9 +33,10 @@ var TagSchema = new Schema({
     soCount: Number,
 });
 
-var SoProfileSchema = new Schema({
+var StackOverflowProfileSchema = new Schema({
     _id: Number,
     displayName: String,
+    email: String,
     isPopulated: {
         tags: {
             type: Boolean,
@@ -61,4 +62,4 @@ var SoProfileSchema = new Schema({
     timestamps: true
 });
 
-mongoose.model('StackOverflowProfile', SoProfileSchema);
+mongoose.model('StackOverflowProfile', StackOverflowProfileSchema);

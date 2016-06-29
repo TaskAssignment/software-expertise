@@ -5,7 +5,7 @@ var Schema = mongoose.Schema;
 
 var GitHubProfileSchema = new Schema({
     _id: { //GitHub id
-        type: Number,
+        type: String, //TODO:This is temporary!
         required: true,
         unique: true,
     },

@@ -8,8 +8,7 @@
   "mean": "0.5.5",
   "dependencies": {
     "fast-csv": "latest",
-    "jsdoc": "^3.4.0",
-    "mongoose-to-csv": "^0.1.0"
+    "jsdoc": "^3.4.0"
   },
   "license": "MIT",
   "scripts": {

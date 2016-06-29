@@ -29,10 +29,12 @@ module.exports = function (BaseFrame){
             var query = req.query;
             switch (query.option) {
                 case 'StopProject':
-                case 'Developer':
                 case 'CoOccurrence':
                 case 'Tag':
                     readFile(query.option);
+                    break;
+                case 'Developer':
+                    readDevs();
                     break;
                 default:
                     populate(query.option, query.project);
@@ -397,7 +399,7 @@ function writeDevs(){
 * located on 'files/' (from the root of the project).
 *
 *  @param {string} option - The Model name that will be import.
-*  @param {function} transform - The function that will transform the data before
+*  @param {function} transformCallback - The function that will transform the data before
     writing it to the database.
 *  @param {boolean|array} headers - If true, it will consider the first line
     of the file as headers. If an array is given, each entry will be a header.
@@ -405,7 +407,8 @@ function writeDevs(){
     Default is option pluralized. E.g: option = Issue, fileName = Issues.tsv
 **/
 function readFile(option,
-            transform = undefined,
+            transformCallback = undefined,
+            savingOnTransform = false,
             headers = true,
             fileName = option + 's.tsv'){
 
@@ -415,48 +418,83 @@ function readFile(option,
     var options = {
         delimiter: '\t',
         headers: headers,
-        ignoreEmpty: true
+        ignoreEmpty: true,
     }
     var readable = fs.createReadStream(path, {encoding: 'utf8'});
 
     console.log('** Reading file! **');
     var models = [];
+    var counter = 0;
     var readStream = csv.fromStream(readable, options);
-    if(transform){
-        readStream.transform(transform);
+
+    if(transformCallback){
+        readStream.transform(transformCallback);
     }
-    readStream.on('data', function(model){
-        models.push(model)
-    }).on('end', function(){
-        MongooseModel.collection.insert(models, function (err) {
-            if(err){
-                console.log(err.message);
-            } else {
-                console.log(option + 's populated');
-                console.log('***** DONE *****');
-            }
-            populated[option].status = READY;
+
+    if(!savingOnTransform){
+        readStream.on('data', function(model){
+            models.push(model);
         });
-    });
-}
-
-/** Checks if the there are records of the given model in the database. If true,
-* just sets the status to READY. If false, reads a file and populate the DB.
-*
-* @param {string} option - The name of the to be checked
-**/
-function checkDatabase(option){
-    var MongooseModel = mongoose.model(option);
-
-    var countCallback = function (err, dbCount) {
-        if(dbCount === 0) {
-            readFile(option);
+    }
+    readStream.on('end', function(){
+        if(!savingOnTransform){
+            MongooseModel.collection.insert(models, function (err) {
+                if(err){
+                    console.log(err.message);
+                } else {
+                    console.log(option + 's populated');
+                    console.log('***** DONE *****');
+                }
+                populated[option].status = READY;
+            });
         } else {
             populated[option].status = READY;
         }
+    });
+}
+
+/** Generates the callback to populate the common users.
+**/
+function readDevs(){
+    var transform = function (data) {
+        var GitHubProfile = mongoose.model('GitHubProfile');
+        var SoProfile = mongoose.model('StackOverflowProfile');
+
+        if(data.soId.length > 0){
+            var soProfile = {
+                _id: data.soId,
+                email: data.email,
+            }
+            SoProfile.create(soProfile, function (err){
+                if(err){
+                    console.log(err.message);
+                }
+            });
+        }
+        delete data.soId;
+        delete data.tags;
+
+        data.username = data._id;
+        // data._id = counter; // data.gitHubId; //Just untill I fix this!!!!
+        // counter++;
+        if(data.repositories.length > 0){
+            data.repositories = data.repositories.split(',');
+            data.repositories = data.repositories.map(Number);
+        } else {
+            data.repositories = [];
+        }
+
+        GitHubProfile.create(data, function (err){
+            if(err){
+                console.log(err.message);
+            }
+        });
     }
 
-    MongooseModel.count().exec(countCallback);
+    var savingOnTransform = true;
+
+    readFile('Developer', transform, savingOnTransform);
+
 }
 
 function populate(option, project = undefined){
