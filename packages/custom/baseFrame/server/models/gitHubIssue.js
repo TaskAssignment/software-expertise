@@ -6,11 +6,11 @@ var Schema = mongoose.Schema;
 var GitHubIssueSchema = new Schema({
     _id: Number,
     number: Number,
-    bugId: {
-        type: Number,
+    bug: {
+        type: String,
         ref: 'Bug',
     },
-    projectId: {
+    project: {
         type: Number,
         ref: 'Project',
     },

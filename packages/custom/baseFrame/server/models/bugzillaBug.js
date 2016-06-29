@@ -7,7 +7,7 @@ var BugzillaBugSchema = new Schema({
     _id: Number,
     severity: String,
     bugId: {
-        type: Number,
+        type: String,
         ref: 'Bug',
     },
     assignee: {

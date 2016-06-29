@@ -5,12 +5,12 @@ var Schema = mongoose.Schema;
 
 var TagSchema = new Schema({
     _id: String,
-    issueCount: Number,
+    bugCount: Number,
     soCount: Number
 });
 
 var BugSchema = new Schema({
-    _id: Number,
+    _id: String,
     title: String,
     body: String,
     status: String,

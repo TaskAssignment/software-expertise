@@ -9,7 +9,7 @@ var csv = require('fast-csv');
 var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
 
-var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit', 'Comment',
+var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit', 'Comment',
   'Language', 'Project', 'IssueEvent', 'StopWord', 'Contributor', 'IssueComment', 'CommitComment'];
 
 var populated = {};

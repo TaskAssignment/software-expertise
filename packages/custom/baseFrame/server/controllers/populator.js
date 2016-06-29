@@ -6,7 +6,7 @@ var mongoose = require('mongoose');
 var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
 
-var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit',
+var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit',
   'CommitComment', 'IssueComment', 'Language', 'Project', 'IssueEvent', 'Contributor'];
 
 var populated = {project: {items: {}}};
@@ -21,7 +21,7 @@ var ACCESS_TOKENS = [
     'access_token=Al(Mk7j*crIMRteMw7AnZg))&key=Ctt)0cvvDQttNSj9wmv38g((',
     'access_token=*NptX8UDdghuEVxycU3BIQ))&key=J1y9C6i6AhWLcgHAyC2iOQ((',
     'access_token=(CnKXfjNGlEWcTd7yT7s0A))&key=vRMoDd5M)SvR0OSzLWQIfw((',
-    'access_token=oXBWhENXHQZJY8h8LAykUw))&key=unaHxXqTCHJ5Ve6AfnIJGg(('
+    'access_token=oXBWhENXHQZJY8h8LAykUw))&key=unaHxXqTCHJ5Ve6AfnIJGg((',
 ]
 var stopRequests = false;
 var delay = 34; // 34 ms to assure that there will be no more than 30 requests per second.
@@ -36,7 +36,7 @@ module.exports = function (BaseFrame) {
                 case 'Developer':
                     populateContributors(id);
                     break;
-                case 'Issue':
+                case 'Bug':
                     var StopWord = mongoose.model('StopWord');
                     StopWord.find().lean().exec(function (err, words) {
                         stopWords = words.map(function (word){
@@ -413,35 +413,47 @@ function populateLanguages(id){
     gitHubPopulate('Language', url, buildModels);
 }
 
-function populateIssues(id){
-    var Issue = mongoose.model('Issue');
-    Issue.findOne({projectId: id}, '-_id createdAt', {sort: '-createdAt', lean:true},function (err, lastCreated){
-        var url = id + '/issues?state=all&sort=created&direction=asc'
+/** Populate Issues from a specific project on GitHub.
+* It creates 'tags' based on the text of the issue and on the StackOverflow tags.
+*
+* @param projectId - Id of a GitHub repository.
+**/
+function populateIssues(projectId){
+    var GitHubIssue = mongoose.model('GitHubIssue');
+    var filter = {
+        projectId: projectId,
+    }
+
+    GitHubIssue.findOne(filter).populate('bug').sort('-bug.createdAt')
+    .exec(function (err, lastCreated){
+        var url = projectId + '/issues?state=all&sort=created&direction=asc';
 
         if(lastCreated){
-            lastCreated.createdAt.setSeconds(lastCreated.createdAt.getSeconds() + 1);
-            url +='&since=' + lastCreated.createdAt.toISOString();
+            var time = lastCreated.bug.createdAt;
+            time.setSeconds(time.getSeconds() + 1);
+            url +='&since=' + time.toISOString();
         }
 
-        function saveIssue(issue) {
-            Issue.update({_id: issue._id}, issue, {upsert:true})
+        function save(bug, model = 'Bug') {
+            var MongooseModel = mongoose.model(model);
+            MongooseModel.update({_id: bug._id}, bug, {upsert:true})
             .exec(function(err){
                 if(err){
-                    console.log('=== Error Issue: ' + err.message);
+                    console.log('=== Error ' + model + ': ' + err.message);
                 } else {
-                    console.log('Issue #' + issue.number + ' saved.');
-                    issue = null;
+                    console.log(model + ' ID:' + bug._id + ' saved.');
+                    bug = null;
                 }
             });
         }
 
-        function makeTags(issue) {
-            var title = issue.title + ' ' + selectedProject.description;
+        function makeTags(bug) {
+            var title = bug.title + ' ' + selectedProject.description;
             title = title.toLowerCase().split(' ');
 
             var body = [];
-            if(issue.body){ //It may not have a body.
-                body = issue.body.toLowerCase().split(' ');
+            if(bug.body){ //It may not have a body.
+                body = bug.body.toLowerCase().split(' ');
             }
 
             // word: count
@@ -489,59 +501,69 @@ function populateIssues(id){
                 for(var i in tags){
                     var tag = tags[i];
 
-                    var issueTag = {
+                    var bugTag = {
                         _id: tag._id,
                         soCount: tag.soTotalCount,
-                        issueCount: allWords[tag._id]
+                        bugCount: allWords[tag._id]
                     };
 
-                    issue.tags.push(issueTag);
+                    bug.tags.push(bugTag);
                 }
-                issue.parsed = true;
-                saveIssue(issue);
+                bug.parsed = true;
+                save(bug);
             });
         }
 
         var buildModels = function(results){
-            for (var i in results) {
-                var result = results[i];
-                var issue = {
+            for(var result of results) {
+                var bug = {
+                    _id: 'GH' + result.id,
+                    title: result.title,
+                    body: result.body,
+                    status: result.state,
+                    labels: [],
+                    createdAt: new Date(result.created_at),
+                    author: result.user.login
+                    url: result.html_url,
+                    tags: [],
+                    closedBy: result.closed_by,
+                    closedAt: result.closed_at,
+                    updatedAt: new Date(result.updated_at),
+                    parsed: false,
+                }
+
+                var ghIssue = {
                     _id: result.id,
                     number: result.number,
-                    body: result.body,
-                    title: result.title,
-                    state: result.state,
-                    projectId: id,
-                    parsed: false,
-                    type: 'IS',
-                    tags: [],
-                    comments: [],
-                    labels: [],
-                    url: result.html_url,
-                    createdAt: new Date(result.created_at),
-                    updatedAt: new Date(result.updated_at),
-                    reporterId: result.user.login
+                    project: projectId,
+                    bug: bug._id,
+                    isPR: false,
+                    assignees: [],
                 }
 
-                if(result.assignee){
-                    issue.assigneeId = result.assignee.login;
+                for(var assignee of assignees){
+                    var new_assignee = {
+                        username: assignee.login,
+                        id: assignee.id,
+                    }
+                    issues.assignees.push(new_assignee);
                 }
+
 
                 if(result.pull_request){
-                    issue.type = 'PR';
+                    issue.isPR = true;
                 }
 
-                if(result.labels){
-                    for(var label of result.labels){
-                        issue.labels.push(label.name);
-                    }
+                for(var label of result.labels){
+                    bug.labels.push(label.name);
                 }
 
-                makeTags(issue);
+                makeTags(bug);
+                save(issue, 'GitHubIssue');
             }
         }
 
-        gitHubPopulate('Issue', url, buildModels);
+        gitHubPopulate('Bug', url, buildModels);
     });
 }
 
