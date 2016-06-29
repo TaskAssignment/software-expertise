@@ -15,8 +15,10 @@ var GitHubIssueSchema = new Schema({
         ref: 'Project',
     },
     assignees: [{
-        username: String,
-        id: Number,
+        username: {
+            type: String,
+            ref: 'GitHubProfile',
+        },
     }],
     isPR: { // Is this a pull request?
         type: Boolean,

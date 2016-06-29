@@ -601,17 +601,16 @@ function populateIssues(projectId){
                     assignees: [],
                 }
 
-                for(var assignee of assignees){
+                for(var assignee of result.assignees){
                     var new_assignee = {
                         username: assignee.login,
-                        id: assignee.id,
                     }
-                    issues.assignees.push(new_assignee);
+                    ghIssue.assignees.push(new_assignee);
                 }
 
 
                 if(result.pull_request){
-                    issue.isPR = true;
+                    ghIssue.isPR = true;
                 }
 
                 for(var label of result.labels){
@@ -619,7 +618,7 @@ function populateIssues(projectId){
                 }
 
                 makeTags(bug);
-                save(issue, 'GitHubIssue');
+                save(ghIssue, 'GitHubIssue');
             }
         }
 
@@ -639,7 +638,7 @@ function populateContributors(projectId){
     var updateEmail = function (result) {
         if(result.email){
             var filter = {
-                _id: result.id,
+                _id: result.login,
             }
 
             var updateFields = {
@@ -659,8 +658,7 @@ function populateContributors(projectId){
     var buildModels = function (results) {
         for (var result of results) {
             var updateFields = {
-                _id: result.id,
-                username: result.login,
+                _id: result.login,
                 $addToSet: {
                     repositories: projectId,
                 },
@@ -683,7 +681,7 @@ function populateContributors(projectId){
                 }
             }
 
-            GitHubProfile.findByIdAndUpdate(result.id, updateFields, options, findCallback);
+            GitHubProfile.findByIdAndUpdate(result.login, updateFields, options, findCallback);
         }
     }
 

@@ -431,11 +431,12 @@ function readFile(option,
         readStream.transform(transformCallback);
     }
 
-    if(!savingOnTransform){
-        readStream.on('data', function(model){
+    readStream.on('data', function(model){
+        if(!savingOnTransform){
             models.push(model);
-        });
-    }
+        }
+    });
+
     readStream.on('end', function(){
         if(!savingOnTransform){
             MongooseModel.collection.insert(models, function (err) {
@@ -474,9 +475,6 @@ function readDevs(){
         delete data.soId;
         delete data.tags;
 
-        data.username = data._id;
-        // data._id = counter; // data.gitHubId; //Just untill I fix this!!!!
-        // counter++;
         if(data.repositories.length > 0){
             data.repositories = data.repositories.split(',');
             data.repositories = data.repositories.map(Number);

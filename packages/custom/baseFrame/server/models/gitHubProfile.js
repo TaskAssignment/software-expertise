@@ -4,12 +4,11 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var GitHubProfileSchema = new Schema({
-    _id: { //GitHub id
-        type: String, //TODO:This is temporary!
+    _id: { //GitHub login
+        type: String,
         required: true,
         unique: true,
     },
-    username: String,
     email: String,
     repositories: [{
         type: Number,
@@ -17,7 +16,7 @@ var GitHubProfileSchema = new Schema({
         unique: true,
     }],
 }, {
-    timestamps: true
+    timestamps: true,
 });
 
 mongoose.model('GitHubProfile', GitHubProfileSchema);

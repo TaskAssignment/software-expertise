@@ -56,7 +56,7 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
             projectSpecific: true,
             noModel: false,
         },
-        Issue: {
+        Bug: {
             label: 'Issues',
             projectSpecific: true,
             noModel: false,
