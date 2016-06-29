@@ -259,7 +259,7 @@ function populateUserTags(ids, projectId, filter = 'default', site = 'stackoverf
     url += '&filter=' + filter;
 
     var Tag = mongoose.model('Tag');
-    var Developer = mongoose.model('Developer');
+    var SoProfile = mongoose.model('StackOverflowProfile');
 
     var findTags = function (tag, result){
         Tag.findOne({_id: tag._id}, function (err, dbTag){
@@ -271,18 +271,17 @@ function populateUserTags(ids, projectId, filter = 'default', site = 'stackoverf
             }
 
             var filter = {
-                'soProfile._id': result.user_id,
-                'ghProfile.repositories': projectId
+                _id: result.user_id,
             }
 
             var updateFields = {
                 $addToSet: {
-                    'soProfile.tags': tag
+                    tags: tag,
                 },
-                'soProfile.soPopulated': true
+                'isPopulated.tags': true,
             };
 
-            Developer.update(filter, updateFields).exec(function(err){
+            SoProfile.update(filter, updateFields).exec(function(err){
                 if(err){
                     console.log('=== Error UserTags: ' + err.message);
                 } else {
@@ -333,7 +332,7 @@ function populateAnswers(ids, projectId, filter = 'default', obj = 'users/', sit
     url += '&site=' + site;
     url += '&filter=' + filter;
 
-    var Developer = mongoose.model('Developer');
+    var SoProfile = mongoose.model('StackOverflowProfile');
 
     var buildModels = function(items){
         for(var result of items){
@@ -344,23 +343,23 @@ function populateAnswers(ids, projectId, filter = 'default', obj = 'users/', sit
                 title: result.title,
                 score: result.score,
                 tags: result.tags,
-                //Time comes in seconds on Stack Exchange API
+                //Time comes in seconds on the Stack Exchange API
                 createdAt: new Date(result.creation_date * 1000),
                 updatedAt: new Date(result.last_activity_date * 1000)
             };
 
             var filter = {
-                'soProfile._id': result.owner.user_id,
-                'ghProfile.repositories': projectId,
+                _id: result.owner.user_id,
             }
 
             var updateFields = {
                 $addToSet: {
-                    'soProfile.answers': answer
-                }
+                    answers: answer,
+                },
+                'isPopulated.answers': true,
             };
 
-            Developer.update(filter, updateFields).exec(function (err){
+            SoProfile.update(filter, updateFields).exec(function (err){
                 if(err){
                     console.log('=== Error Answers: ' + err.message);
                 } else {
@@ -411,14 +410,14 @@ function populateQuestions(ids, projectId, filter = 'default', obj = 'users/', s
             };
 
             var filter = {
-                'soProfile._id': result.owner.user_id,
-                'ghProfile.repositories': projectId,
+                _id: result.owner.user_id,
             }
 
             var updateFields = {
                 $addToSet: {
-                    'soProfile.questions': question
-                }
+                    questions: question,
+                },
+                'isPopulated.answers': true,
             };
 
             Developer.update(filter, updateFields).exec(function (err){
@@ -638,7 +637,7 @@ function populateContributors(projectId){
     var GitHubProfile = mongoose.model('GitHubProfile');
 
     var updateEmail = function (result) {
-        if(resutl.email){
+        if(result.email){
             var filter = {
                 _id: result.id,
             }

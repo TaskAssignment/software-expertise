@@ -1,7 +1,7 @@
 'use strict';
 
 var mongoose = require('mongoose');
-var Issue = mongoose.model('Issue');
+// var Issue = mongoose.model('Issue');
 var CoOccurrence = mongoose.model('CoOccurrence');
 var Developer = mongoose.model('Developer');
 
