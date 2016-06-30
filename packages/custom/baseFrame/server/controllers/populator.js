@@ -9,7 +9,7 @@ var NOT_READY = 202; //Send accepted status code
 var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit',
   'CommitComment', 'IssueComment', 'Language', 'Project', 'Event', 'Contributor'];
 
-var populated = {project: {items: {}}};
+var populated = {};
 for(var model of models){
     populated[model] = NOT_READY;
 }

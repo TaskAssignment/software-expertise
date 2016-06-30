@@ -400,18 +400,19 @@ function readFile(modelName,
         headers: headers,
         ignoreEmpty: true,
     }
-    var readable = fs.createReadStream(path, {encoding: 'utf8'});
-
     console.log('** Reading file! **');
-    var models = [];
-    var counter = 0;
+
+    var readable = fs.createReadStream(path, {encoding: 'utf8'});
     var readStream = csv.fromStream(readable, options);
 
     if(transformCallback){
-        readStream.transform(transformCallback);
+        readStream.on('data', function(data){
+            transformCallback(data)
+        });
     }
 
     if(!savingOnTransform){
+        var models = [];
         readStream.on('data', function(model){
             models.push(model);
         }).on('end', function () {
@@ -424,7 +425,7 @@ function readFile(modelName,
                 }
                 changeStatus(modelName, READY, 'populated');
             });
-        })
+        });
     } else {
         readStream.on('end', function(){
             changeStatus(modelName, READY, 'populated');
@@ -441,18 +442,11 @@ function readDevs(){
     var Developer = mongoose.model('Developer');
 
     var transform = function (data) {
-        var soProfile = {};
-
-        if(data.soId.length > 0){
-            soProfile._id = data.soId;
-            soProfile.email = data.email;
-
-            StackOverflowProfile.create(soProfile, function (err){
-                if(err){
-                    console.log(err.message);
-                }
-            });
-        }
+        StackOverflowProfile.create({_id: data.soId, email: data.email}, function (err){
+            if(err){
+                console.log(err.message);
+            }
+        });
 
         GitHubProfile.create(data, function (err){
             if(err){
@@ -466,14 +460,14 @@ function readDevs(){
         var updateFields = {
             $addToSet: {
                 'profiles.gh': data._id,
-                'profiles.so': soProfile._id,
+                'profiles.so': data.soId,
             },
         }
         var options = {
             upsert: true,
         }
 
-        Developer.findOneAndUpdate(dev, updateFields, options, function (err){
+        Developer.update(dev, updateFields, options, function (err){
             if(err){
                 console.log(err.message);
             }
@@ -481,7 +475,6 @@ function readDevs(){
     }
 
     var savingOnTransform = true;
-
     readFile('Developer', transform, savingOnTransform);
 }
 
