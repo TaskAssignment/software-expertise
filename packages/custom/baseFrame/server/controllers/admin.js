@@ -10,17 +10,16 @@ var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
 
 var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit', 'Comment',
-  'Language', 'Project', 'IssueEvent', 'StopWord', 'Contributor', 'IssueComment', 'CommitComment', 'GitHubIssue'];
+  'Language', 'Project', 'Event', 'StopWord', 'Contributor', 'IssueComment',
+  'CommitComment', 'GitHubIssue'];
 
-var populated = {};
-var file = {};
+var statuses = {};
+
 for(var model of models){
-    populated[model] = {
-        status: NOT_READY,
-    };
-    file[model] = {
-        status: NOT_READY,
-    };
+    statuses[model] = {
+        populated: NOT_READY,
+        generated: NOT_READY,
+    }
 }
 
 module.exports = function (BaseFrame){
@@ -40,7 +39,7 @@ module.exports = function (BaseFrame){
                     populate(query.option, query.project);
             }
 
-            res.status(NOT_READY).send(populated[query.option]);
+            res.sendStatus(NOT_READY);
         },
 
         generate: function (req, res) {
@@ -52,15 +51,14 @@ module.exports = function (BaseFrame){
                     writeAnswersAndQuestions();
                     // writeDevs();
                     break;
-                case 'IssueEvent':
+                case 'Event':
                     var headers = ['_id', 'projectId', 'issueId', 'issueNumber',
                       'actor', 'commitId', 'typeOfEvent', 'assigneeId',
                       'createdAt'];
-                    writeFile('IssueEvent', headers);
+                    writeFile('Event', headers);
                     break;
                 case 'IssueComment':
                     writeIssueComments();
-                    saveTimestamp(option, 'files/IssueComments.tsv');
                     break;
                 case 'Bug':
                     writeBugs();
@@ -70,13 +68,12 @@ module.exports = function (BaseFrame){
                     break;
                 case 'CommitComment':
                     writeCommitComments();
-                    saveTimestamp(option, 'files/CommitComments.tsv');
                     break;
                 default:
                     writeFile(option);
                     break;
             }
-            res.status(NOT_READY).send(file[option]);
+            res.sendStatus(NOT_READY);
         },
 
         oauth: function (req, res) {
@@ -112,7 +109,7 @@ module.exports = function (BaseFrame){
             }
 
             if(!populate){
-                res.status(file[option].status).send(file[option]);
+                res.sendStatus(getStatus(option));
             } else {
                 var populator = require('../controllers/populator')();
                 switch (option) {
@@ -123,7 +120,7 @@ module.exports = function (BaseFrame){
                     case 'Developer':
                     case 'CoOccurrence':
                     case 'Tag':
-                        res.sendStatus(populated[option].status);
+                        res.sendStatus(getStatus(option, 'populated'));
                         break;
                     default:
                         res.sendStatus(populator.check(option));
@@ -148,7 +145,6 @@ module.exports = function (BaseFrame){
 function saveTimestamp(option, path){
     var GenerateFileLog = mongoose.model('GenerateFileLog');
     var update = {
-        filePath: path,
         timestamp: new Date(),
     };
     GenerateFileLog.update({model: option}, update, {upsert: true}).exec();
@@ -204,10 +200,12 @@ function writeFile(modelName,
         csvStream.end();
         console.log('* Finished! *');
         changeStatus(modelName, READY);
-        saveTimestamp(modelName, path);
     });
 }
 
+
+/** Export bugs to file
+**/
 function writeBugs(){
     var headers = ['_id', 'projectId', 'number', 'title',
       'body', 'labels', 'status', 'reporterLogin',
@@ -489,6 +487,39 @@ function populate(option, project = undefined){
     }
 }
 
-function changeStatus(model, status, option = 'file'){
+function getStatus(model, option = 'generated'){
+    switch (model) {
+        case 'CommitComment':
+        case 'IssueComment':
+        case 'Comment':
+            model = 'Comment';
+            break;
+        case 'Bug':
+        case 'Issue':
+        case 'GitHubIssue':
+        case 'BugzillaBug':
+            model = 'Bug';
+            break;
+    }
+    return statuses[model][option];
+}
 
+function changeStatus(model, status, option = 'generated'){
+    switch (model) {
+        case 'CommitComment':
+        case 'IssueComment':
+        case 'Comment':
+            model = 'Comment';
+            break;
+        case 'Bug':
+        case 'Issue':
+        case 'GitHubIssue':
+        case 'BugzillaBug':
+            model = 'Bug';
+            break;
+    }
+    statuses[model][option] = status;
+    if(status === READY){
+        saveTimestamp(model);
+    }
 }

@@ -7,7 +7,7 @@ var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
 
 var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit',
-  'CommitComment', 'IssueComment', 'Language', 'Project', 'IssueEvent', 'Contributor'];
+  'CommitComment', 'IssueComment', 'Language', 'Project', 'Event', 'Contributor'];
 
 var populated = {project: {items: {}}};
 for(var model of models){
@@ -55,7 +55,7 @@ module.exports = function (BaseFrame) {
                         }
                     });
                     break;
-                case 'IssueEvent':
+                case 'Event':
                     populateEvents(id);
                     break;
                 case 'IssueComment':
@@ -759,10 +759,10 @@ function populateCommits(projectId){
 **/
 function populateEvents(projectId){
     var url = projectId + '/issues/events'
-    var IssueEvent = mongoose.model('IssueEvent');
+    var Event = mongoose.model('Event');
 
     var buildModels = function(results){
-        var issueEvents = [];
+        var events = [];
         for (var result of results) {
             if(result.issue){
                 var issueEvent = {
@@ -785,20 +785,20 @@ function populateEvents(projectId){
                     issueEvent.assigneeId = result.assignee.login;
                 }
 
-                issueEvents.push(issueEvent);
+                events.push(issueEvent);
             }
         }
 
-        IssueEvent.create(issueEvents, function(err){
+        Event.create(events, function(err){
             if(err){
-                console.log('=== Error IssueEvent: ' + err.message);
+                console.log('=== Error Event: ' + err.message);
             } else {
                 console.log('Events Created');
             }
         });
 
     }
-    gitHubPopulate('IssueEvent', url, buildModels);
+    gitHubPopulate('Event', url, buildModels);
 }
 
 /** Fetch comments from a repository. They may be on issue or commits, depending

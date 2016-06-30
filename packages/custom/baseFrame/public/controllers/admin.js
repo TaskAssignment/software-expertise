@@ -61,7 +61,7 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
             projectSpecific: true,
             noModel: false,
         },
-        IssueEvent: {
+        Event: {
             label: 'Issue Events',
             projectSpecific: true,
             noModel: false,
