@@ -9,19 +9,23 @@ var csv = require('fast-csv');
 var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
 
-var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit', 'Comment',
-  'Language', 'Project', 'Event', 'StopWord', 'Contributor', 'IssueComment',
-  'CommitComment', 'GitHubIssue'];
-
 var statuses = {};
 
-for(var model of models){
-    statuses[model] = {
-        populated: NOT_READY,
-        generated: NOT_READY,
-    }
-}
+initialStatus();
 
+function initialStatus(){
+    var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit', 'Comment',
+      'Language', 'Project', 'Event', 'StopWord', 'Contributor', 'IssueComment',
+      'CommitComment', 'GitHubIssue'];
+
+    for(var model of models){
+        statuses[model] = {
+            populated: NOT_READY,
+            generated: NOT_READY,
+        }
+    }
+
+}
 module.exports = function (BaseFrame){
     return {
         populate: function (req, res) {
@@ -407,14 +411,10 @@ function readFile(modelName,
         readStream.transform(transformCallback);
     }
 
-    readStream.on('data', function(model){
-        if(!savingOnTransform){
+    if(!savingOnTransform){
+        readStream.on('data', function(model){
             models.push(model);
-        }
-    });
-
-    readStream.on('end', function(){
-        if(!savingOnTransform){
+        }).on('end', function () {
             MongooseModel.collection.insert(models, function (err) {
                 if(err){
                     console.log(err.message);
@@ -424,19 +424,23 @@ function readFile(modelName,
                 }
                 changeStatus(modelName, READY, 'populated');
             });
-        } else {
+        })
+    } else {
+        readStream.on('end', function(){
             changeStatus(modelName, READY, 'populated');
-        }
-    });
+        });
+    }
+
 }
 
 /** Generates the callback to populate the common users.
 **/
 function readDevs(){
-    var transform = function (data) {
-        var GitHubProfile = mongoose.model('GitHubProfile');
-        var StackOverflowProfile = mongoose.model('StackOverflowProfile');
+    var GitHubProfile = mongoose.model('GitHubProfile');
+    var StackOverflowProfile = mongoose.model('StackOverflowProfile');
+    var Developer = mongoose.model('Developer');
 
+    var transform = function (data) {
         var soProfile = {};
 
         if(data.soId.length > 0){
@@ -449,9 +453,6 @@ function readDevs(){
                 }
             });
         }
-        delete data.soId;
-        delete data.tags;
-        delete data.repositories;
 
         GitHubProfile.create(data, function (err){
             if(err){
@@ -459,7 +460,6 @@ function readDevs(){
             }
         });
 
-        var Developer = mongoose.model('Developer');
         var dev = {
             email: data.email,
         }
@@ -476,11 +476,8 @@ function readDevs(){
         Developer.findOneAndUpdate(dev, updateFields, options, function (err){
             if(err){
                 console.log(err.message);
-            } else {
-                console.log('Common Profile created: ' + data._id + ' & ' + soProfile._id);
             }
         });
-
     }
 
     var savingOnTransform = true;
