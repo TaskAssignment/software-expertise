@@ -10,7 +10,7 @@ var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
 
 var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit', 'Comment',
-  'Language', 'Project', 'IssueEvent', 'StopWord', 'Contributor', 'IssueComment', 'CommitComment'];
+  'Language', 'Project', 'IssueEvent', 'StopWord', 'Contributor', 'IssueComment', 'CommitComment', 'GitHubIssue'];
 
 var populated = {};
 var file = {};
@@ -49,7 +49,8 @@ module.exports = function (BaseFrame){
             switch (option) {
                 case 'Developer':
                 case 'Contributor':
-                    writeDevs();
+                    writeAnswersAndQuestions();
+                    // writeDevs();
                     break;
                 case 'IssueEvent':
                     var headers = ['_id', 'projectId', 'issueId', 'issueNumber',
@@ -61,8 +62,8 @@ module.exports = function (BaseFrame){
                     writeIssueComments();
                     saveTimestamp(option, 'files/IssueComments.tsv');
                     break;
-                case 'Issue':
-                    writeIssues();
+                case 'Bug':
+                    writeBugs();
                     break;
                 case 'Commit':
                     writeCommits();
@@ -157,35 +158,36 @@ function saveTimestamp(option, path){
 *
 * @param option - The Model that will be exported. The file will be the name of this model pluralized.
 **/
-function writeFile(option,
+function writeFile(modelName,
             headers = true,
             transform = undefined,
-            fileName = option + 's.tsv',
+            fileName = modelName + 's.tsv',
             items = '-updatedAt -__v',
-            filter = {}){
+            filter = {},
+            populate = ''){
     var path = 'files/' + fileName;
 
-    var MongooseModel = mongoose.model(option);
+    var MongooseModel = mongoose.model(modelName);
     var stream = fs.createWriteStream(path);
 
-    var dbStream = MongooseModel.find(filter).select(items).lean().stream();
+    var dbStream = MongooseModel.find(filter).select(items).populate(populate).lean().stream();
 
-    var options = {
+    var csvOptions = {
         delimiter: '\t',
         headers: headers
     }
 
-    var csvStream = csv.createWriteStream(options);
+    var csvStream = csv.createWriteStream(csvOptions);
     if(transform){
         csvStream.transform(transform);
     }
     csvStream.pipe(stream);
 
     dbStream.on('data', function (model) {
-        counter++;
-        if(option === 'CoOccurrence'){
+        //TODO: Change this to use transform!!
+        if(modelName === 'CoOccurrence'){
             delete model._id;
-        } else if (option === 'Project'){
+        } else if (modelName === 'Project'){
             model.languages = model.languages.map(function (lang) {
                 return lang._id + ':' + lang.amount;
             });
@@ -201,32 +203,39 @@ function writeFile(option,
     }).on('close', function (){
         csvStream.end();
         console.log('* Finished! *');
-        file[option].status = READY;
-        saveTimestamp(option, path);
+        changeStatus(modelName, READY);
+        saveTimestamp(modelName, path);
     });
 }
 
-function writeIssues(){
+function writeBugs(){
     var headers = ['_id', 'projectId', 'number', 'title',
-      'body', 'type', 'labels', 'state', 'reporterLogin',
-      'assigneeLogin', 'createdAt', 'url'];
+      'body', 'labels', 'status', 'reporterLogin',
+      'assigneesLogins', 'createdAt', 'url'];
 
     var transform = function (row) {
-        if(row.body){
-            row.body = row.body
+        if(row.bug.body){
+            row.bug.body = row.bug.body
               .replace(/\t/g, '        ');
-            row.body = row.body
+            row.bug.body = row.bug.body
               .replace(/(?:\r\n|\r|\n)/g, '                ');
-            row.body = row.body
+            row.bug.body = row.bug.body
               .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
         }
-        row.reporterLogin = row.reporterId;
-        row.assigneeLogin = row.assigneeId;
-        delete row.reporterId;
-        delete row.assigneeId;
-        return row;
+        row.bug.createdAt = row.bug.createdAt.toISOString();
+
+        row.bug.projectId = row.project;
+        row.bug.number = row.number;
+        row.bug.reporterLogin = row.bug.author;
+        row.bug.assigneesLogins = [];
+        for(var assignee of row.assignees){
+            row.bug.assigneesLogins.push(assignee.username);
+        }
+        delete row.bug.author;
+        return row.bug;
     }
-    writeFile('Issue', headers, transform);
+    writeFile('GitHubIssue', headers, transform, 'Bugs.tsv', '-updatedAt -__v',
+    {isPR: false}, 'bug');
 }
 
 function writeIssueComments(){
@@ -283,28 +292,24 @@ function writeCommitComments() {
       '-__v', {type: 'commit'});
 }
 
-function writeDevs(){
+/** Writes StackOverflow answers and questions to .tsv files. They are called
+* 'Answers.tsv' and 'Questions.tsv' and are on the 'files/' folder.
+**/
+function writeAnswersAndQuestions(){
     console.log('** Generating developers file **');
     var items = '-updatedAt -createdAt -__v'
-    var Developer = mongoose.model('Developer');
-    var dbStream = Developer.find().select(items).lean().stream();
+    var SoProfile = mongoose.model('StackOverflowProfile');
+    var dbStream = SoProfile.find().select(items).lean().stream();
 
-    var devFilePath = 'files/Developers.tsv';
     var questionFilePath = 'files/Questions.tsv';
     var answerFilePath = 'files/Answers.tsv';
-    var devStream = fs.createWriteStream(devFilePath);
     var questionStream = fs.createWriteStream(questionFilePath);
     var answerStream = fs.createWriteStream(answerFilePath);
 
     var options = {
         delimiter: '\t',
-        headers: ['_id', 'email', 'repositories', 'soId', 'tags']
+        headers: true,
     }
-
-    var devCsvStream = csv.createWriteStream(options);
-    devCsvStream.pipe(devStream);
-
-    options.headers = true;
 
     var questionCsvStream = csv.createWriteStream(options);
     questionCsvStream.pipe(questionStream);
@@ -312,84 +317,57 @@ function writeDevs(){
     var answerCsvStream = csv.createWriteStream(options);
     answerCsvStream.pipe(answerStream);
 
-    var counter = 0;
     dbStream.on('data', function (dev) {
-        counter++;
-        dev.email = dev.ghProfile.email;
-        dev.repositories = dev.ghProfile.repositories;
-        if(dev.soProfile){
-            for(var question of dev.soProfile.questions){
-                question.body = question.body
-                  .replace(/\t/g, '        ');
-                question.body = question.body
-                  .replace(/(?:\r\n|\r|\n)/g, '                ');
-                question.body = question.body
-                  .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
-                question.askerId = dev._id;
-                question.askerSoId = dev.soProfile._id;
+        for(var question of dev.questions){
+            question.body = question.body
+              .replace(/\t/g, '        ');
+            question.body = question.body
+              .replace(/(?:\r\n|\r|\n)/g, '                ');
+            question.body = question.body
+              .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
+            question.askerEmail = dev.email;
+            question.askerSoId = dev._id;
 
-                if(question.createdAt){
-                    question.createdAt = question.createdAt.toISOString();
-                }
-
-                if(question.updatedAt){
-                    question.updatedAt = question.updatedAt.toISOString();
-                }
-                questionCsvStream.write(question);
+            if(question.createdAt){
+                question.createdAt = question.createdAt.toISOString();
             }
 
-            for(var answer of dev.soProfile.answers){
-                answer.body = answer.body
-                  .replace(/\t/g, '        ');
-                answer.body = answer.body
-                  .replace(/(?:\r\n|\r|\n)/g, '                ');
-                answer.body = answer.body
-                  .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
-                answer.answererId = dev._id;
-                answer.answererSoId = dev.soProfile._id;
+            if(question.updatedAt){
+                question.updatedAt = question.updatedAt.toISOString();
+            }
+            questionCsvStream.write(question);
+        }
 
-                if(answer.createdAt){
-                    answer.createdAt = answer.createdAt.toISOString();
-                }
+        for(var answer of dev.answers){
+            answer.body = answer.body
+              .replace(/\t/g, '        ');
+            answer.body = answer.body
+              .replace(/(?:\r\n|\r|\n)/g, '                ');
+            answer.body = answer.body
+              .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
+            answer.answererEmail = dev.email;
+            answer.answererSoId = dev._id;
 
-                if(answer.updatedAt){
-                    answer.updatedAt = answer.updatedAt.toISOString();
-                }
-
-                answerCsvStream.write(answer);
+            if(answer.createdAt){
+                answer.createdAt = answer.createdAt.toISOString();
             }
 
-            dev.soId = dev.soProfile._id;
+            if(answer.updatedAt){
+                answer.updatedAt = answer.updatedAt.toISOString();
+            }
 
-            dev.tags = dev.soProfile.tags.map(function (tag) {
-                return tag._id;
-            });
+            answerCsvStream.write(answer);
         }
 
-        if(dev.createdAt){
-            dev.createdAt = dev.createdAt.toISOString();
-        }
-
-        if(dev.updatedAt){
-            dev.updatedAt = dev.updatedAt.toISOString();
-        }
-
-        delete dev.ghProfile;
-        delete dev.soProfile;
-
-        devCsvStream.write(dev);
     }).on('error', function (err) {
         console.log('========== AAAAHHHHHH')
         console.log(err);
     }).on('close', function (){
         console.log('* Finished Developers! *');
-        devCsvStream.end();
+
         answerCsvStream.end();
         questionCsvStream.end();
-        file.Developer.status = READY;
-        file.Contributor.status = READY;
-        saveTimestamp('Developer', devFilePath);
-        saveTimestamp('Contributor', devFilePath);
+
         saveTimestamp('Answer', answerFilePath);
         saveTimestamp('Question', questionFilePath);
     });
@@ -446,10 +424,10 @@ function readFile(option,
                     console.log(option + 's populated');
                     console.log('***** DONE *****');
                 }
-                populated[option].status = READY;
+                changeStatus(model, READY);
             });
         } else {
-            populated[option].status = READY;
+            changeStatus(model, READY);
         }
     });
 }
@@ -506,7 +484,11 @@ function populate(option, project = undefined){
             populator.GitHub(option, repo._id);
         }
     } else {
-        populated[option].status = READY;
+        changeStatus(model, READY);
         populator.StackOverflow(option);
     }
+}
+
+function changeStatus(model, status, option = 'file'){
+
 }
