@@ -102,15 +102,12 @@ module.exports = function (BaseFrame){
 
         check: function (req, res) {
             var option = req.query.resource;
-
             var populate = false;
             if(req.query.populate){
                 populate = true;
             }
 
-            if(!populate){
-                res.sendStatus(getStatus(option));
-            } else {
+            if(populate){
                 var populator = require('../controllers/populator')();
                 switch (option) {
                     case 'Contributor':
@@ -124,7 +121,10 @@ module.exports = function (BaseFrame){
                         break;
                     default:
                         res.sendStatus(populator.check(option));
+                        break;
                 }
+            } else {
+                res.sendStatus(getStatus(option, 'generated'));
             }
         },
 
@@ -152,7 +152,7 @@ function saveTimestamp(option, path){
 
 /** This is responsible for writing the file with the StackOverflow data.
 *
-* @param option - The Model that will be exported. The file will be the name of this model pluralized.
+* @param modelName - The Model that will be exported. The file will be the name of this model pluralized.
 **/
 function writeFile(modelName,
             headers = true,
@@ -374,21 +374,21 @@ function writeAnswersAndQuestions(){
 /** Basic flow to read files. It's assumed that, whatever the file name, it's
 * located on 'files/' (from the root of the project).
 *
-*  @param {string} option - The Model name that will be import.
+*  @param {string} modelName - The Model name that will be import.
 *  @param {function} transformCallback - The function that will transform the data before
     writing it to the database.
 *  @param {boolean|array} headers - If true, it will consider the first line
     of the file as headers. If an array is given, each entry will be a header.
 *  @param fileName - The name of file to be read. This should be a .tsv.
-    Default is option pluralized. E.g: option = Issue, fileName = Issues.tsv
+    Default is modelName pluralized. E.g: modelName = Issue, fileName = Issues.tsv
 **/
-function readFile(option,
+function readFile(modelName,
             transformCallback = undefined,
             savingOnTransform = false,
             headers = true,
-            fileName = option + 's.tsv'){
+            fileName = modelName + 's.tsv'){
 
-    var MongooseModel = mongoose.model(option);
+    var MongooseModel = mongoose.model(modelName);
 
     var path = 'files/' + fileName;
     var options = {
@@ -419,13 +419,13 @@ function readFile(option,
                 if(err){
                     console.log(err.message);
                 } else {
-                    console.log(option + 's populated');
+                    console.log(modelName + 's populated');
                     console.log('***** DONE *****');
                 }
-                changeStatus(model, READY);
+                changeStatus(modelName, READY, 'populated');
             });
         } else {
-            changeStatus(model, READY);
+            changeStatus(modelName, READY, 'populated');
         }
     });
 }
@@ -435,14 +435,15 @@ function readFile(option,
 function readDevs(){
     var transform = function (data) {
         var GitHubProfile = mongoose.model('GitHubProfile');
-        var SoProfile = mongoose.model('StackOverflowProfile');
+        var StackOverflowProfile = mongoose.model('StackOverflowProfile');
+
+        var soProfile = {};
 
         if(data.soId.length > 0){
-            var soProfile = {
-                _id: data.soId,
-                email: data.email,
-            }
-            SoProfile.create(soProfile, function (err){
+            soProfile._id = data.soId;
+            soProfile.email = data.email;
+
+            StackOverflowProfile.create(soProfile, function (err){
                 if(err){
                     console.log(err.message);
                 }
@@ -450,25 +451,41 @@ function readDevs(){
         }
         delete data.soId;
         delete data.tags;
-
-        if(data.repositories.length > 0){
-            data.repositories = data.repositories.split(',');
-            data.repositories = data.repositories.map(Number);
-        } else {
-            data.repositories = [];
-        }
+        delete data.repositories;
 
         GitHubProfile.create(data, function (err){
             if(err){
                 console.log(err.message);
             }
         });
+
+        var Developer = mongoose.model('Developer');
+        var dev = {
+            email: data.email,
+        }
+        var updateFields = {
+            $addToSet: {
+                'profiles.gh': data._id,
+                'profiles.so': soProfile._id,
+            },
+        }
+        var options = {
+            upsert: true,
+        }
+
+        Developer.findOneAndUpdate(dev, updateFields, options, function (err){
+            if(err){
+                console.log(err.message);
+            } else {
+                console.log('Common Profile created: ' + data._id + ' & ' + soProfile._id);
+            }
+        });
+
     }
 
     var savingOnTransform = true;
 
     readFile('Developer', transform, savingOnTransform);
-
 }
 
 function populate(option, project = undefined){
@@ -482,7 +499,7 @@ function populate(option, project = undefined){
             populator.GitHub(option, repo._id);
         }
     } else {
-        changeStatus(model, READY);
+        changeStatus(model, READY, 'populated');
         populator.StackOverflow(option);
     }
 }
@@ -518,8 +535,9 @@ function changeStatus(model, status, option = 'generated'){
             model = 'Bug';
             break;
     }
+
     statuses[model][option] = status;
-    if(status === READY){
+    if(status === READY && option === 'generated'){
         saveTimestamp(model);
     }
 }

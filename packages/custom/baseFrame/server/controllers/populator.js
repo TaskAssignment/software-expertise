@@ -76,7 +76,7 @@ module.exports = function (BaseFrame) {
                         if(populated.Developer === READY){
                             stop();
                         }
-                    }, 1000);
+                    }, 2000);
 
                     function stop(){
                         clearInterval(interval);
@@ -206,6 +206,8 @@ function populateTags(filter = 'default', site = 'stackoverflow'){
 * @param {int} projectId - Id from a GitHub project.
 **/
 function populateStackOverflowUserData(projectId){
+    var GitHubProfile = mongoose.model('GitHubProfile');
+    // GitHubProfile.find({repositories: projectId, email:
     var Developer = mongoose.model('Developer');
     var populateGH = {
         path: 'profiles.gh',
@@ -642,7 +644,7 @@ function populateContributors(projectId){
             }
 
             var updateFields = {
-                email: result.email,
+                email: result.email || '',
             };
 
             var findCallback = function (err) {
