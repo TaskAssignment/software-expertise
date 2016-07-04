@@ -1065,6 +1065,7 @@ function soPopulate(option, specificUrl, callback) {
                 case 502:
                     console.log('Error Related to token. Trying a different one');
                     console.log(body);
+                    console.log(options.uri);
                     nextApp = (nextApp + 1) % CLIENT_IDS.length;
                     nextClientId = CLIENT_IDS[nextApp];
                     if(nextApp === 0){
