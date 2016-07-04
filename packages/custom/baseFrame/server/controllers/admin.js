@@ -13,7 +13,6 @@ var statuses = {};
 
 initialStatus();
 
-
 var SO_APPS = {
     7211: {
         client_secret: 'yurW77OF7QW5a*M84WnxJw((',
@@ -44,8 +43,7 @@ var SO_APPS = {
 
 function initialStatus(){
     var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit', 'Comment',
-      'Language', 'Project', 'Event', 'StopWord', 'Contributor', 'IssueComment',
-      'CommitComment', 'GitHubIssue', ];
+      'Project', 'Event', 'StopWord'];
 
     for(var model of models){
         statuses[model] = {
@@ -67,6 +65,9 @@ module.exports = function (BaseFrame){
                     break;
                 case 'Developer':
                     readDevs();
+                    break;
+                case 'PullRequest':
+                    populate('Bug', query.project);
                     break;
                 default:
                     populate(query.option, query.project);
@@ -95,6 +96,9 @@ module.exports = function (BaseFrame){
                     break;
                 case 'Bug':
                     writeBugs();
+                    break;
+                case 'PullRequest':
+                    writeBugs(true);
                     break;
                 case 'Commit':
                     writeCommits();
@@ -127,12 +131,10 @@ module.exports = function (BaseFrame){
                 }
             };
             request(config, function (err, response, body){
-                console.log(body);
                 var equalsIndex = body.lastIndexOf('=') + 1;
                 var accessToken = body.substring(equalsIndex);
 
                 SO_APPS[clientId].access_token = accessToken;
-                console.log(SO_APPS);
                 res.sendStatus(200);
             });
         },
@@ -143,7 +145,7 @@ module.exports = function (BaseFrame){
         },
 
         check: function (req, res) {
-            var option = req.query.resource;
+            var option = getModelName(req.query.resource);
             var populate = false;
             if(req.query.populate){
                 populate = true;
@@ -212,7 +214,7 @@ function writeFile(modelName,
 
     var csvOptions = {
         delimiter: '\t',
-        headers: headers
+        headers: headers,
     }
 
     var csvStream = csv.createWriteStream(csvOptions);
@@ -249,7 +251,7 @@ function writeFile(modelName,
 
 /** Export bugs to file
 **/
-function writeBugs(){
+function writeBugs(isPR = false){
     var headers = ['_id', 'projectId', 'number', 'title',
       'body', 'labels', 'status', 'reporterLogin',
       'assigneesLogins', 'createdAt', 'url'];
@@ -275,8 +277,17 @@ function writeBugs(){
         delete row.bug.author;
         return row.bug;
     }
-    writeFile('GitHubIssue', headers, transform, 'Bugs.tsv', '-updatedAt -__v',
-    {isPR: false}, 'bug');
+
+    var modelName = 'GitHubIssue';
+    var fileName = 'Bugs.tsv';
+    var filter = { isPR: isPR };
+
+    if(isPR){
+        fileName = 'PullRequests.tsv';
+    }
+
+    writeFile(modelName, headers, transform, fileName, '-updatedAt -__v',
+      filter, 'bug');
 }
 
 function writeIssueComments(){
@@ -562,43 +573,36 @@ function populate(option, project = undefined){
 }
 
 function getStatus(model, option = 'generated'){
-    switch (model) {
-        case 'CommitComment':
-        case 'IssueComment':
-        case 'Comment':
-            model = 'Comment';
-            break;
-        case 'Bug':
-        case 'Issue':
-        case 'GitHubIssue':
-        case 'BugzillaBug':
-            model = 'Bug';
-            break;
-        case 'Contributor':
-        case 'Developer':
-            model = 'Developer';
-    }
+    model = getModelName(model);
     return statuses[model][option];
 }
 
 function changeStatus(model, status, option = 'generated'){
-    switch (model) {
-        case 'CommitComment':
-        case 'IssueComment':
-        case 'Comment':
-            model = 'Comment';
-            break;
-        case 'Bug':
-        case 'Issue':
-        case 'GitHubIssue':
-        case 'BugzillaBug':
-            model = 'Bug';
-            break;
-    }
-
+    model = getModelName(model);
     statuses[model][option] = status;
-    console.log(statuses);
     if(status === READY && option === 'generated'){
         saveTimestamp(model);
     }
+}
+
+function getModelName(option){
+    switch (option) {
+        case 'CommitComment':
+        case 'IssueComment':
+        case 'Comment':
+            option = 'Comment';
+            break;
+        case 'Developer':
+        case 'Contributor':
+            option = 'Developer';
+            break;
+        case 'Bug':
+        case 'Issue':
+        case 'PullRequest':
+        case 'GitHubIssue':
+        case 'BugzillaBug':
+            option = 'Bug';
+            break;
+    }
+    return option
 }

@@ -73,7 +73,6 @@ module.exports = function (BaseFrame){
         * @param res - Express response
         **/
         findIssues: function (req, res){
-            var Developer = mongoose.model('Developer');
             var GitHubIssue = mongoose.model('GitHubIssue');
 
             var filter = {
@@ -82,7 +81,7 @@ module.exports = function (BaseFrame){
             };
             var items = '_id bug';
 
-            GitHubIssue.find(filter, items).limit(500)
+            GitHubIssue.find(filter, items).sort('-createdAt').limit(500)
               .populate('bug', 'title').lean().sort('-updatedAt')
               .exec(function(err, bugs){
                 res.send(bugs);

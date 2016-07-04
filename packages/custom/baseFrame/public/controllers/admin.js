@@ -40,11 +40,13 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
             label: 'SO Answers',
             projectSpecific: true,
             noModel: true,
+            parent: 'Contributor',
         },
         Question: {
             label: 'SO Questions',
             projectSpecific: true,
             noModel: true,
+            parent: 'Contributor',
         },
         Commit: {
             label: 'Commit',
@@ -58,6 +60,11 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
         },
         Bug: {
             label: 'Issues',
+            projectSpecific: true,
+            noModel: false,
+        },
+        PullRequest: {
+            label: 'Pull Requests',
             projectSpecific: true,
             noModel: false,
         },
