@@ -5,7 +5,7 @@
     <div id='issueSelection' class='scrollable list-group' ng-if="issues.length > 0">
         <button ng-repeat="issue in issues" class="list-group-item"
           ng-click="selectIssue(issue)" ng-class="{active: selectedIssue._id == issue._id}">
-            <p>{{ issue.title }}</p>
+            <p>{{ issue.bug.title }}</p>
         </button>
     </div>
 

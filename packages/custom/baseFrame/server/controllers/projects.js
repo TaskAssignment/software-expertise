@@ -74,18 +74,18 @@ module.exports = function (BaseFrame){
         **/
         findIssues: function (req, res){
             var Developer = mongoose.model('Developer');
-            var Issue = mongoose.model('Issue');
+            var GitHubIssue = mongoose.model('GitHubIssue');
 
             var filter = {
-                projectId: req.params.projectId,
-                type: 'IS',
+                project: req.params.projectId,
+                isPR: false,
             };
-            var items = '_id title assigneeId';
-            var options = {lean: true, limit: 500};
+            var items = '_id bug';
 
-            console.log(filter);
-            Issue.find(filter, items, options).sort('-updatedAt').exec(function(err, issues){
-                res.send(issues);
+            GitHubIssue.find(filter, items).limit(500)
+              .populate('bug', 'title').lean().sort('-updatedAt')
+              .exec(function(err, bugs){
+                res.send(bugs);
             });
         }
     }

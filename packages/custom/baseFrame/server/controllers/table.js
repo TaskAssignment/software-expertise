@@ -227,17 +227,17 @@ module.exports = function (BaseFrame){
 
             var issueCallback = function (params){
                 var filter = {
-                    'ghProfile.repositories': params.Bug.projectId,
-                    soProfile: { $exists: true }
+                    'profiles.gh.repositories': params.Bug.projectId,
                 };
 
                 var tag_array = params.Bug.tags.map(function (tag){
                     return tag._id;
                 })
 
-                var selectItems = 'soProfile ghProfile.repositories'
+                var selectItems = 'profiles.so profiles.gh'
                 Developer.find(filter, selectItems )
-                .populate('ghProfile.repositories').exec(function (err, users) {
+                .populate('profiles.so profiels.gh').exec(function (err, users) {
+                    console.log(users);
                     for(var user of users){
                         var callbackParams = {
                             user: { id: user._id },
@@ -291,8 +291,7 @@ module.exports = function (BaseFrame){
 
             }
 
-            findOneModel(Bug, req.params.issueId, issueCallback, {}, 'tags projectId assigneeId');
-
+            findOneModel(Bug, req.params.bugId, issueCallback, {}, 'tags');
         },
     }
 }
