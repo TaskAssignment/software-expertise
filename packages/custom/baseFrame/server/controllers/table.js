@@ -1,7 +1,7 @@
 'use strict';
 
 var mongoose = require('mongoose');
-// var Issue = mongoose.model('Issue');
+var Bug = mongoose.model('Bug');
 var CoOccurrence = mongoose.model('CoOccurrence');
 var Developer = mongoose.model('Developer');
 
@@ -11,35 +11,10 @@ var _ = require('lodash');
 
 module.exports = function (BaseFrame){
     // TODO: REMAKE THIS DOCUMENTATION!!!
-    /**
-    * This will format the tags and links to what is expected to render the graph
-    *
-    **/
-    function formatDataToGraph(links, allTags, callback, callbackParams = {}){
-        for(var link of links){
-            // Adds the values of these occurences to the tags counter
-            allTags[link.source].soCount += (link.occurrences || 0);
-            allTags[link.target].soCount += (link.occurrences || 0);
-
-            link.source = allTags[link.source].index;
-            link.target = allTags[link.target].index;
-        }
-
-        var nodes = [];
-        for(var tag in allTags){
-            nodes[allTags[tag].index] = allTags[tag];
-        }
-
-        callbackParams.nodes = nodes;
-        callbackParams.links = links;
-
-        callback(callbackParams);
-
-    }
 
     /**
     * This function will merge the issueTags with the userTags
-    * Both issueTags and userTags have _id, count[, soCount].
+    * Both issueTags and userTags have _id, count, soCount.
     **/
     function mergeTags(modelsTags, callback, callbackParams = {}){
         callbackParams.tags = {};
@@ -68,9 +43,6 @@ module.exports = function (BaseFrame){
 
         callback(callbackParams);
     }
-
-    /** Fetches user tags from database.
-    **/
 
     function findOneModel(Model, id, callback, callbackParams = {}, selectItems = 'tags'){
         Model.findOne({_id: id}, selectItems, {lean: true}, function (err, model){
@@ -206,56 +178,6 @@ module.exports = function (BaseFrame){
     }
 
     return {
-        /** Gets and formats the graph data.
-        *
-        * @param req - Express request.
-        * @param res - Express response.
-        * @param req.params.modeIssue - The mode to look for issues. For now, just using 'default' (issue text from github).
-        * @param req.params.modeUser - The mode to look for user. For now, just using 'default' (user data from SO).
-        * @param req.query.issueId - The issueId when the mode is default. It will look for this issue in the local database.
-        * @param req.query.userId - The userId when the mode is default. It will look for this user in the local database.
-        **/
-        getDataForGraph: function(req, res){
-            //For now I'll treat all the requests as default ones.
-            var ids = req.query;
-
-            var formatCallback = function (params){
-                if(!res.headersSent){
-                    res.send(params);
-                }
-            };
-
-            var mergeCallback = function (params){
-                var tags = Object.keys(params.tags);
-
-                var conditions = {
-                    $and: [
-                        {source: {$in: tags}} ,
-                        {target: {$in: tags}}
-                    ]
-                };
-
-                CoOccurrence.find(conditions, '-_id occurrences source target', {lean: true}, function(err, occurrences){
-                    formatDataToGraph(occurrences, params.tags, formatCallback);
-                });
-            };
-
-            var userCallback = function (params){
-                if(params.Developer.soProfile){
-                    params.Developer = {
-                        tags: params.Developer.soProfile.tags
-                    }
-                }
-                mergeTags(params, mergeCallback);
-            };
-
-            var issueCallback = function(params){
-                findOneModel(Developer, ids.userId, userCallback, params, 'soProfile');
-            };
-
-            findOneModel(Issue, ids.issueId, issueCallback);
-        },
-
         calculateSimilarity: function(req, res){
             var mode = req.params.similarity;
             var response = {
@@ -275,7 +197,6 @@ module.exports = function (BaseFrame){
         },
 
         findMatches: function (req, res) {
-
             var similarities = [];
 
             var mergeCallback = function (params){
@@ -306,11 +227,11 @@ module.exports = function (BaseFrame){
 
             var issueCallback = function (params){
                 var filter = {
-                    'ghProfile.repositories': params.Issue.projectId,
+                    'ghProfile.repositories': params.Bug.projectId,
                     soProfile: { $exists: true }
                 };
 
-                var tag_array = params.Issue.tags.map(function (tag){
+                var tag_array = params.Bug.tags.map(function (tag){
                     return tag._id;
                 })
 
@@ -320,7 +241,7 @@ module.exports = function (BaseFrame){
                     for(var user of users){
                         var callbackParams = {
                             user: { id: user._id },
-                            assignee: params.Issue.assigneeId,
+                            assignee: params.Bug.assigneeId,
                             issueTags: tag_array
                         };
                         callbackParams.user.repos = [];
@@ -349,22 +270,18 @@ module.exports = function (BaseFrame){
                         var user = similarities[i];
                         user.cosineIndex = i + 1;
                     }
-                    //TODO: I probably don't need this anymore.
-                    position.cosine = similarities.findIndex(findAssignee);
 
                     similarities.sort(sortJaccard);
                     for(var i = 0; i < similarities.length; i++){
                         var user = similarities[i];
                         user.jaccardIndex = i + 1;
                     }
-                    position.jaccard = similarities.findIndex(findAssignee);
 
                     similarities.sort(sortSsaZ);
                     for(var i = 0; i < similarities.length; i++){
                         var user = similarities[i];
                         user.ssazIndex = i + 1;
                     }
-                    position.ssaZ = similarities.findIndex(findAssignee);
 
                     res.json({
                         similarities: similarities,
@@ -374,100 +291,8 @@ module.exports = function (BaseFrame){
 
             }
 
-            findOneModel(Issue, req.params.issueId, issueCallback, {}, 'tags projectId assigneeId');
+            findOneModel(Bug, req.params.issueId, issueCallback, {}, 'tags projectId assigneeId');
 
         },
-
-        findMatchAverage: function (req, res) {
-            var averages = {
-                cosine: 0,
-                jaccard: 0,
-                ssaZScore: 0,
-                MrrCosine: 0,
-                MrrJaccard: 0,
-                MrrSsaZ: 0
-            };
-
-            var mergeCallback = function(params){
-                params.user.cosine = cosineSimilarity(params.tags);
-                params.user.jaccard = jaccardSimilarity(params.tags);
-            }
-
-            var issuesCallback = function(params){
-                for(var issue of params.Issue){
-                    var similarities = [];
-                    var tag_array = issue.tags.map(function (tag){
-                        return tag._id;
-                    });
-                    for(var user of params.Developer){
-                        mergeTags({Issue: {tags: issue.tags}, Developer: {tags: user.soProfile.tags}}, mergeCallback, {user: user});
-
-                        user.ssaZScore = ssaZSimilarity(user.soProfile || {answers: [], questions: []}, tag_array);
-
-                        if(issue.assigneeId === user._id){
-                            user.assignee = true;
-                        } else {
-                            user.assignee = false;
-                        }
-
-                        similarities.push(user);
-                    }
-
-                    similarities.sort(sortCosine);
-                    var position = similarities.findIndex(findAssignee) + 1
-                    averages.cosine += position;
-                    averages.MrrCosine += 1/position;
-
-                    similarities.sort(sortJaccard);
-                    position = similarities.findIndex(findAssignee) + 1
-                    averages.jaccard += position;
-                    averages.MrrJaccard += 1/position;
-
-                    similarities.sort(sortSsaZ);
-                    position = similarities.findIndex(findAssignee) + 1
-                    averages.ssaZScore += position;
-                    averages.MrrSsaZ += 1/position;
-                }
-
-                for(var key in averages){
-                    averages[key] /= params.Issue.length;
-                    if(key.search('Mrr') >= 0){
-                        averages[key] = averages[key].toFixed(4);
-                    } else {
-                        averages[key] = Math.round(averages[key]);
-                    }
-                }
-
-                res.send({averages: averages});
-            }
-
-
-            var devCallback = function(params){
-                var callbackParams = {
-                    Developer: params.Developer
-                };
-
-                var dev_ids = params.Developer.map(function (dev){
-                    return dev._id;
-                });
-
-                var filter = {
-                    projectId: req.params.projectId,
-                    type: 'IS',
-                    parsed: true,
-                    assigneeId: { $in: dev_ids }
-                };
-
-                findModel(Issue, filter, issuesCallback, callbackParams, 'tags assigneeId');
-            }
-
-            var filter = {
-                'ghProfile.repositories': req.params.projectId,
-                soProfile: { $exists: true }
-            };
-
-
-            findModel(Developer, filter, devCallback, {}, 'soProfile');
-        }
     }
 }

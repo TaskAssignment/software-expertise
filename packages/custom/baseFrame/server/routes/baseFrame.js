@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function (BaseFrame, app, database) {
-    //See how to nest this.
+    //TODO: See how to nest this.
     var base = '/api/baseFrame/';
     var controllers = '../controllers/';
 
@@ -31,17 +31,9 @@ module.exports = function (BaseFrame, app, database) {
     app.route(base + 'oauth')
       .get(admin.oauth);
 
-    /** My idea here is to be able to fetch data from different places.
-    * The modes, for now, will be 'default' and 'default' to fetch data from our
-    * database (populated from github/SO).
-    **/
-    var graph = require(controllers + 'graph')(BaseFrame);
-    app.route(base + ':modeIssue/:modeUser/graphData')
-      .get(graph.getDataForGraph);
+    var table = require(controllers + 'table')(BaseFrame);
     app.route(base + 'calculate/:similarity/')
-      .get(graph.calculateSimilarity);
+      .get(table.calculateSimilarity);
     app.route(base + 'find/:issueId/matches')
-      .get(graph.findMatches);
-    app.route(base + ':projectId/calculate/matches/averages')
-      .get(graph.findMatchAverage);
+      .get(table.findMatches);
 };
