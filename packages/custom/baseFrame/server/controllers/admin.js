@@ -16,7 +16,7 @@ initialStatus();
 function initialStatus(){
     var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit', 'Comment',
       'Language', 'Project', 'Event', 'StopWord', 'Contributor', 'IssueComment',
-      'CommitComment', 'GitHubIssue'];
+      'CommitComment', 'GitHubIssue', ];
 
     for(var model of models){
         statuses[model] = {
@@ -53,7 +53,7 @@ module.exports = function (BaseFrame){
                 case 'Developer':
                 case 'Contributor':
                     writeAnswersAndQuestions();
-                    // writeDevs();
+                    writeDevs();
                     break;
                 case 'Event':
                     var headers = ['_id', 'projectId', 'issueId', 'issueNumber',
@@ -192,6 +192,7 @@ function writeFile(modelName,
                 return lang._id + ':' + lang.amount;
             });
         }
+
         if(model.createdAt){
             model.createdAt = model.createdAt.toISOString();
         }
@@ -202,7 +203,7 @@ function writeFile(modelName,
         console.log(err);
     }).on('close', function (){
         csvStream.end();
-        console.log('* Finished! *');
+        console.log('* Finished ' + fileName + ' *');
         changeStatus(modelName, READY);
     });
 }
@@ -298,7 +299,7 @@ function writeCommitComments() {
 * 'Answers.tsv' and 'Questions.tsv' and are on the 'files/' folder.
 **/
 function writeAnswersAndQuestions(){
-    console.log('** Generating developers file **');
+    console.log('** Generating answers and questions files **');
     var items = '-updatedAt -createdAt -__v'
     var SoProfile = mongoose.model('StackOverflowProfile');
     var dbStream = SoProfile.find().select(items).lean().stream();
@@ -365,7 +366,7 @@ function writeAnswersAndQuestions(){
         console.log('========== AAAAHHHHHH')
         console.log(err);
     }).on('close', function (){
-        console.log('* Finished Developers! *');
+        console.log('* Finished Answers and questions! *');
 
         answerCsvStream.end();
         questionCsvStream.end();
@@ -373,6 +374,34 @@ function writeAnswersAndQuestions(){
         saveTimestamp('Answer', answerFilePath);
         saveTimestamp('Question', questionFilePath);
     });
+}
+
+function writeDevs() {
+    var transform = function (data) {
+        data.tags = [];
+        data.soIds = [];
+        for(var soProfile of data.profiles.so){
+            for(var tag of soProfile.tags){
+                data.tags.push(tag._id);
+            }
+            data.soIds.push(soProfile._id);
+        }
+
+
+        data.repositories = [];
+        for(var ghProfile of data.profiles.gh){
+            for(var repo of ghProfile.repositories){
+                data.repositories.push(repo);
+            }
+        }
+
+        return data;
+    }
+
+    var headers = ['_id', 'email', 'repositories', 'soIds', 'tags'];
+
+    writeFile('Developer', headers, transform, 'Developers.tsv',
+      '-updatedAt -__v', {}, 'profiles.so profiles.gh');
 }
 
 /** Basic flow to read files. It's assumed that, whatever the file name, it's
@@ -507,6 +536,9 @@ function getStatus(model, option = 'generated'){
         case 'BugzillaBug':
             model = 'Bug';
             break;
+        case 'Contributor':
+        case 'Developer':
+            model = 'Developer';
     }
     return statuses[model][option];
 }
@@ -527,6 +559,7 @@ function changeStatus(model, status, option = 'generated'){
     }
 
     statuses[model][option] = status;
+    console.log(statuses);
     if(status === READY && option === 'generated'){
         saveTimestamp(model);
     }
