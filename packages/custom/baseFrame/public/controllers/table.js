@@ -14,10 +14,10 @@ var controllerCallback = function ($scope, $resource, $uibModal) {
     $scope.assigneePosition = undefined
 
     var findMatches = function (event, params) {
-        if(params.bugId){
+        if(params.issueId){
             $scope.bestUsers = undefined;
             showLoadingScreen();
-            var Match = $resource('api/baseFrame/find/:bugId/matches');
+            var Match = $resource('api/baseFrame/find/:issueId/matches');
 
             Match.get(params).$promise.then(function (matches){
                 $scope.bestUsers = matches.similarities;

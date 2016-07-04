@@ -81,9 +81,8 @@ module.exports = function (BaseFrame){
             };
             var items = '_id bug';
 
-            GitHubIssue.find(filter, items).sort('-createdAt').limit(500)
-              .populate('bug', 'title').lean().sort('-updatedAt')
-              .exec(function(err, bugs){
+            GitHubIssue.find(filter, items).populate('bug', 'title')
+              .sort('-number').limit(500).lean().exec(function(err, bugs){
                 res.send(bugs);
             });
         }

@@ -32,8 +32,6 @@ module.exports = function (BaseFrame, app, database) {
       .get(admin.oauth);
 
     var table = require(controllers + 'table')(BaseFrame);
-    app.route(base + 'calculate/:similarity/')
-      .get(table.calculateSimilarity);
-    app.route(base + 'find/:bugId/matches')
+    app.route(base + 'find/:issueId/matches')
       .get(table.findMatches);
 };

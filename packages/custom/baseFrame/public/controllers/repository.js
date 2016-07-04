@@ -129,7 +129,7 @@ var RepositoryController = function ($scope,  $http, $location, $resource) {
         hideLoadingScreen();
         var args = {};
         if($scope.selectedIssue){
-            args.bugId = $scope.selectedIssue.bug._id;
+            args.issueId = $scope.selectedIssue._id;
         }
         $scope.$broadcast('findMatches', args);
     }
