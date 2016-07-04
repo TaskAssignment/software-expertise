@@ -14,15 +14,39 @@ for(var model of models){
     populated[model] = NOT_READY;
 }
 
-var next_token = 0;
-var ACCESS_TOKENS = [
-    'access_token=7mnlmGk6edBcSJnG1Qpn1w))&key=vqnCl1eW8aKqHEBXFabq7Q((',
-    'access_token=pQYmG3eKP1xoNlN*m0RD5Q))&key=LrB92oMtLUnGJ5uyZvA)bw((',
-    'access_token=Al(Mk7j*crIMRteMw7AnZg))&key=Ctt)0cvvDQttNSj9wmv38g((',
-    'access_token=*NptX8UDdghuEVxycU3BIQ))&key=J1y9C6i6AhWLcgHAyC2iOQ((',
-    'access_token=(CnKXfjNGlEWcTd7yT7s0A))&key=vRMoDd5M)SvR0OSzLWQIfw((',
-    'access_token=oXBWhENXHQZJY8h8LAykUw))&key=unaHxXqTCHJ5Ve6AfnIJGg((',
-]
+var SO_APPS = {
+    '7211': {
+        client_secret: 'yurW77OF7QW5a*M84WnxJw((',
+        access_token: 'yBmIU6ZDieXJH28yD8xsvg))',
+        key: 'unaHxXqTCHJ5Ve6AfnIJGg((',
+    },
+    '7341': {
+        client_secret: 'aiU5CjKOd*6Nyvjjf38ALA((',
+        access_token: 'cX38VZgQoBegnEj10eDJqA))',
+        key: 'vRMoDd5M)SvR0OSzLWQIfw((',
+    },
+    '7342': {
+        client_secret: 'mxH2R184QmhGDrWI1TikaQ((',
+        access_token: 'vVGjAoR(qSM7yfA56Atfog))',
+        key: 'vqnCl1eW8aKqHEBXFabq7Q((',
+    },
+    '7343': {
+        client_secret: 'ae5OXiV4C2OtuPWFjVuoXQ((',
+        access_token: 'oYFcVO3QDnl(91sSUjThNA))',
+        key: 'LrB92oMtLUnGJ5uyZvA)bw((',
+    },
+    '7344': {
+        client_secret: '1iPAaK1iEz1gYlrJ73Yi4w((',
+        access_token: '7QlDCIzxwizwdUisKiv9gg))',
+        key: 'Ctt)0cvvDQttNSj9wmv38g((',
+    },
+};
+
+var CLIENT_IDS = Object.keys(SO_APPS);
+var nextApp = 0;
+var nextClientId = CLIENT_IDS[nextApp];
+
+
 var stopRequests = false;
 var delay = 34; // 34 ms to assure that there will be no more than 30 requests per second.
 var selectedProject;
@@ -207,22 +231,25 @@ function populateTags(filter = 'default', site = 'stackoverflow'){
 **/
 function populateStackOverflowUserData(projectId){
     var GitHubProfile = mongoose.model('GitHubProfile');
-    // GitHubProfile.find({repositories: projectId, email:
-    var Developer = mongoose.model('Developer');
-    var populateGH = {
-        path: 'profiles.gh',
-        match: { repositories: projectId },
+    var filter = {
+        repositories: projectId,
+        email: {$exists: true},
     }
-    var populateSO = {
-        path: 'profiles.so',
-        match: { 'isPopulated.all': false },
-        select: '_id',
-    }
+    GitHubProfile.find(filter).select('email').lean().exec(function (err, gh){
+        if(err){
+            console.log(err);
+        } else {
+            var emails = gh.map(function (profile) {
+                return profile.email;
+            });
+            findStackOverflowMatches(emails);
+        }
+    });
 
     function partialUsers(users){
         var ids = '';
         for(var user of users){
-            ids += user.so._id + ';';
+            ids += user._id + ';';
         }
 
         ids = ids.slice(0, -1); // Remove last unecessary semicolon
@@ -234,14 +261,24 @@ function populateStackOverflowUserData(projectId){
         }
     }
 
-    Developer.find().select('so').lean().populate(populateGH)
-    .populate(populateSO).exec(function(err, devs){
-        while(devs.length > 100){
-            var dev_part = devs.splice(0, 100);
-            partialUsers(dev_part);
+    function findStackOverflowMatches(emails){
+        var SoProfile = mongoose.model('StackOverflowProfile');
+        var filter = {
+            email: {
+                $in: emails,
+            },
+            'isPopulated.all': false,
         }
-        partialUsers(devs);
-    });
+
+        SoProfile.find({email: {$in: emails}}).select('_id')
+        .lean().exec(function(err, devs){
+            while(devs.length > 100){
+                var dev_part = devs.splice(0, 100);
+                partialUsers(dev_part);
+            }
+            partialUsers(devs);
+        });
+    }
 }
 
 /** Populate all the user tags from StackOverflow using the soPopulate function.
@@ -287,7 +324,7 @@ function populateUserTags(ids, projectId, filter = 'default', site = 'stackoverf
                 if(err){
                     console.log('=== Error UserTags: ' + err.message);
                 } else {
-                    console.log('User ' + result.user_id + ': tags updated!');
+                    // console.log('User ' + result.user_id + ': tags updated!');
                 }
             });
         });
@@ -365,7 +402,7 @@ function populateAnswers(ids, projectId, filter = 'default', obj = 'users/', sit
                 if(err){
                     console.log('=== Error Answers: ' + err.message);
                 } else {
-                    console.log(result.owner.user_id + ' answers updated!');
+                    // console.log(result.owner.user_id + ' answers updated!');
                 }
             });
         }
@@ -396,7 +433,7 @@ function populateQuestions(ids, projectId, filter = 'default', obj = 'users/', s
     url += '&site=' + site;
     url += '&filter=' + filter;
 
-    var Developer = mongoose.model('Developer');
+    var StackOverflowProfile = mongoose.model('StackOverflowProfile');
 
     var buildModels = function(items){
         for(var i in items){
@@ -419,14 +456,14 @@ function populateQuestions(ids, projectId, filter = 'default', obj = 'users/', s
                 $addToSet: {
                     questions: question,
                 },
-                'isPopulated.answers': true,
+                'isPopulated.questions': true,
             };
 
-            Developer.update(filter, updateFields).exec(function (err){
+            StackOverflowProfile.update(filter, updateFields).exec(function (err){
                 if(err){
                     console.log('=== Error Questions: ' + err.message);
                 } else {
-                    console.log(result.owner.user_id + ' questions updated!');
+                    // console.log(result.owner.user_id + ' questions updated!');
                 }
             });
         }
@@ -677,7 +714,7 @@ function populateContributors(projectId){
                     return null;
                 }
 
-                var user_url = 'https://api.github.com/users/' + dev.username;
+                var user_url = 'https://api.github.com/users/' + dev._id;
                 if(!dev.email){
                     gitHubPopulate('Contributor', user_url, updateEmail, true);
                 }
@@ -988,16 +1025,15 @@ function gitHubPopulate(option, specificUrl, callback, finalUrl = false){
     This should handle the creation or the updating of models in the database.
 **/
 function soPopulate(option, specificUrl, callback) {
-    var uri = 'https://api.stackexchange.com/2.2/' + specificUrl +
-      '&pagesize=100&pagesize=100';
-    uri += ACCESS_TOKENS[next_token];
+    var uri = 'https://api.stackexchange.com/2.2/' + specificUrl + '&pagesize=100';
 
     var options = {
         headers: {
-            'Accept-Encoding': 'gzip'
+            'Accept-Encoding': 'gzip',
         },
         gzip: true,
-        uri: uri
+        uri: uri + '&key=' + SO_APPS[nextClientId].key + '&access_token=' +
+          SO_APPS[nextClientId].access_token,
     };
 
     var requestCallback = function (error, response, body){
@@ -1010,8 +1046,9 @@ function soPopulate(option, specificUrl, callback) {
                     console.log(option + ': Page ' + results.page);
                     // Check for next page
                     if(results.has_more){
-                        var new_uri = uri + ACCESS_TOKENS[next_token] + '&page=' +
-                        (parseInt(results.page) + 1);
+                        var new_uri = uri + '&key=' + SO_APPS[nextClientId].key +
+                          '&access_token=' + SO_APPS[nextClientId].access_token +
+                          '&page=' + (parseInt(results.page) + 1);
                         options.uri = new_uri;
 
                         //To avoid exceed rate limit
@@ -1028,12 +1065,15 @@ function soPopulate(option, specificUrl, callback) {
                 case 502:
                     console.log('Error Related to token. Trying a different one');
                     console.log(body);
-                    next_token = (next_token + 1) % ACCESS_TOKENS.length;
-                    if(next_token === 0){
+                    nextApp = (nextApp + 1) % CLIENT_IDS.length;
+                    nextClientId = CLIENT_IDS[nextApp];
+                    if(nextApp === 0){
                         stopRequests = true;
                     } else {
                         var page = '&' + options.uri.split('&').pop();
-                        options.uri = uri + ACCESS_TOKENS[next_token] + page;
+                        options.uri = uri + '&key=' + SO_APPS[nextClientId].key +
+                          '&access_token=' + SO_APPS[nextClientId].access_token +
+                          page;
                         request(options, requestCallback);
                     }
                     break;
@@ -1041,6 +1081,7 @@ function soPopulate(option, specificUrl, callback) {
                 case 500:
                 case 503:
                     console.log('SE Server Error. Trying again in one second');
+                    console.log(options.uri);
                     console.log(body);
                     remakeRequest(options, requestCallback);
                     break;

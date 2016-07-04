@@ -13,6 +13,35 @@ var statuses = {};
 
 initialStatus();
 
+
+var SO_APPS = {
+    7211: {
+        client_secret: 'yurW77OF7QW5a*M84WnxJw((',
+        access_token: '',
+        key: 'unaHxXqTCHJ5Ve6AfnIJGg((',
+    },
+    7344: {
+        client_secret: '1iPAaK1iEz1gYlrJ73Yi4w((',
+        access_token: '',
+        key: 'Ctt)0cvvDQttNSj9wmv38g((',
+    },
+    7343: {
+        client_secret: 'ae5OXiV4C2OtuPWFjVuoXQ((',
+        access_token: '',
+        key: 'LrB92oMtLUnGJ5uyZvA)bw((',
+    },
+    7342: {
+        client_secret: 'mxH2R184QmhGDrWI1TikaQ((',
+        access_token: '',
+        key: 'vqnCl1eW8aKqHEBXFabq7Q((',
+    },
+    7341: {
+        client_secret: 'aiU5CjKOd*6Nyvjjf38ALA((',
+        access_token: '',
+        key: 'vRMoDd5M)SvR0OSzLWQIfw((',
+    },
+}
+
 function initialStatus(){
     var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit', 'Comment',
       'Language', 'Project', 'Event', 'StopWord', 'Contributor', 'IssueComment',
@@ -81,6 +110,8 @@ module.exports = function (BaseFrame){
         },
 
         oauth: function (req, res) {
+            var request = require('request');
+            var clientId = req.query.client_id;
             var config = {
                 method: 'POST',
                 headers: {
@@ -88,14 +119,21 @@ module.exports = function (BaseFrame){
                 },
                 uri: 'https://stackexchange.com/oauth/access_token',
                 form: {
-                    'client_id': '7345',
-                    'client_secret': 'YlMgg2VjucoX9q9ksZyyKA((',
+                    'client_id': clientId,
+                    'scope': 'no_expiry',
+                    'client_secret': SO_APPS[clientId].client_secret,
                     'code': req.query.code,
                     'redirect_uri': 'http://localhost:3000/admin'
                 }
             };
             request(config, function (err, response, body){
-                res.send(body);
+                console.log(body);
+                var equalsIndex = body.lastIndexOf('=') + 1;
+                var accessToken = body.substring(equalsIndex);
+
+                SO_APPS[clientId].access_token = accessToken;
+                console.log(SO_APPS);
+                res.sendStatus(200);
             });
         },
 
