@@ -46,7 +46,6 @@ var CLIENT_IDS = Object.keys(SO_APPS);
 var nextApp = 0;
 var nextClientId = CLIENT_IDS[nextApp];
 
-
 var stopRequests = false;
 var delay = 34; // 34 ms to assure that there will be no more than 30 requests per second.
 var selectedProject;
@@ -108,14 +107,17 @@ module.exports = function (BaseFrame) {
                     }
                     break;
                 case 'Tag':
-                    populateTags('!4-J-dto(jg0aSjE(E');
+                    populateTags();
                     break;
                 case 'CoOccurrence':
-                    populateCoOccurrences('!bNKX0pf0ks06(E');
+                    populateCoOccurrences();
                     break;
             }
         },
         check: function (option) {
+            if(option === 'Comment'){
+                return populated['IssueComment'];
+            }
             return populated[option];
         }
     }
@@ -128,61 +130,40 @@ module.exports = function (BaseFrame) {
 * @param {string} filter - The filter to be used on the StackExchange API.
 * @param {string} site - The StackExchange network to pull the data from.
 **/
-function populateCoOccurrences(filter = 'default', site = 'stackoverflow'){
+function populateCoOccurrences(filter = '!bNKX0pf0ks0KAn', site = 'stackoverflow'){
     var Tag = mongoose.model('Tag');
-    var CoOccurrence = mongoose.model('CoOccurrence');
-    var patterns = ['[a-c]', '[d-h]', '[i-n]', '[o-r]', '[s-w]', '[x-z]','[^a-z]'];
-    for(var pattern of patterns){
-        var regex = new RegExp('^' + pattern);
-        findTags(regex);
-    }
+    var dbStream = Tag.find().lean().stream();
 
-    function findTags(regex){
-        Tag.find({_id: regex}).lean().exec(function (err, tags){
-            for(var tag of tags){
-                coOccurrenceRequest(tag, regex);
-            }
-        });
-    }
+    var buildModels = function (results) {
+        var CoOccurrence = mongoose.model('CoOccurrence');
+        var tag = results[0]; //First item is the 'requested' tag
 
-    function coOccurrenceRequest(tag, regex){
-        if(!stopRequests){
-            setTimeout(function () {
-                var CONFIDENCE = 0.01;
-                var MINIMUM_COUNT = CONFIDENCE * tag.soTotalCount;
-                var url = 'tags/' + tag._id + '/related?order=desc&sort=popular';
-                url += '&site=' + site;
-                url += '&filter=' + filter;
+        for(var i = 1; i < results.length; i++){
+            var result = results[i];
+            var coOccurrence = {
+                source: tag.name,
+                target: result.name,
+                occurrences: result.count,
+            };
 
-                var buildModels = function(items){
-                    var coOccurrences = [];
-                    for(var i in items){
-                        var result = items[i];
-                        if(result.count >= MINIMUM_COUNT) {
-
-                            var coOccurrence = {
-                                source: tag._id,
-                                target: result.name,
-                                occurrences: result.count
-                            };
-
-                            coOccurrences.push(coOccurrence);
-                        } else {
-                            break;
-                        }
-                    }
-
-                    CoOccurrence.collection.insert(coOccurrences, function (err){
-                        if(err){
-                            console.log('=== Error CoOccurrence: ' + err.message);
-                        }
-                    });
+            CoOccurrence.update(coOccurrence, {occurrences: result.count},
+              {upsert: true}, function (err) {
+                if(err){
+                    console.log('=== Error CoOccurrence: ' + err.message);
                 }
-
-                soPopulate('CoOccurrence', url, buildModels);
-            }, delay);
+            });
         }
     }
+
+    dbStream.on('data', function (tag) {
+        var url = 'tags/' + tag._id + '/related?order=desc&sort=popular';
+        url += '&site=' + site;
+        url += '&filter=' + filter;
+
+        setTimeout(function () {
+            soPopulate('CoOccurrence', url, buildModels);
+        }, delay);
+    });
 }
 
 /** Populate all the tags present in a specified StackExchange network.
@@ -192,7 +173,7 @@ function populateCoOccurrences(filter = 'default', site = 'stackoverflow'){
 * @param {string} filter - The filter to be used on the StackExchange API.
 * @param {string} site - The StackExchange network to pull the data from.
 **/
-function populateTags(filter = 'default', site = 'stackoverflow'){
+function populateTags(filter = '!4-J-dto(jg0aSjE(E', site = 'stackoverflow'){
     var url = 'tags?order=desc&sort=popular';
     url += '&site=' + site;
     url += '&filter=' + filter;
@@ -215,7 +196,13 @@ function populateTags(filter = 'default', site = 'stackoverflow'){
             tags.push(tag);
         }
 
-        Tag.collection.insert(tags);
+        Tag.create(tags, function (err, tags) {
+            if(err){
+                console.log(err.message);
+            } else {
+                console.log('Tags created');
+            }
+        });
     }
 
     soPopulate('Tag', url, buildModels);
@@ -1026,14 +1013,15 @@ function gitHubPopulate(option, specificUrl, callback, finalUrl = false){
 **/
 function soPopulate(option, specificUrl, callback) {
     var uri = 'https://api.stackexchange.com/2.2/' + specificUrl + '&pagesize=100';
+    var final_uri = uri + '&key=' + SO_APPS[nextClientId].key + '&access_token=' +
+      SO_APPS[nextClientId].access_token + '&page=1';
 
     var options = {
         headers: {
             'Accept-Encoding': 'gzip',
         },
         gzip: true,
-        uri: uri + '&key=' + SO_APPS[nextClientId].key + '&access_token=' +
-          SO_APPS[nextClientId].access_token,
+        uri: final_uri,
     };
 
     var requestCallback = function (error, response, body){
@@ -1051,14 +1039,12 @@ function soPopulate(option, specificUrl, callback) {
                           '&page=' + (parseInt(results.page) + 1);
                         options.uri = new_uri;
 
-                        //To avoid exceed rate limit
-                        setTimeout(function () {
-                            request(options, requestCallback);
-                        }, 100);
+                        request(options, requestCallback);
                     } else {
                         console.log(option + ' done!');
                     }
                     break;
+                case 400:
                 case 401:
                 case 402:
                 case 406:
@@ -1071,19 +1057,19 @@ function soPopulate(option, specificUrl, callback) {
                     if(nextApp === 0){
                         stopRequests = true;
                     } else {
-                        var page = '&' + options.uri.split('&').pop();
-                        options.uri = uri + '&key=' + SO_APPS[nextClientId].key +
+                        var page = '&' + final_uri.split('&').pop();
+                        final_uri = uri + '&key=' + SO_APPS[nextClientId].key +
                           '&access_token=' + SO_APPS[nextClientId].access_token +
                           page;
+                        options.uri = final_uri;
                         request(options, requestCallback);
                     }
                     break;
-                case 400:
                 case 500:
                 case 503:
                     console.log('SE Server Error. Trying again in one second');
                     console.log(options.uri);
-                    console.log(body);
+                    console.log(body, response.statusCode);
                     remakeRequest(options, requestCallback);
                     break;
                 default:

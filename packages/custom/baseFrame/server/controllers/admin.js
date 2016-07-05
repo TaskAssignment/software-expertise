@@ -60,7 +60,7 @@ module.exports = function (BaseFrame){
             switch (query.option) {
                 case 'StopProject':
                 case 'CoOccurrence':
-                case 'Tag':
+                // case 'Tag':
                     readFile(query.option);
                     break;
                 case 'Developer':
@@ -567,7 +567,7 @@ function populate(option, project = undefined){
             populator.GitHub(option, repo._id);
         }
     } else {
-        changeStatus(model, READY, 'populated');
+        changeStatus(option, READY, 'populated');
         populator.StackOverflow(option);
     }
 }
