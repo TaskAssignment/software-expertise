@@ -93,11 +93,11 @@
                         <p>{{ user._id }}</p>
                         <p> Questions on SO: {{ user.amountQuestions }}</p>
                         <p> Answers SO: {{ user.amountAnswers }}</p>
-                        <p> Tags: {{ user.tags }} </p>
-                        <small> Repos: </small>
-                        <small ng-repeat="repo in user.repos">
-                            {{repo}}
-                        </small>
+                        <uib-accordion close-others="oneAtATime">
+                            <uib-accordion-group heading="Show/Hide User Tags">
+                                <p ng-repeat="tag in user.tags"> {{ tag }} </p>
+                            </uib-accordion-group>
+                        </uib-accordion>
                     </td>
                     <td>
                         <p class="pull-left badge">{{ user.cosineIndex }}</p>

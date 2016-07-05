@@ -35,8 +35,6 @@ module.exports = function (BaseFrame){
                 }
             }
         }
-        console.log(callbackParams);
-
         callback(callbackParams);
     }
 
@@ -57,7 +55,6 @@ module.exports = function (BaseFrame){
         }
 
         var similarity = num/(Math.sqrt(sum_bug) * Math.sqrt(sum_dev));
-        console.log
         return similarity || 0;
     }
 
