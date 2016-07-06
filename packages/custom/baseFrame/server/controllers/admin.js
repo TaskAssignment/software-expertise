@@ -1,6 +1,12 @@
 'use strict';
 
-// Database connections
+/** Handles import and export requests from the UI
+*
+* @module admin
+* @requires mongoose
+* @requires fs
+* @requires fast-csv
+**/
 var mongoose = require('mongoose');
 
 var fs = require('fs');
@@ -9,38 +15,71 @@ var csv = require('fast-csv');
 var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
 
-var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit', 'Comment',
-  'Language', 'Project', 'IssueEvent', 'StopWord', 'Contributor', 'IssueComment', 'CommitComment'];
+var statuses = {};
 
-var populated = {};
-var file = {};
-for(var model of models){
-    populated[model] = {
-        status: NOT_READY,
-        pagesAdded: 0
-    };
-    file[model] = {
-        status: NOT_READY,
-        pagesAdded: 0
-    };
+initialStatus();
+
+var SO_APPS = {
+    7211: {
+        client_secret: 'yurW77OF7QW5a*M84WnxJw((',
+        access_token: '',
+        key: 'unaHxXqTCHJ5Ve6AfnIJGg((',
+    },
+    7344: {
+        client_secret: '1iPAaK1iEz1gYlrJ73Yi4w((',
+        access_token: '',
+        key: 'Ctt)0cvvDQttNSj9wmv38g((',
+    },
+    7343: {
+        client_secret: 'ae5OXiV4C2OtuPWFjVuoXQ((',
+        access_token: '',
+        key: 'LrB92oMtLUnGJ5uyZvA)bw((',
+    },
+    7342: {
+        client_secret: 'mxH2R184QmhGDrWI1TikaQ((',
+        access_token: '',
+        key: 'vqnCl1eW8aKqHEBXFabq7Q((',
+    },
+    7341: {
+        client_secret: 'aiU5CjKOd*6Nyvjjf38ALA((',
+        access_token: '',
+        key: 'vRMoDd5M)SvR0OSzLWQIfw((',
+    },
 }
 
+function initialStatus(){
+    var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit', 'Comment',
+      'Project', 'Event', 'StopWord'];
+
+    for(var model of models){
+        statuses[model] = {
+            populated: NOT_READY,
+            generated: NOT_READY,
+        }
+    }
+
+}
 module.exports = function (BaseFrame){
     return {
         populate: function (req, res) {
             var query = req.query;
             switch (query.option) {
                 case 'StopProject':
-                case 'Developer':
                 case 'CoOccurrence':
-                case 'Tag':
+                // case 'Tag':
                     readFile(query.option);
+                    break;
+                case 'Developer':
+                    readDevs();
+                    break;
+                case 'PullRequest':
+                    populate('Bug', query.project);
                     break;
                 default:
                     populate(query.option, query.project);
             }
 
-            res.status(NOT_READY).send(populated[query.option]);
+            res.sendStatus(NOT_READY);
         },
 
         generate: function (req, res) {
@@ -49,36 +88,38 @@ module.exports = function (BaseFrame){
             switch (option) {
                 case 'Developer':
                 case 'Contributor':
+                    writeAnswersAndQuestions();
                     writeDevs();
                     break;
-                case 'IssueEvent':
+                case 'Event':
                     var headers = ['_id', 'projectId', 'issueId', 'issueNumber',
                       'actor', 'commitId', 'typeOfEvent', 'assigneeId',
                       'createdAt'];
-                    writeFile('IssueEvent', headers);
+                    writeFile('Event', headers);
                     break;
                 case 'IssueComment':
                     writeIssueComments();
-                    saveTimestamp(option, 'files/IssueComments.tsv');
                     break;
-                case 'Issue':
-                    writeIssues();
+                case 'Bug':
+                    writeBugs();
+                    writeBugs(true);
                     break;
                 case 'Commit':
                     writeCommits();
                     break;
                 case 'CommitComment':
                     writeCommitComments();
-                    saveTimestamp(option, 'files/CommitComments.tsv');
                     break;
                 default:
                     writeFile(option);
                     break;
             }
-            res.status(NOT_READY).send(file[option]);
+            res.sendStatus(NOT_READY);
         },
 
         oauth: function (req, res) {
+            var request = require('request');
+            var clientId = req.query.client_id;
             var config = {
                 method: 'POST',
                 headers: {
@@ -86,14 +127,19 @@ module.exports = function (BaseFrame){
                 },
                 uri: 'https://stackexchange.com/oauth/access_token',
                 form: {
-                    'client_id': '7345',
-                    'client_secret': 'YlMgg2VjucoX9q9ksZyyKA((',
+                    'client_id': clientId,
+                    'scope': 'no_expiry',
+                    'client_secret': SO_APPS[clientId].client_secret,
                     'code': req.query.code,
                     'redirect_uri': 'http://localhost:3000/admin'
                 }
             };
             request(config, function (err, response, body){
-                res.send(body);
+                var equalsIndex = body.lastIndexOf('=') + 1;
+                var accessToken = body.substring(equalsIndex);
+
+                SO_APPS[clientId].access_token = accessToken;
+                res.sendStatus(200);
             });
         },
 
@@ -103,16 +149,13 @@ module.exports = function (BaseFrame){
         },
 
         check: function (req, res) {
-            var option = req.query.resource;
-
+            var option = getModelName(req.query.resource);
             var populate = false;
             if(req.query.populate){
                 populate = true;
             }
 
-            if(!populate){
-                res.status(file[option].status).send(file[option]);
-            } else {
+            if(populate){
                 var populator = require('../controllers/populator')();
                 switch (option) {
                     case 'Contributor':
@@ -122,11 +165,14 @@ module.exports = function (BaseFrame){
                     case 'Developer':
                     case 'CoOccurrence':
                     case 'Tag':
-                        res.sendStatus(populated[option].status);
+                        res.sendStatus(getStatus(option, 'populated'));
                         break;
                     default:
                         res.sendStatus(populator.check(option));
+                        break;
                 }
+            } else {
+                res.sendStatus(getStatus(option, 'generated'));
             }
         },
 
@@ -147,7 +193,6 @@ module.exports = function (BaseFrame){
 function saveTimestamp(option, path){
     var GenerateFileLog = mongoose.model('GenerateFileLog');
     var update = {
-        filePath: path,
         timestamp: new Date(),
     };
     GenerateFileLog.update({model: option}, update, {upsert: true}).exec();
@@ -155,48 +200,46 @@ function saveTimestamp(option, path){
 
 /** This is responsible for writing the file with the StackOverflow data.
 *
-* @param option - The Model that will be exported. The file will be the name of this model pluralized.
+* @param modelName - The Model that will be exported. The file will be the name of this model pluralized.
 **/
-function writeFile(option,
+function writeFile(modelName,
             headers = true,
             transform = undefined,
-            fileName = option + 's.tsv',
+            fileName = modelName + 's.tsv',
             items = '-updatedAt -__v',
-            filter = {}){
+            filter = {},
+            populate = ''){
     var path = 'files/' + fileName;
 
-    var MongooseModel = mongoose.model(option);
+    var MongooseModel = mongoose.model(modelName);
     var stream = fs.createWriteStream(path);
 
-    var dbStream = MongooseModel.find(filter).select(items).lean().stream();
+    var dbStream = MongooseModel.find(filter).select(items).populate(populate).lean().stream();
 
-    var options = {
+    var csvOptions = {
         delimiter: '\t',
-        headers: headers
+        headers: headers,
     }
 
-    var csvStream = csv.createWriteStream(options);
+    var csvStream = csv.createWriteStream(csvOptions);
     if(transform){
         csvStream.transform(transform);
     }
     csvStream.pipe(stream);
 
-    var counter = 0;
-
     dbStream.on('data', function (model) {
-        counter++;
-        if(option === 'CoOccurrence'){
+        //TODO: Change this to use transform!!
+        if(modelName === 'CoOccurrence'){
             delete model._id;
-        } else if (option === 'Project'){
+        } else if (modelName === 'Project'){
             model.languages = model.languages.map(function (lang) {
                 return lang._id + ':' + lang.amount;
             });
         }
+
         if(model.createdAt){
             model.createdAt = model.createdAt.toISOString();
         }
-
-        file[option].linesRead = counter;
 
         csvStream.write(model);
     }).on('error', function (err) {
@@ -204,33 +247,51 @@ function writeFile(option,
         console.log(err);
     }).on('close', function (){
         csvStream.end();
-        console.log('* Finished! *');
-        file[option].status = READY;
-        saveTimestamp(option, path);
+        console.log('* Finished ' + fileName + ' *');
+        changeStatus(modelName, READY);
     });
 }
 
-function writeIssues(){
+
+/** Export bugs to file
+**/
+function writeBugs(isPR = false){
     var headers = ['_id', 'projectId', 'number', 'title',
-      'body', 'type', 'labels', 'state', 'reporterLogin',
-      'assigneeLogin', 'createdAt', 'url'];
+      'body', 'labels', 'status', 'reporterLogin',
+      'assigneesLogins', 'createdAt', 'url'];
 
     var transform = function (row) {
-        if(row.body){
-            row.body = row.body
+        if(row.bug.body){
+            row.bug.body = row.bug.body
               .replace(/\t/g, '        ');
-            row.body = row.body
+            row.bug.body = row.bug.body
               .replace(/(?:\r\n|\r|\n)/g, '                ');
-            row.body = row.body
+            row.bug.body = row.bug.body
               .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
         }
-        row.reporterLogin = row.reporterId;
-        row.assigneeLogin = row.assigneeId;
-        delete row.reporterId;
-        delete row.assigneeId;
-        return row;
+        row.bug.createdAt = row.bug.createdAt.toISOString();
+
+        row.bug.projectId = row.project;
+        row.bug.number = row.number;
+        row.bug.reporterLogin = row.bug.author;
+        row.bug.assigneesLogins = [];
+        for(var assignee of row.assignees){
+            row.bug.assigneesLogins.push(assignee.username);
+        }
+        delete row.bug.author;
+        return row.bug;
     }
-    writeFile('Issue', headers, transform);
+
+    var modelName = 'GitHubIssue';
+    var fileName = 'Bugs.tsv';
+    var filter = { isPR: isPR };
+
+    if(isPR){
+        fileName = 'PullRequests.tsv';
+    }
+
+    writeFile(modelName, headers, transform, fileName, '-updatedAt -__v',
+      filter, 'bug');
 }
 
 function writeIssueComments(){
@@ -287,28 +348,24 @@ function writeCommitComments() {
       '-__v', {type: 'commit'});
 }
 
-function writeDevs(){
-    console.log('** Generating developers file **');
+/** Writes StackOverflow answers and questions to .tsv files. They are called
+* 'Answers.tsv' and 'Questions.tsv' and are on the 'files/' folder.
+**/
+function writeAnswersAndQuestions(){
+    console.log('** Generating answers and questions files **');
     var items = '-updatedAt -createdAt -__v'
-    var Developer = mongoose.model('Developer');
-    var dbStream = Developer.find().select(items).lean().stream();
+    var SoProfile = mongoose.model('StackOverflowProfile');
+    var dbStream = SoProfile.find().select(items).lean().stream();
 
-    var devFilePath = 'files/Developers.tsv';
     var questionFilePath = 'files/Questions.tsv';
     var answerFilePath = 'files/Answers.tsv';
-    var devStream = fs.createWriteStream(devFilePath);
     var questionStream = fs.createWriteStream(questionFilePath);
     var answerStream = fs.createWriteStream(answerFilePath);
 
     var options = {
         delimiter: '\t',
-        headers: ['_id', 'email', 'repositories', 'soId', 'tags']
+        headers: true,
     }
-
-    var devCsvStream = csv.createWriteStream(options);
-    devCsvStream.pipe(devStream);
-
-    options.headers = true;
 
     var questionCsvStream = csv.createWriteStream(options);
     questionCsvStream.pipe(questionStream);
@@ -316,154 +373,191 @@ function writeDevs(){
     var answerCsvStream = csv.createWriteStream(options);
     answerCsvStream.pipe(answerStream);
 
-    var counter = 0;
     dbStream.on('data', function (dev) {
-        counter++;
-        dev.email = dev.ghProfile.email;
-        dev.repositories = dev.ghProfile.repositories;
-        if(dev.soProfile){
-            for(var question of dev.soProfile.questions){
-                question.body = question.body
-                  .replace(/\t/g, '        ');
-                question.body = question.body
-                  .replace(/(?:\r\n|\r|\n)/g, '                ');
-                question.body = question.body
-                  .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
-                question.askerId = dev._id;
-                question.askerSoId = dev.soProfile._id;
+        for(var question of dev.questions){
+            question.body = question.body
+              .replace(/\t/g, '        ');
+            question.body = question.body
+              .replace(/(?:\r\n|\r|\n)/g, '                ');
+            question.body = question.body
+              .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
+            question.askerEmail = dev.email;
+            question.askerSoId = dev._id;
 
-                if(question.createdAt){
-                    question.createdAt = question.createdAt.toISOString();
-                }
-
-                if(question.updatedAt){
-                    question.updatedAt = question.updatedAt.toISOString();
-                }
-                questionCsvStream.write(question);
+            if(question.createdAt){
+                question.createdAt = question.createdAt.toISOString();
             }
 
-            for(var answer of dev.soProfile.answers){
-                answer.body = answer.body
-                  .replace(/\t/g, '        ');
-                answer.body = answer.body
-                  .replace(/(?:\r\n|\r|\n)/g, '                ');
-                answer.body = answer.body
-                  .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
-                answer.answererId = dev._id;
-                answer.answererSoId = dev.soProfile._id;
+            if(question.updatedAt){
+                question.updatedAt = question.updatedAt.toISOString();
+            }
+            questionCsvStream.write(question);
+        }
 
-                if(answer.createdAt){
-                    answer.createdAt = answer.createdAt.toISOString();
-                }
+        for(var answer of dev.answers){
+            answer.body = answer.body
+              .replace(/\t/g, '        ');
+            answer.body = answer.body
+              .replace(/(?:\r\n|\r|\n)/g, '                ');
+            answer.body = answer.body
+              .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
+            answer.answererEmail = dev.email;
+            answer.answererSoId = dev._id;
 
-                if(answer.updatedAt){
-                    answer.updatedAt = answer.updatedAt.toISOString();
-                }
-
-                answerCsvStream.write(answer);
+            if(answer.createdAt){
+                answer.createdAt = answer.createdAt.toISOString();
             }
 
-            dev.soId = dev.soProfile._id;
+            if(answer.updatedAt){
+                answer.updatedAt = answer.updatedAt.toISOString();
+            }
 
-            dev.tags = dev.soProfile.tags.map(function (tag) {
-                return tag._id;
-            });
+            answerCsvStream.write(answer);
         }
 
-        if(dev.createdAt){
-            dev.createdAt = dev.createdAt.toISOString();
-        }
-
-        if(dev.updatedAt){
-            dev.updatedAt = dev.updatedAt.toISOString();
-        }
-
-        delete dev.ghProfile;
-        delete dev.soProfile;
-
-        devCsvStream.write(dev);
-        file.Developer.linesRead = counter;
     }).on('error', function (err) {
         console.log('========== AAAAHHHHHH')
         console.log(err);
     }).on('close', function (){
-        console.log('* Finished Developers! *');
-        devCsvStream.end();
+        console.log('* Finished Answers and questions! *');
+
         answerCsvStream.end();
         questionCsvStream.end();
-        file.Developer.status = READY;
-        file.Contributor.status = READY;
-        saveTimestamp('Developer', devFilePath);
-        saveTimestamp('Contributor', devFilePath);
+
         saveTimestamp('Answer', answerFilePath);
         saveTimestamp('Question', questionFilePath);
     });
 }
 
-/** Helper function to read the files
-*
-*  @param option - The Model that will be exported. The file will be the name of this model pluralized.
-**/
-
-function readFile(option){
-    var MongooseModel = mongoose.model(option);
-
-    var countCallback = function (err, dbCount) {
-        if(dbCount === 0) {
-            var path = 'files/' + option + 's.tsv';
-            var options = {
-                delimiter: '\t',
-                headers: true,
-                ignoreEmpty: true
+function writeDevs() {
+    var transform = function (data) {
+        data.tags = [];
+        data.soIds = [];
+        for(var soProfile of data.profiles.so){
+            for(var tag of soProfile.tags){
+                data.tags.push(tag._id);
             }
-            var readable = fs.createReadStream(path, {encoding: 'utf8'});
-
-            console.log('** Reading file! **');
-            var models = [];
-            var counter = 0;
-            csv.fromStream(readable, options)
-            .on('data', function(model){
-                if(option === 'Developer'){
-                    delete model.tags;
-                    if(model.soId){
-                        model.soProfile = {
-                            _id: parseInt(model.soId),
-                            tags: [],
-                            questions: [],
-                            answers: [],
-                            soPopulated: false
-                        }
-                    }
-                    model.ghProfile = {
-                        _id: model._id,
-                        repositories: [],
-                        email: model.email
-                    }
-                    delete model.email;
-                    delete model.soId;
-                }
-
-                models.push(model)
-                counter++;
-                populated[option].linesRead = counter;
-            }).on('end', function(){
-                MongooseModel.collection.insert(models, function (err) {
-                    if(err){
-                        console.log(err);
-                    } else {
-                        console.log(option + 's populated');
-                        console.log('***** DONE *****');
-                    }
-                });
-                populated[option].status = READY;
-            });
-        } else {
-            populated[option].status = READY;
-            populated[option].linesRead = dbCount;
+            data.soIds.push(soProfile._id);
         }
+
+
+        data.repositories = [];
+        for(var ghProfile of data.profiles.gh){
+            for(var repo of ghProfile.repositories){
+                data.repositories.push(repo);
+            }
+        }
+
+        return data;
     }
 
-    MongooseModel.count().exec(countCallback);
+    var headers = ['_id', 'email', 'repositories', 'soIds', 'tags'];
+
+    writeFile('Developer', headers, transform, 'Developers.tsv',
+      '-updatedAt -__v', {}, 'profiles.so profiles.gh');
+}
+
+/** Basic flow to read files. It's assumed that, whatever the file name, it's
+* located on 'files/' (from the root of the project).
+*
+* @param {string} modelName - The Model name that will be import.
+* @param {function} transformCallback - The function that will transform the data before
+    writing it to the database.
+* @param {boolean|array} headers - If true, it will consider the first line
+    of the file as headers. If an array is given, each entry will be a header.
+* @param {String} fileName - The name of file to be read. This should be a .tsv.
+    Default is modelName pluralized. E.g: modelName = Issue, fileName = Issues.tsv
+**/
+function readFile(modelName,
+            transformCallback = undefined,
+            savingOnTransform = false,
+            headers = true,
+            fileName = modelName + 's.tsv'){
+
+    var MongooseModel = mongoose.model(modelName);
+
+    var path = 'files/' + fileName;
+    var options = {
+        delimiter: '\t',
+        headers: headers,
+        ignoreEmpty: true,
+    }
+    console.log('** Reading file! **');
+
+    var readable = fs.createReadStream(path, {encoding: 'utf8'});
+    var readStream = csv.fromStream(readable, options);
+
+    if(transformCallback){
+        readStream.on('data', function(data){
+            transformCallback(data)
+        });
+    }
+
+    if(!savingOnTransform){
+        var models = [];
+        readStream.on('data', function(model){
+            models.push(model);
+        }).on('end', function () {
+            MongooseModel.collection.insert(models, function (err) {
+                if(err){
+                    console.log(err.message);
+                } else {
+                    console.log(modelName + 's populated');
+                    console.log('***** DONE *****');
+                }
+                changeStatus(modelName, READY, 'populated');
+            });
+        });
+    } else {
+        readStream.on('end', function(){
+            changeStatus(modelName, READY, 'populated');
+        });
+    }
+
+}
+
+/** Generates the callback to populate the common users.
+**/
+function readDevs(){
+    var GitHubProfile = mongoose.model('GitHubProfile');
+    var StackOverflowProfile = mongoose.model('StackOverflowProfile');
+    var Developer = mongoose.model('Developer');
+
+    var transform = function (data) {
+        StackOverflowProfile.create({_id: data.soId, email: data.email}, function (err){
+            if(err){
+                console.log(err.message);
+            }
+        });
+
+        GitHubProfile.create(data, function (err){
+            if(err){
+                console.log(err.message);
+            }
+        });
+
+        var dev = {
+            email: data.email,
+        }
+        var updateFields = {
+            $addToSet: {
+                'profiles.gh': data._id,
+                'profiles.so': data.soId,
+            },
+        }
+        var options = {
+            upsert: true,
+        }
+
+        Developer.update(dev, updateFields, options, function (err){
+            if(err){
+                console.log(err.message);
+            }
+        });
+    }
+
+    var savingOnTransform = true;
+    readFile('Developer', transform, savingOnTransform);
 }
 
 function populate(option, project = undefined){
@@ -477,7 +571,42 @@ function populate(option, project = undefined){
             populator.GitHub(option, repo._id);
         }
     } else {
-        populated[option].status = READY;
+        changeStatus(option, READY, 'populated');
         populator.StackOverflow(option);
     }
+}
+
+function getStatus(model, option = 'generated'){
+    model = getModelName(model);
+    return statuses[model][option];
+}
+
+function changeStatus(model, status, option = 'generated'){
+    model = getModelName(model);
+    statuses[model][option] = status;
+    if(status === READY && option === 'generated'){
+        saveTimestamp(model);
+    }
+}
+
+function getModelName(option){
+    switch (option) {
+        case 'CommitComment':
+        case 'IssueComment':
+        case 'Comment':
+            option = 'Comment';
+            break;
+        case 'Developer':
+        case 'Contributor':
+            option = 'Developer';
+            break;
+        case 'Bug':
+        case 'Issue':
+        case 'PullRequest':
+        case 'GitHubIssue':
+        case 'BugzillaBug':
+            option = 'Bug';
+            break;
+    }
+    return option
 }

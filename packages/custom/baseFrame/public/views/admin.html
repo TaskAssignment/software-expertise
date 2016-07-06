@@ -20,9 +20,9 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
                             Populate
                         </button>
                         <i class="fa fa-spinner fa-pulse fa-fw"
-                        ng-if="generalOptions[model].populated === false"></i>
+                        ng-if="option.populated === false"></i>
                         <i class="fa fa-check"
-                        ng-if="generalOptions[model].populated"></i>
+                        ng-if="option.populated"></i>
                     </td>
                     <td ng-if="option.projectSpecific">
                         <div class="form-inline">
@@ -35,17 +35,17 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
                         <div ng-if="model !== 'Project'">
                         <button ng-if="projectSelected() && !option.noModel"
                           ng-click="populate(model)" class="btn btn-default">
-                            Populate {{ model }} for {{ selectedProject.name }}
+                            Populate {{ option.label }} for {{ selectedProject.name }}
                         </button>
                         <i class="fa fa-spinner fa-pulse fa-fw"
-                        ng-if="generalOptions[model].populated === false"></i>
+                        ng-if="option.populated === false"></i>
                         <i class="fa fa-check"
-                        ng-if="generalOptions[model].populated"></i>
+                        ng-if="option.populated"></i>
                         <p ng-if="!projectSelected()">
                             This is project specific. Select a project to populate it.
                         </p>
                         <p ng-if="option.noModel">
-                            This is populated with contributors
+                            This is populated with {{ option.parent }}
                         </p>
                     </td>
                     <td> {{ option.timestamp }} </td>
@@ -54,21 +54,21 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
                             Generate
                         </button>
                         <i class="fa fa-spinner fa-pulse fa-fw"
-                        ng-if="generalOptions[model].generated === false"></i>
+                        ng-if="option.generated === false"></i>
                         <i class="fa fa-check"
-                        ng-if="generalOptions[model].generated"></i>
+                        ng-if="option.generated"></i>
                     </td>
                     <td ng-if="option.noModel">
-                        This is generated with Contributors.
+                        This is generated with {{ option.parent }}.
                     </td>
                     <td>
                         <button ng-click="download(model)" class="btn btn-default">
                             Download
                         </button>
                         <i class="fa fa-spinner fa-pulse fa-fw"
-                        ng-if="generalOptions[model].downloaded === false"></i>
+                        ng-if="option.downloaded === false"></i>
                         <i class="fa fa-check"
-                        ng-if="generalOptions[model].downloaded"></i>
+                        ng-if="option.downloaded"></i>
                     </td>
                 </tr>
             </tbody>

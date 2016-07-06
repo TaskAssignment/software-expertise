@@ -3,6 +3,11 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
+/** CoOccurrence is the count of how many times a StackOverflow tag appears with
+* another tag. All fields are required.
+* @class CoOccurrence
+* @requires mongoose
+**/
 var CoOccurrenceSchema = new Schema({
     source: {
         type: String,

@@ -1,4 +1,10 @@
 'use strict';
+/** Module to populate data from StackExchange and GitHub.
+*
+* @module populator
+* @requires mongoose
+* @requires request
+**/
 
 var request = require('request');
 var mongoose = require('mongoose');
@@ -6,23 +12,46 @@ var mongoose = require('mongoose');
 var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
 
-var models = ['Tag', 'CoOccurrence', 'Issue', 'Developer', 'Commit',
-  'CommitComment', 'IssueComment', 'Language', 'Project', 'IssueEvent', 'Contributor'];
+var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit',
+  'CommitComment', 'IssueComment', 'Language', 'Project', 'Event', 'Contributor'];
 
-var populated = {project: {items: {}}};
+var populated = {};
 for(var model of models){
     populated[model] = NOT_READY;
 }
 
-var next_token = 0;
-var ACCESS_TOKENS = [
-    'access_token=7mnlmGk6edBcSJnG1Qpn1w))&key=vqnCl1eW8aKqHEBXFabq7Q((',
-    'access_token=pQYmG3eKP1xoNlN*m0RD5Q))&key=LrB92oMtLUnGJ5uyZvA)bw((',
-    'access_token=Al(Mk7j*crIMRteMw7AnZg))&key=Ctt)0cvvDQttNSj9wmv38g((',
-    'access_token=*NptX8UDdghuEVxycU3BIQ))&key=J1y9C6i6AhWLcgHAyC2iOQ((',
-    'access_token=(CnKXfjNGlEWcTd7yT7s0A))&key=vRMoDd5M)SvR0OSzLWQIfw((',
-    'access_token=oXBWhENXHQZJY8h8LAykUw))&key=unaHxXqTCHJ5Ve6AfnIJGg(('
-]
+var SO_APPS = {
+    '7211': {
+        client_secret: 'yurW77OF7QW5a*M84WnxJw((',
+        access_token: 'yBmIU6ZDieXJH28yD8xsvg))',
+        key: 'unaHxXqTCHJ5Ve6AfnIJGg((',
+    },
+    '7341': {
+        client_secret: 'aiU5CjKOd*6Nyvjjf38ALA((',
+        access_token: 'cX38VZgQoBegnEj10eDJqA))',
+        key: 'vRMoDd5M)SvR0OSzLWQIfw((',
+    },
+    '7342': {
+        client_secret: 'mxH2R184QmhGDrWI1TikaQ((',
+        access_token: 'vVGjAoR(qSM7yfA56Atfog))',
+        key: 'vqnCl1eW8aKqHEBXFabq7Q((',
+    },
+    '7343': {
+        client_secret: 'ae5OXiV4C2OtuPWFjVuoXQ((',
+        access_token: 'oYFcVO3QDnl(91sSUjThNA))',
+        key: 'LrB92oMtLUnGJ5uyZvA)bw((',
+    },
+    '7344': {
+        client_secret: '1iPAaK1iEz1gYlrJ73Yi4w((',
+        access_token: '7QlDCIzxwizwdUisKiv9gg))',
+        key: 'Ctt)0cvvDQttNSj9wmv38g((',
+    },
+};
+
+var CLIENT_IDS = Object.keys(SO_APPS);
+var nextApp = 0;
+var nextClientId = CLIENT_IDS[nextApp];
+
 var stopRequests = false;
 var delay = 34; // 34 ms to assure that there will be no more than 30 requests per second.
 var selectedProject;
@@ -32,42 +61,61 @@ var firstTime = true;
 module.exports = function (BaseFrame) {
     return {
         GitHub: function (option, id) {
-            switch (option) {
-                case 'Developer':
-                    populateContributors(id);
-                    break;
-                case 'Issue':
-                    var StopWord = mongoose.model('StopWord');
-                    StopWord.find().lean().exec(function (err, words) {
-                        stopWords = words.map(function (word){
-                            return word._id;
-                        });
-                        populateLanguages(id);
-                        var intervalLanguage = setInterval(function () {
-                            if(populated.Language === READY){
-                                stopLanguage();
-                            }
-                        }, 1000);
+            var Project = mongoose.model('Project');
+            console.log(id);
+            Project.findById(id, function(err, project){
+                if(err){
+                    console.log('=== Error Project: ' + err.message);
+                } else {
+                    selectedProject = project;
+                }
+            });
+            var intervalProject = setInterval(function () {
+                if(selectedProject){
+                    stopProject();
+                }
+            }, 1000);
 
-                        function stopLanguage(){
-                            clearInterval(intervalLanguage);
-                            populateIssues(id);
-                        }
-                    });
-                    break;
-                case 'IssueEvent':
-                    populateEvents(id);
-                    break;
-                case 'IssueComment':
-                    populateComments(id, 'Issue');
-                    break;
-                case 'Commit':
-                    populateCommits(id);
-                    break;
-                case 'CommitComment':
-                    populateComments(id, 'Commit');
-                    break;
+            function stopProject(){
+                clearInterval(intervalProject);
+                switch (option) {
+                    case 'Developer':
+                        populateContributors(id);
+                        break;
+                    case 'Bug':
+                        var StopWord = mongoose.model('StopWord');
+                        StopWord.find().lean().exec(function (err, words) {
+                            stopWords = words.map(function (word){
+                                return word._id;
+                            });
+                            populateLanguages(id);
+                            var intervalLanguage = setInterval(function () {
+                                if(populated.Language === READY){
+                                    stopLanguage();
+                                }
+                            }, 1000);
+
+                            function stopLanguage(){
+                                clearInterval(intervalLanguage);
+                                populateIssues(id);
+                            }
+                        });
+                        break;
+                    case 'Event':
+                        populateEvents(id);
+                        break;
+                    case 'IssueComment':
+                        populateComments(id, 'Issue');
+                        break;
+                    case 'Commit':
+                        populateCommits(id);
+                        break;
+                    case 'CommitComment':
+                        populateComments(id, 'Commit');
+                        break;
+                }
             }
+
         },
         StackOverflow: function (option, projectId = '') {
             switch (option) {
@@ -76,7 +124,7 @@ module.exports = function (BaseFrame) {
                         if(populated.Developer === READY){
                             stop();
                         }
-                    }, 1000);
+                    }, 2000);
 
                     function stop(){
                         clearInterval(interval);
@@ -84,77 +132,73 @@ module.exports = function (BaseFrame) {
                     }
                     break;
                 case 'Tag':
-                    populateTags('!4-J-dto(jg0aSjE(E');
+                    populateTags();
                     break;
                 case 'CoOccurrence':
-                    populateCoOccurrences('!bNKX0pf0ks06(E');
+                    populateCoOccurrences();
                     break;
             }
         },
         check: function (option) {
+            if(option === 'Comment'){
+                return populated['IssueComment'];
+            }
             return populated[option];
         }
     }
 }
-
-function populateCoOccurrences(filter = 'default', site = 'stackoverflow'){
+/** Populate all the CoOccurrences of tags on the database. CoOccurrences are
+* given related tags.
+* @see {@link https://api.stackexchange.com/docs/related-tags|Related Tags}
+* @see populateUserTags
+*
+* @param {string} filter - The filter to be used on the StackExchange API.
+* @param {string} site - The StackExchange network to pull the data from.
+**/
+function populateCoOccurrences(filter = '!bNKX0pf0ks0KAn', site = 'stackoverflow'){
     var Tag = mongoose.model('Tag');
-    var CoOccurrence = mongoose.model('CoOccurrence');
-    var patterns = ['[a-c]', '[d-h]', '[i-n]', '[o-r]', '[s-w]', '[x-z]','[^a-z]'];
-    for(var pattern of patterns){
-        var regex = new RegExp('^' + pattern);
-        findTags(regex);
-    }
+    var dbStream = Tag.find().lean().stream();
 
-    function findTags(regex){
-        Tag.find({_id: regex}).lean().exec(function (err, tags){
-            for(var tag of tags){
-                coOccurrenceRequest(tag, regex);
-            }
-        });
-    }
+    var buildModels = function (results) {
+        var CoOccurrence = mongoose.model('CoOccurrence');
+        var tag = results[0]; //First item is the 'requested' tag
 
-    function coOccurrenceRequest(tag, regex){
-        if(!stopRequests){
-            setTimeout(function () {
-                var CONFIDENCE = 0.01;
-                var MINIMUM_COUNT = CONFIDENCE * tag.soTotalCount;
-                var url = 'tags/' + tag._id + '/related?order=desc&sort=popular';
-                url += '&site=' + site;
-                url += '&filter=' + filter;
+        for(var i = 1; i < results.length; i++){
+            var result = results[i];
+            var coOccurrence = {
+                source: tag.name,
+                target: result.name,
+                occurrences: result.count,
+            };
 
-                var buildModels = function(items){
-                    var coOccurrences = [];
-                    for(var i in items){
-                        var result = items[i];
-                        if(result.count >= MINIMUM_COUNT) {
-
-                            var coOccurrence = {
-                                source: tag._id,
-                                target: result.name,
-                                occurrences: result.count
-                            };
-
-                            coOccurrences.push(coOccurrence);
-                        } else {
-                            break;
-                        }
-                    }
-
-                    CoOccurrence.collection.insert(coOccurrences, function (err){
-                        if(err){
-                            console.log('=== Error CoOccurrence: ' + err.message);
-                        }
-                    });
+            CoOccurrence.update(coOccurrence, {occurrences: result.count},
+              {upsert: true}, function (err) {
+                if(err){
+                    console.log('=== Error CoOccurrence: ' + err.message);
                 }
-
-                soPopulate('CoOccurrence', url, buildModels);
-            }, delay);
+            });
         }
     }
+
+    dbStream.on('data', function (tag) {
+        var url = 'tags/' + tag._id + '/related?order=desc&sort=popular';
+        url += '&site=' + site;
+        url += '&filter=' + filter;
+
+        setTimeout(function () {
+            soPopulate('CoOccurrence', url, buildModels);
+        }, delay);
+    });
 }
 
-function populateTags(filter = 'default', site = 'stackoverflow'){
+/** Populate all the tags present in a specified StackExchange network.
+* @see {@link https://api.stackexchange.com/docs/tags|Tags}
+* @see populateUserTags
+*
+* @param {string} filter - The filter to be used on the StackExchange API.
+* @param {string} site - The StackExchange network to pull the data from.
+**/
+function populateTags(filter = '!4-J-dto(jg0aSjE(E', site = 'stackoverflow'){
     var url = 'tags?order=desc&sort=popular';
     url += '&site=' + site;
     url += '&filter=' + filter;
@@ -177,31 +221,50 @@ function populateTags(filter = 'default', site = 'stackoverflow'){
             tags.push(tag);
         }
 
-        Tag.collection.insert(tags);
+        Tag.create(tags, function (err, tags) {
+            if(err){
+                console.log(err.message);
+            } else {
+                console.log('Tags created');
+            }
+        });
     }
 
     soPopulate('Tag', url, buildModels);
 }
 
+/** Populate questions, answers and tags related to users from a specific GitHub
+* project.
+* @see populateAnswers
+* @see populateQuestion
+* @see populateUserTags
+*
+* @param {int} projectId - Id from a GitHub project.
+**/
 function populateStackOverflowUserData(projectId){
-    var Developer = mongoose.model('Developer');
-    var devFilter = {
-        'ghProfile.repositories': projectId,
-        soProfile: {
-            $exists: true
-        },
-        'soProfile.soPopulated': false
-    };
-
-    var selectItems = 'soProfile._id';
+    var GitHubProfile = mongoose.model('GitHubProfile');
+    var filter = {
+        repositories: projectId,
+        email: {$exists: true},
+    }
+    GitHubProfile.find(filter).select('email').lean().exec(function (err, gh){
+        if(err){
+            console.log(err);
+        } else {
+            var emails = gh.map(function (profile) {
+                return profile.email;
+            });
+            findStackOverflowMatches(emails);
+        }
+    });
 
     function partialUsers(users){
         var ids = '';
-        for(var i in users){
-            ids += users[i].soProfile._id + ';';
+        for(var user of users){
+            ids += user._id + ';';
         }
 
-        ids = ids.slice(0, -1);
+        ids = ids.slice(0, -1); // Remove last unecessary semicolon
 
         if(ids.length > 0 && !stopRequests){
             populateAnswers(ids, projectId, '!FcbKgR9VoP8kZFhRg5uitziPRm');
@@ -209,20 +272,37 @@ function populateStackOverflowUserData(projectId){
             populateUserTags(ids, projectId, '!bMMRSq0xzD.9EI');
         }
     }
-    Developer.find(devFilter).select(selectItems).lean().exec(function(err, devs){
-        while(devs.length > 100){
-            var dev_part = devs.splice(0, 100);
-            partialUsers(dev_part);
+
+    function findStackOverflowMatches(emails){
+        var SoProfile = mongoose.model('StackOverflowProfile');
+        var filter = {
+            email: {
+                $in: emails,
+            },
+            'isPopulated.all': false,
         }
-        partialUsers(devs);
-    });
+
+        SoProfile.find({email: {$in: emails}}).select('_id')
+        .lean().exec(function(err, devs){
+            while(devs.length > 100){
+                var dev_part = devs.splice(0, 100);
+                partialUsers(dev_part);
+            }
+            partialUsers(devs);
+        });
+    }
 }
 
-/** Populates all the user tags from stackoverflow using the
-* soPopulate function.
+/** Populate all the user tags from StackOverflow using the soPopulate function.
+* User tags are provided by the endpoint @see {@link https://api.stackexchange.com/docs/tags-on-users|Tags on users}
 *
-* Filter is generated by stackexchange api. Check
-*https://api.stackexchange.com/docs/tags-on-users#pagesize=100&order=desc&sort=popular&ids=696885&filter=!4-J-dtwSuoIA.NOpA&site=stackoverflow
+* @param {string} ids - A string with up to 100 StakOverflow ids.
+    @see {@link https://api.stackexchange.com/docs/tags-on-users|Tags on users} for more information.
+* @param {int} projectId - Id of a GitHub project. This is used to filter
+    the users on saving, since some ids are repeated.
+* @param {string} filter - The filter to be used on the StackExchange API. This is generated by the API.
+    @see {@link https://api.stackexchange.com/docs/tags-on-users#pagesize=100&order=desc&sort=popular&ids=696885&filter=!4-J-dtwSuoIA.NOpA&site=stackoverflow|Example Filter}
+* @param {string} site - The StackExchange network to pull the data from.
 **/
 function populateUserTags(ids, projectId, filter = 'default', site = 'stackoverflow'){
     var url = 'users/' + ids + '/tags?order=desc&sort=popular';
@@ -230,7 +310,7 @@ function populateUserTags(ids, projectId, filter = 'default', site = 'stackoverf
     url += '&filter=' + filter;
 
     var Tag = mongoose.model('Tag');
-    var Developer = mongoose.model('Developer');
+    var SoProfile = mongoose.model('StackOverflowProfile');
 
     var findTags = function (tag, result){
         Tag.findOne({_id: tag._id}, function (err, dbTag){
@@ -242,22 +322,21 @@ function populateUserTags(ids, projectId, filter = 'default', site = 'stackoverf
             }
 
             var filter = {
-                'soProfile._id': result.user_id,
-                'ghProfile.repositories': projectId
+                _id: result.user_id,
             }
 
             var updateFields = {
                 $addToSet: {
-                    'soProfile.tags': tag
+                    tags: tag,
                 },
-                'soProfile.soPopulated': true
+                'isPopulated.tags': true,
             };
 
-            Developer.update(filter, updateFields).exec(function(err){
+            SoProfile.update(filter, updateFields).exec(function(err){
                 if(err){
                     console.log('=== Error UserTags: ' + err.message);
                 } else {
-                    console.log('User ' + result.user_id + ': tags updated!');
+                    // console.log('User ' + result.user_id + ': tags updated!');
                 }
             });
         });
@@ -283,8 +362,20 @@ function populateUserTags(ids, projectId, filter = 'default', site = 'stackoverf
     soPopulate('Tag', url, buildModels);
 }
 
-/** Populates all the user answers from stackoverflow using the
-* soPopulate function.
+/** Populate answers from StackOverflow using the soPopulate function.
+* Answers can be populated based on users or not.
+* @see {@link https://api.stackexchange.com/docs/answers-by-ids | Answers by ids}.
+* @see {@link https://api.stackexchange.com/docs/answers-on-users | Answers on users}
+* @see populateUserTags
+*
+* @param {string} ids - A string with up to 100 StakOverflow ids. This will be considered users ids if the obj is 'users/'.
+* @param {int} projectId - Id of a GitHub project. This is used to filter
+    the users on saving, since some ids are repeated.
+* @param {string} filter - The filter to be used on the StackExchange API.
+* @param {string} obj - If 'users/' will get the answers related to given user ids.
+    If 'questions/' will get answers related to given questions. If '' will get
+    answers with the given ids.
+* @param {string} site - The StackExchange network to pull the data from.
 **/
 function populateAnswers(ids, projectId, filter = 'default', obj = 'users/', site = 'stackoverflow'){
 
@@ -292,7 +383,7 @@ function populateAnswers(ids, projectId, filter = 'default', obj = 'users/', sit
     url += '&site=' + site;
     url += '&filter=' + filter;
 
-    var Developer = mongoose.model('Developer');
+    var SoProfile = mongoose.model('StackOverflowProfile');
 
     var buildModels = function(items){
         for(var result of items){
@@ -303,27 +394,27 @@ function populateAnswers(ids, projectId, filter = 'default', obj = 'users/', sit
                 title: result.title,
                 score: result.score,
                 tags: result.tags,
-                //Time comes in seconds on Stack Exchange API
+                //Time comes in seconds on the Stack Exchange API
                 createdAt: new Date(result.creation_date * 1000),
                 updatedAt: new Date(result.last_activity_date * 1000)
             };
 
             var filter = {
-                'soProfile._id': result.owner.user_id,
-                'ghProfile.repositories': projectId,
+                _id: result.owner.user_id,
             }
 
             var updateFields = {
                 $addToSet: {
-                    'soProfile.answers': answer
-                }
+                    answers: answer,
+                },
+                'isPopulated.answers': true,
             };
 
-            Developer.update(filter, updateFields).exec(function (err){
+            SoProfile.update(filter, updateFields).exec(function (err){
                 if(err){
                     console.log('=== Error Answers: ' + err.message);
                 } else {
-                    console.log(result.owner.user_id + ' answers updated!');
+                    // console.log(result.owner.user_id + ' answers updated!');
                 }
             });
         }
@@ -333,8 +424,20 @@ function populateAnswers(ids, projectId, filter = 'default', obj = 'users/', sit
     soPopulate('Answer', url, buildModels);
 }
 
-/** Populates all the user questions from stackoverflow using the
-* soPopulate function.
+/** Populate answers from StackOverflow using the soPopulate function.
+* Answers can be populated based on users or not.
+* @see {@link https://api.stackexchange.com/docs/questions-by-ids | Questions by ids}.
+* @see {@link https://api.stackexchange.com/docs/questions-on-users | Questions on users}
+* @see populateUserTags
+*
+* @param {string} ids - A string with up to 100 StakOverflow ids. This will be considered users ids if the obj is 'users/'.
+* @param {int} projectId - Id of a GitHub project. This is used to filter
+    the users on saving, since some ids are repeated.
+* @param {string} filter - The filter to be used on the StackExchange API.
+* @param {string} obj - If 'users/' will get the questions related to given user ids.
+    If 'questions/' will get questions related to given questions. If '' will get
+    questions with the given ids.
+* @param {string} site - The StackExchange network to pull the data from.
 **/
 function populateQuestions(ids, projectId, filter = 'default', obj = 'users/', site = 'stackoverflow'){
 
@@ -342,7 +445,7 @@ function populateQuestions(ids, projectId, filter = 'default', obj = 'users/', s
     url += '&site=' + site;
     url += '&filter=' + filter;
 
-    var Developer = mongoose.model('Developer');
+    var StackOverflowProfile = mongoose.model('StackOverflowProfile');
 
     var buildModels = function(items){
         for(var i in items){
@@ -358,21 +461,21 @@ function populateQuestions(ids, projectId, filter = 'default', obj = 'users/', s
             };
 
             var filter = {
-                'soProfile._id': result.owner.user_id,
-                'ghProfile.repositories': projectId,
+                _id: result.owner.user_id,
             }
 
             var updateFields = {
                 $addToSet: {
-                    'soProfile.questions': question
-                }
+                    questions: question,
+                },
+                'isPopulated.questions': true,
             };
 
-            Developer.update(filter, updateFields).exec(function (err){
+            StackOverflowProfile.update(filter, updateFields).exec(function (err){
                 if(err){
                     console.log('=== Error Questions: ' + err.message);
                 } else {
-                    console.log(result.owner.user_id + ' questions updated!');
+                    // console.log(result.owner.user_id + ' questions updated!');
                 }
             });
         }
@@ -381,12 +484,14 @@ function populateQuestions(ids, projectId, filter = 'default', obj = 'users/', s
     soPopulate('Question', url, buildModels);
 }
 
-function populateLanguages(id){
-    var url = id + '/languages';
+/** Fetch all the languages used in a GitHub project and update the database.
+*
+* @param {int} projectId - Id from a GitHub project.
+**/
+function populateLanguages(projectId){
+    var url = projectId + '/languages';
 
     var buildModels = function(results){
-        var Project = mongoose.model('Project');
-
         var keys = Object.keys(results);
         var languages = [];
         keys.forEach(function(key, index, array){
@@ -401,47 +506,57 @@ function populateLanguages(id){
             languages: languages
         }
 
-        Project.findByIdAndUpdate(id, updateFields, {new: true}, function(err, project){
-            if(err){
-                console.log('=== Error Project: ' + err.message);
-            } else {
-                selectedProject = project;
-            }
-        });
-
+        selectedProject.languages = languages;
+        selectedProject.save();
     }
     gitHubPopulate('Language', url, buildModels);
 }
 
-function populateIssues(id){
-    var Issue = mongoose.model('Issue');
-    Issue.findOne({projectId: id}, '-_id createdAt', {sort: '-createdAt', lean:true},function (err, lastCreated){
-        var url = id + '/issues?state=all&sort=created&direction=asc'
+/** Populate Issues from a specific project on GitHub.
+* It creates 'tags' based on the text of the issue and on the StackOverflow tags.
+* On GitHub, Pull Requests are issues and they are fetched in this same function,
+* they are saved in the database with the 'isPR' attribute equals to true.
+* To avoid throttle problems, only the new issues are fetched (once there is at least one in the database).
+* @see {@link https://developer.github.com/v3/issues/|Issues API}
+*
+* @param {int} projectId - Id of a GitHub repository.
+**/
+function populateIssues(projectId){
+    var GitHubIssue = mongoose.model('GitHubIssue');
+    var filter = {
+        projectId: projectId,
+    }
+
+    GitHubIssue.findOne(filter).populate('bug').sort('-bug.createdAt')
+    .exec(function (err, lastCreated){
+        var url = projectId + '/issues?state=all&sort=created&direction=asc';
 
         if(lastCreated){
-            lastCreated.createdAt.setSeconds(lastCreated.createdAt.getSeconds() + 1);
-            url +='&since=' + lastCreated.createdAt.toISOString();
+            var time = lastCreated.bug.createdAt;
+            time.setSeconds(time.getSeconds() + 1);
+            url +='&since=' + time.toISOString();
         }
 
-        function saveIssue(issue) {
-            Issue.update({_id: issue._id}, issue, {upsert:true})
+        function save(bug, model = 'Bug') {
+            var MongooseModel = mongoose.model(model);
+            MongooseModel.update({_id: bug._id}, bug, {upsert:true})
             .exec(function(err){
                 if(err){
-                    console.log('=== Error Issue: ' + err.message);
+                    console.log('=== Error ' + model + ': ' + err.message);
                 } else {
-                    console.log('Issue #' + issue.number + ' saved.');
-                    issue = null;
+                    console.log(model + ' ID:' + bug._id + ' saved.');
+                    bug = null;
                 }
             });
         }
 
-        function makeTags(issue) {
-            var title = issue.title + ' ' + selectedProject.description;
+        function makeTags(bug) {
+            var title = bug.title + ' ' + selectedProject.description;
             title = title.toLowerCase().split(' ');
 
             var body = [];
-            if(issue.body){ //It may not have a body.
-                body = issue.body.toLowerCase().split(' ');
+            if(bug.body){ //It may not have a body.
+                body = bug.body.toLowerCase().split(' ');
             }
 
             // word: count
@@ -489,90 +604,106 @@ function populateIssues(id){
                 for(var i in tags){
                     var tag = tags[i];
 
-                    var issueTag = {
+                    var bugTag = {
                         _id: tag._id,
                         soCount: tag.soTotalCount,
-                        issueCount: allWords[tag._id]
+                        bugCount: allWords[tag._id]
                     };
 
-                    issue.tags.push(issueTag);
+                    bug.tags.push(bugTag);
                 }
-                issue.parsed = true;
-                saveIssue(issue);
+                bug.parsed = true;
+                save(bug);
             });
         }
 
-        var buildModels = function(results){
-            for (var i in results) {
-                var result = results[i];
-                var issue = {
+        var buildModels = function (results) {
+            for(var result of results) {
+                var bug = {
+                    _id: 'GH' + result.id,
+                    title: result.title,
+                    body: result.body,
+                    status: result.state,
+                    labels: [],
+                    createdAt: new Date(result.created_at),
+                    author: result.user.login,
+                    url: result.html_url,
+                    tags: [],
+                    closedBy: result.closed_by,
+                    closedAt: result.closed_at,
+                    updatedAt: new Date(result.updated_at),
+                    parsed: false,
+                }
+
+                var ghIssue = {
                     _id: result.id,
                     number: result.number,
-                    body: result.body,
-                    title: result.title,
-                    state: result.state,
-                    projectId: id,
-                    parsed: false,
-                    type: 'IS',
-                    tags: [],
-                    comments: [],
-                    labels: [],
-                    url: result.html_url,
-                    createdAt: new Date(result.created_at),
-                    updatedAt: new Date(result.updated_at),
-                    reporterId: result.user.login
+                    project: projectId,
+                    bug: bug._id,
+                    isPR: false,
+                    assignees: [],
                 }
 
-                if(result.assignee){
-                    issue.assigneeId = result.assignee.login;
+                for(var assignee of result.assignees){
+                    var new_assignee = {
+                        username: assignee.login,
+                    }
+                    ghIssue.assignees.push(new_assignee);
                 }
+
 
                 if(result.pull_request){
-                    issue.type = 'PR';
+                    ghIssue.isPR = true;
                 }
 
-                if(result.labels){
-                    for(var label of result.labels){
-                        issue.labels.push(label.name);
-                    }
+                for(var label of result.labels){
+                    bug.labels.push(label.name);
                 }
 
-                makeTags(issue);
+                makeTags(bug);
+                save(ghIssue, 'GitHubIssue');
             }
         }
 
-        gitHubPopulate('Issue', url, buildModels);
+        gitHubPopulate('Bug', url, buildModels);
     });
 }
 
+/** Create the 'GitHubProfile' for the contributors of the project.
+* If the developer is already on the database, add it as contributor.
+*
+* @param {int} projectId - Id of a GitHub repository.
+**/
 function populateContributors(projectId){
     var url = projectId + '/contributors';
-    var Developer = mongoose.model('Developer');
+    var GitHubProfile = mongoose.model('GitHubProfile');
 
-    var buildContributor = function(result){
-        var filter = {
-            'ghProfile._id': result.login,
-        }
-        var updateFields = {
-            'ghProfile.email': result.email,
-        };
-
-        var findCallback = function (err) {
-            if(err){
-                console.log('=== Error Developer: ' + err.message);
+    var updateEmail = function (result) {
+        if(result.email){
+            var filter = {
+                _id: result.login,
             }
-        }
 
-        Developer.update(filter, updateFields, findCallback);
+            var updateFields = {
+                email: result.email || '',
+            };
+
+            var findCallback = function (err) {
+                if(err){
+                    console.log('=== Error GitHubProfile: ' + err.message);
+                }
+            }
+
+            GitHubProfile.update(filter, updateFields, findCallback);
+        }
     }
 
-    var buildModels = function(results){
+    var buildModels = function (results) {
         for (var result of results) {
             var updateFields = {
-                'ghProfile._id': result.login,
-                'ghProfile.email': result.email,
+                _id: result.login,
                 $addToSet: {
-                    'ghProfile.repositories': projectId,
+                    repositories: projectId,
                 },
             };
 
@@ -583,22 +714,29 @@ function populateContributors(projectId){
 
             var findCallback = function (err, dev) {
                 if(err){
-                    console.log('=== Error Developer: ' + err.message);
-                } else {
-                    var user_url = 'https://api.github.com/users/' + dev._id;
-                    if(!dev.ghProfile.email){
-                        gitHubPopulate('Contributor', user_url, buildContributor, true);
-                    }
+                    console.log('=== Error GitHubProfile: ' + err.message);
+                    return null;
+                }
+
+                var user_url = 'https://api.github.com/users/' + dev._id;
+                if(!dev.email){
+                    gitHubPopulate('Contributor', user_url, updateEmail, undefined, true);
                 }
             }
 
-            Developer.findByIdAndUpdate(result.login, updateFields, options, findCallback);
+            GitHubProfile.findByIdAndUpdate(result.login, updateFields, options, findCallback);
         }
     }
 
     gitHubPopulate('Developer', url, buildModels);
 }
 
+/** Fetch all the commits of a given repository. Only commits modified after the
+* last one in the database are fetched. Commits are ordered in descending order.
+* @see {@link https://developer.github.com/v3/repos/commits/|Commits API}
+*
+* @param {int} projectId - Id of a GitHub project.
+**/
 function populateCommits(projectId){
     var Commit = mongoose.model('Commit');
     Commit.findOne({projectId: projectId}, 'createdAt', {sort: '-createdAt', lean:true},function (err, lastCreated){
@@ -654,12 +792,19 @@ function populateCommits(projectId){
     });
 }
 
+/** Fetch all Issue Events. Issue Events are the 'history' of that issue and show
+* when it was referenced by a commit (or comment), when it was closed, opened,
+* assigned (or deassigned) to someone.
+* @see {@link https://developer.github.com/v3/issues/events/|Issue Events API}
+*
+* @param {int} projectId - Id of a GitHub project.
+**/
 function populateEvents(projectId){
     var url = projectId + '/issues/events'
-    var IssueEvent = mongoose.model('IssueEvent');
+    var Event = mongoose.model('Event');
 
-    var buildModels = function(results){
-        var issueEvents = [];
+    var buildModels = function (results) {
+        var events = [];
         for (var result of results) {
             if(result.issue){
                 var issueEvent = {
@@ -682,22 +827,37 @@ function populateEvents(projectId){
                     issueEvent.assigneeId = result.assignee.login;
                 }
 
-                issueEvents.push(issueEvent);
+                if(result.issue.pull_request){
+                    issueEvent.isPrEvent = true;
+                }
+
+                events.push(issueEvent);
             }
         }
 
-        IssueEvent.create(issueEvents, function(err){
+        Event.create(events, function(err){
             if(err){
-                console.log('=== Error IssueEvent: ' + err.message);
+                console.log('=== Error Event: ' + err.message);
             } else {
                 console.log('Events Created');
             }
         });
 
     }
-    gitHubPopulate('IssueEvent', url, buildModels);
+    gitHubPopulate('Event', url, buildModels, selectedProject.eventsEtag);
 }
 
+/** Fetch comments from a repository. They may be on issue or commits, depending
+* on what is specified by who calls this function. Commit Comments cannot be sorted,
+* or filtered. So, when calling this for commits comments, it will always get ALL
+* the comments on commits of this repository! Issue Comments can be filtered by
+* date, so only new ones are fetched when calling this for issue comments.
+* @see {@link https://developer.github.com/v3/repos/comments/|Commit Comments API}
+* @see {@link https://developer.github.com/v3/issues/comments/|Issue Comments API}
+*
+* @param {int} projectId - Id of a GitHub project.
+* @param {string} type - Issue or Commit
+**/
 function populateComments(projectId, type){
     var Comment = mongoose.model('Comment');
     var filter = {
@@ -752,7 +912,22 @@ function populateComments(projectId, type){
     });
 }
 
-function gitHubPopulate(option, specificUrl, callback, finalUrl = false){
+/** Basic flow for GitHub requests. This handles the pagination and eventual errors,
+* so every GitHub request should be made though this function.
+* @see {@link https://developer.github.com/v3/|GitHub API overview}
+*
+* @param {string} option - The option that is being populated now. It's used to
+* check the request status later. It can be Issue, Comment, Developer, etc.
+* @param {string} specificUrl - The url that will be appended to the base one.
+* @param {function} callback - The function to call when the results are received.
+    This should handle the creation or the updating of models in the database.
+* @param {string} etag - GitHub API Etag to avoid repeated requests
+* @param {boolean} finalUrl - If set to true, specificUrl will be considered the
+    endpoint of the request (without any other aditional parameters). If false,
+    specificUrl will be added to the base url 'https://api.github.com/repositories'
+    and will have a 'per_page' attribute added to the end.
+**/
+function gitHubPopulate(option, specificUrl, callback, etag = undefined, finalUrl = false){
     var uri = specificUrl;
     if(!finalUrl) {
         uri = 'https://api.github.com/repositories/' + specificUrl;
@@ -763,20 +938,30 @@ function gitHubPopulate(option, specificUrl, callback, finalUrl = false){
     var options = {
         headers: {
             'User-Agent': 'TaskAssignment/software-expertise',
-            Accept: 'application/vnd.github.v3+json'
+            Accept: 'application/vnd.github.v3+json',
         },
         uri: uri,
         auth:{
-            bearer: '19e383c976807df0359e36ba05938027e4a20c45'
+            bearer: '19e383c976807df0359e36ba05938027e4a20c45',
         }
     };
+
+    if(etag){
+        options.headers['If-None-Match'] = etag;
+    }
+
+    var firstRequest = true;
 
     var requestCallback = function (error, response, body){
         if (!error) {
             switch (response.statusCode) {
                 case 200:
                     var results = JSON.parse(body);
-                    // results.etag = response.headers.etag;
+                    if(firstRequest){
+                        selectedProject.eventsEtag = response.headers.etag;
+                        selectedProject.save();
+                        firstRequest = false;
+                    }
                     callback(results);
 
                     var links = response.headers.link || '';
@@ -837,6 +1022,11 @@ function gitHubPopulate(option, specificUrl, callback, finalUrl = false){
                     console.log(body, response.statusCode);
                     remakeRequest(options, requestCallback);
                     break;
+                case 304:
+                    console.log('No new changes to the option on github');
+                    console.log('*** DONE ***', option);
+                    populated[option] = READY;
+                    break;
                 default:
                     console.log(body, response.statusCode);
             }
@@ -848,17 +1038,28 @@ function gitHubPopulate(option, specificUrl, callback, finalUrl = false){
     request(options, requestCallback);
 }
 
+/** Basic flow for StackExchange requests. This handles the pagination and eventual errors,
+* so every StackExchange request should be made though this function.
+* @see {@link https://api.stackexchange.com/docs|StackExchange API overview}
+* @see {@link https://api.stackexchange.com/docs/compression|Compression}
+*
+* @param {string} option - The option that is being populated now. It's used to
+* check the request status later. It can be Tag, CoOccurrence, Question, etc.
+* @param {string} specificUrl - The url that will be appended to the base one.
+* @param {function} callback - The function to call when the results are received.
+    This should handle the creation or the updating of models in the database.
+**/
 function soPopulate(option, specificUrl, callback) {
-    var uri = 'https://api.stackexchange.com/2.2/' + specificUrl +
-      '&pagesize=100&pagesize=100';
-    uri += ACCESS_TOKENS[next_token];
+    var uri = 'https://api.stackexchange.com/2.2/' + specificUrl + '&pagesize=100';
+    var final_uri = uri + '&key=' + SO_APPS[nextClientId].key + '&access_token=' +
+      SO_APPS[nextClientId].access_token + '&page=1';
 
     var options = {
         headers: {
-            'Accept-Encoding': 'gzip'
+            'Accept-Encoding': 'gzip',
         },
         gzip: true,
-        uri: uri
+        uri: final_uri,
     };
 
     var requestCallback = function (error, response, body){
@@ -871,38 +1072,42 @@ function soPopulate(option, specificUrl, callback) {
                     console.log(option + ': Page ' + results.page);
                     // Check for next page
                     if(results.has_more){
-                        var new_uri = uri + ACCESS_TOKENS[next_token] + '&page=' +
-                        (parseInt(results.page) + 1);
+                        var new_uri = uri + '&key=' + SO_APPS[nextClientId].key +
+                          '&access_token=' + SO_APPS[nextClientId].access_token +
+                          '&page=' + (parseInt(results.page) + 1);
                         options.uri = new_uri;
 
-                        //To avoid exceed rate limit
-                        setTimeout(function () {
-                            request(options, requestCallback);
-                        }, 100);
+                        request(options, requestCallback);
                     } else {
                         console.log(option + ' done!');
                     }
                     break;
+                case 400:
                 case 401:
                 case 402:
                 case 406:
                 case 502:
                     console.log('Error Related to token. Trying a different one');
                     console.log(body);
-                    next_token = (next_token + 1) % ACCESS_TOKENS.length;
-                    if(next_token === 0){
+                    console.log(options.uri);
+                    nextApp = (nextApp + 1) % CLIENT_IDS.length;
+                    nextClientId = CLIENT_IDS[nextApp];
+                    if(nextApp === 0){
                         stopRequests = true;
                     } else {
-                        var page = '&' + options.uri.split('&').pop();
-                        options.uri = uri + ACCESS_TOKENS[next_token] + page;
+                        var page = '&' + final_uri.split('&').pop();
+                        final_uri = uri + '&key=' + SO_APPS[nextClientId].key +
+                          '&access_token=' + SO_APPS[nextClientId].access_token +
+                          page;
+                        options.uri = final_uri;
                         request(options, requestCallback);
                     }
                     break;
-                case 400:
                 case 500:
                 case 503:
                     console.log('SE Server Error. Trying again in one second');
-                    console.log(body);
+                    console.log(options.uri);
+                    console.log(body, response.statusCode);
                     remakeRequest(options, requestCallback);
                     break;
                 default:
@@ -916,6 +1121,14 @@ function soPopulate(option, specificUrl, callback) {
     request(options, requestCallback);
 }
 
+/** When some errors occur, the populate functions will reattemp to make the request.
+* If the error persists, this will terminate the requests to avoid throttle problems.
+*
+* @param {object} options - The options for the request. This may include the type
+    of request, compression, url and other things.
+* @param {function} requestCallback - The function to handle the requests. This is
+    the responsible for pagination and sending the results to their specific handlers.
+**/
 function remakeRequest(options, requestCallback){
     if(firstTime){
         setTimeout(function () {

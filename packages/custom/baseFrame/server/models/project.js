@@ -3,6 +3,12 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
+
+/** This represents a GitHub repository.
+*
+* @class Project
+* @requires mongoose
+**/
 var ProjectSchema = new Schema({
     _id: {
         type: Number,
@@ -15,8 +21,9 @@ var ProjectSchema = new Schema({
     language: String,
     languages: [{
         _id: String,
-        amount: String
-    }]
+        amount: String,
+    }],
+    eventsEtag: String,
 }, {
     timestamps: true
 });

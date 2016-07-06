@@ -29,7 +29,7 @@ var RepositoryController = function ($scope,  $http, $location, $resource) {
         if(search.user)
             URL += '+user:' + search.user;
         if(search.name)
-            URL += search.name + '+in:name';
+            URL += ' ' + search.name + '+in:name';
         if(search.description)
             URL += '+' + search.description + '+in:description';
         if(search.readme)

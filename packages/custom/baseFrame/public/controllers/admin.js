@@ -40,11 +40,13 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
             label: 'SO Answers',
             projectSpecific: true,
             noModel: true,
+            parent: 'Contributor',
         },
         Question: {
             label: 'SO Questions',
             projectSpecific: true,
             noModel: true,
+            parent: 'Contributor',
         },
         Commit: {
             label: 'Commit',
@@ -56,12 +58,18 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
             projectSpecific: true,
             noModel: false,
         },
-        Issue: {
+        Bug: {
             label: 'Issues',
             projectSpecific: true,
             noModel: false,
         },
-        IssueEvent: {
+        PullRequest: {
+            label: 'Pull Requests',
+            projectSpecific: true,
+            noModel: true,
+            parent: 'Issues',
+        },
+        Event: {
             label: 'Issue Events',
             projectSpecific: true,
             noModel: false,
@@ -72,6 +80,7 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
             noModel: false,
         },
     }
+    $scope.clientIds = [7211, 7341, 7342, 7343, 7344];
 
     $scope.select = function (project) {
         console.log(project);
@@ -82,9 +91,9 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
         return $scope.selectedProject;
     }
 
-    $scope.oauth = function () {
+    $scope.oauth = function (id) {
         var code = $location.search().code;
-        $http.get('/api/baseFrame/oauth', {params: {code: code}})
+        $http.get('/api/baseFrame/oauth', {params: {code: code, client_id: id}})
         .then(function (response) {
             console.log(response.data);
         }, function (response){
