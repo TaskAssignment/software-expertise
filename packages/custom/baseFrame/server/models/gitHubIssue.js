@@ -3,6 +3,14 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
+
+/** This represents a GitHub Issue. It references to a basic bug and has the additional
+* information pertinent to GitHub (like if it's a Pull Request or the Assignees)
+*
+* @class GitHubIssue
+* @see Bug
+* @requires mongoose
+*/
 var GitHubIssueSchema = new Schema({
     _id: Number,
     number: Number,

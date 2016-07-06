@@ -9,6 +9,12 @@ var TagSchema = new Schema({
     soCount: Number,
 });
 
+
+/** This represents a generic bug. A bug must have at least title and body.
+* Tags are generated from title and body, based on StackOverflow tags.
+* @class Bug
+* @requires mongoose
+**/
 var BugSchema = new Schema({
     _id: String,
     title: String,

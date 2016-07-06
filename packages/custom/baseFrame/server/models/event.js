@@ -3,8 +3,14 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
+/** Events are the story of an Issue on GitHub. They show when that issue had
+* labels added or removed, when commits referenced that issue or when a user was
+* assigned or deassigned.
+*
+* @class Event
+* @requires mongoose
+**/
 var EventSchema = new Schema({
-    //Using number here to sort properly. I'll think of something else.
     _id: Number,
     projectId: {
         type: Number,

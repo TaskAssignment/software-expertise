@@ -33,6 +33,15 @@ var TagSchema = new Schema({
     soCount: Number,
 });
 
+/** This represents a user from StackOverflow (SO). It stores the tags, questions
+* and answers related to this user on SO. If this user has an e-mail, it will
+* be possible to gather information from multiple profiles and have a Developer
+* profile.
+*
+* @class StackOverflowProfile
+* @see Developer
+* @requires mongoose
+**/
 var StackOverflowProfileSchema = new Schema({
     _id: Number,
     displayName: String,

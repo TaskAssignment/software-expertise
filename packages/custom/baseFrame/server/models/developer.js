@@ -3,6 +3,14 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
+/** This is the generic Developer profile. It gathers all the other profiles based
+* on the user's email. One developer can have several profiles on different platforms,
+* like GitHub and StackOverflow. Any other profiles must be added to this and referenced
+* on their models.
+*
+* @class Developer
+* @requires mongoose
+**/
 var DeveloperSchema = new Schema({
     email: {
         type: String,
