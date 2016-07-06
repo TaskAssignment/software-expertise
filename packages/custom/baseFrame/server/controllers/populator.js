@@ -1,4 +1,10 @@
 'use strict';
+/** Module to populate data from StackExchange and GitHub.
+*
+* @module populator
+* @requires mongoose
+* @requires request
+**/
 
 var request = require('request');
 var mongoose = require('mongoose');

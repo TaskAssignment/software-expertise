@@ -1,6 +1,12 @@
 'use strict';
 
-// Database connections
+/** Handles import and export requests from the UI
+*
+* @module admin
+* @requires mongoose
+* @requires fs
+* @requires fast-csv
+**/
 var mongoose = require('mongoose');
 
 var fs = require('fs');
@@ -454,12 +460,12 @@ function writeDevs() {
 /** Basic flow to read files. It's assumed that, whatever the file name, it's
 * located on 'files/' (from the root of the project).
 *
-*  @param {string} modelName - The Model name that will be import.
-*  @param {function} transformCallback - The function that will transform the data before
+* @param {string} modelName - The Model name that will be import.
+* @param {function} transformCallback - The function that will transform the data before
     writing it to the database.
-*  @param {boolean|array} headers - If true, it will consider the first line
+* @param {boolean|array} headers - If true, it will consider the first line
     of the file as headers. If an array is given, each entry will be a header.
-*  @param fileName - The name of file to be read. This should be a .tsv.
+* @param {String} fileName - The name of file to be read. This should be a .tsv.
     Default is modelName pluralized. E.g: modelName = Issue, fileName = Issues.tsv
 **/
 function readFile(modelName,
