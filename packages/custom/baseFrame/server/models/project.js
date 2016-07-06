@@ -15,8 +15,9 @@ var ProjectSchema = new Schema({
     language: String,
     languages: [{
         _id: String,
-        amount: String
-    }]
+        amount: String,
+    }],
+    eventsEtag: String, 
 }, {
     timestamps: true
 });

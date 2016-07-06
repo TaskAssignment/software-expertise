@@ -66,7 +66,8 @@ baseFrame.controller('AdminController', function ($scope, $interval, $http, $loc
         PullRequest: {
             label: 'Pull Requests',
             projectSpecific: true,
-            noModel: false,
+            noModel: true,
+            parent: 'Issues',
         },
         Event: {
             label: 'Issue Events',

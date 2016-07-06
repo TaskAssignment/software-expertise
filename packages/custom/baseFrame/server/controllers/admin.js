@@ -96,8 +96,6 @@ module.exports = function (BaseFrame){
                     break;
                 case 'Bug':
                     writeBugs();
-                    break;
-                case 'PullRequest':
                     writeBugs(true);
                     break;
                 case 'Commit':

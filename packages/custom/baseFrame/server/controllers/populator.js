@@ -55,42 +55,61 @@ var firstTime = true;
 module.exports = function (BaseFrame) {
     return {
         GitHub: function (option, id) {
-            switch (option) {
-                case 'Developer':
-                    populateContributors(id);
-                    break;
-                case 'Bug':
-                    var StopWord = mongoose.model('StopWord');
-                    StopWord.find().lean().exec(function (err, words) {
-                        stopWords = words.map(function (word){
-                            return word._id;
-                        });
-                        populateLanguages(id);
-                        var intervalLanguage = setInterval(function () {
-                            if(populated.Language === READY){
-                                stopLanguage();
-                            }
-                        }, 1000);
+            var Project = mongoose.model('Project');
+            console.log(id);
+            Project.findById(id, function(err, project){
+                if(err){
+                    console.log('=== Error Project: ' + err.message);
+                } else {
+                    selectedProject = project;
+                }
+            });
+            var intervalProject = setInterval(function () {
+                if(selectedProject){
+                    stopProject();
+                }
+            }, 1000);
 
-                        function stopLanguage(){
-                            clearInterval(intervalLanguage);
-                            populateIssues(id);
-                        }
-                    });
-                    break;
-                case 'Event':
-                    populateEvents(id);
-                    break;
-                case 'IssueComment':
-                    populateComments(id, 'Issue');
-                    break;
-                case 'Commit':
-                    populateCommits(id);
-                    break;
-                case 'CommitComment':
-                    populateComments(id, 'Commit');
-                    break;
+            function stopProject(){
+                clearInterval(intervalProject);
+                switch (option) {
+                    case 'Developer':
+                        populateContributors(id);
+                        break;
+                    case 'Bug':
+                        var StopWord = mongoose.model('StopWord');
+                        StopWord.find().lean().exec(function (err, words) {
+                            stopWords = words.map(function (word){
+                                return word._id;
+                            });
+                            populateLanguages(id);
+                            var intervalLanguage = setInterval(function () {
+                                if(populated.Language === READY){
+                                    stopLanguage();
+                                }
+                            }, 1000);
+
+                            function stopLanguage(){
+                                clearInterval(intervalLanguage);
+                                populateIssues(id);
+                            }
+                        });
+                        break;
+                    case 'Event':
+                        populateEvents(id);
+                        break;
+                    case 'IssueComment':
+                        populateComments(id, 'Issue');
+                        break;
+                    case 'Commit':
+                        populateCommits(id);
+                        break;
+                    case 'CommitComment':
+                        populateComments(id, 'Commit');
+                        break;
+                }
             }
+
         },
         StackOverflow: function (option, projectId = '') {
             switch (option) {
@@ -467,8 +486,6 @@ function populateLanguages(projectId){
     var url = projectId + '/languages';
 
     var buildModels = function(results){
-        var Project = mongoose.model('Project');
-
         var keys = Object.keys(results);
         var languages = [];
         keys.forEach(function(key, index, array){
@@ -483,14 +500,8 @@ function populateLanguages(projectId){
             languages: languages
         }
 
-        Project.findByIdAndUpdate(projectId, updateFields, {new: true}, function(err, project){
-            if(err){
-                console.log('=== Error Project: ' + err.message);
-            } else {
-                selectedProject = project;
-            }
-        });
-
+        selectedProject.languages = languages;
+        selectedProject.save();
     }
     gitHubPopulate('Language', url, buildModels);
 }
@@ -600,7 +611,7 @@ function populateIssues(projectId){
             });
         }
 
-        var buildModels = function(results){
+        var buildModels = function (results) {
             for(var result of results) {
                 var bug = {
                     _id: 'GH' + result.id,
@@ -703,7 +714,7 @@ function populateContributors(projectId){
 
                 var user_url = 'https://api.github.com/users/' + dev._id;
                 if(!dev.email){
-                    gitHubPopulate('Contributor', user_url, updateEmail, true);
+                    gitHubPopulate('Contributor', user_url, updateEmail, undefined, true);
                 }
             }
 
@@ -781,13 +792,12 @@ function populateCommits(projectId){
 * @see {@link https://developer.github.com/v3/issues/events/|Issue Events API}
 *
 * @param {int} projectId - Id of a GitHub project.
-* @todo This has to be optimized to use the etag header from the GitHub API.
 **/
 function populateEvents(projectId){
     var url = projectId + '/issues/events'
     var Event = mongoose.model('Event');
 
-    var buildModels = function(results){
+    var buildModels = function (results) {
         var events = [];
         for (var result of results) {
             if(result.issue){
@@ -811,6 +821,10 @@ function populateEvents(projectId){
                     issueEvent.assigneeId = result.assignee.login;
                 }
 
+                if(result.issue.pull_request){
+                    issueEvent.isPrEvent = true;
+                }
+
                 events.push(issueEvent);
             }
         }
@@ -824,7 +838,7 @@ function populateEvents(projectId){
         });
 
     }
-    gitHubPopulate('Event', url, buildModels);
+    gitHubPopulate('Event', url, buildModels, selectedProject.eventsEtag);
 }
 
 /** Fetch comments from a repository. They may be on issue or commits, depending
@@ -901,10 +915,13 @@ function populateComments(projectId, type){
 * @param {string} specificUrl - The url that will be appended to the base one.
 * @param {function} callback - The function to call when the results are received.
     This should handle the creation or the updating of models in the database.
+* @param {string} etag - GitHub API Etag to avoid repeated requests
 * @param {boolean} finalUrl - If set to true, specificUrl will be considered the
-    endpoint of the request (without any other aditional parameters)
+    endpoint of the request (without any other aditional parameters). If false,
+    specificUrl will be added to the base url 'https://api.github.com/repositories'
+    and will have a 'per_page' attribute added to the end.
 **/
-function gitHubPopulate(option, specificUrl, callback, finalUrl = false){
+function gitHubPopulate(option, specificUrl, callback, etag = undefined, finalUrl = false){
     var uri = specificUrl;
     if(!finalUrl) {
         uri = 'https://api.github.com/repositories/' + specificUrl;
@@ -915,20 +932,30 @@ function gitHubPopulate(option, specificUrl, callback, finalUrl = false){
     var options = {
         headers: {
             'User-Agent': 'TaskAssignment/software-expertise',
-            Accept: 'application/vnd.github.v3+json'
+            Accept: 'application/vnd.github.v3+json',
         },
         uri: uri,
         auth:{
-            bearer: '19e383c976807df0359e36ba05938027e4a20c45'
+            bearer: '19e383c976807df0359e36ba05938027e4a20c45',
         }
     };
+
+    if(etag){
+        options.headers['If-None-Match'] = etag;
+    }
+
+    var firstRequest = true;
 
     var requestCallback = function (error, response, body){
         if (!error) {
             switch (response.statusCode) {
                 case 200:
                     var results = JSON.parse(body);
-                    // results.etag = response.headers.etag;
+                    if(firstRequest){
+                        selectedProject.eventsEtag = response.headers.etag;
+                        selectedProject.save();
+                        firstRequest = false;
+                    }
                     callback(results);
 
                     var links = response.headers.link || '';
@@ -988,6 +1015,11 @@ function gitHubPopulate(option, specificUrl, callback, finalUrl = false){
                     console.log('Abuse Rate. Trying again in one second;');
                     console.log(body, response.statusCode);
                     remakeRequest(options, requestCallback);
+                    break;
+                case 304:
+                    console.log('No new changes to the option on github');
+                    console.log('*** DONE ***', option);
+                    populated[option] = READY;
                     break;
                 default:
                     console.log(body, response.statusCode);
