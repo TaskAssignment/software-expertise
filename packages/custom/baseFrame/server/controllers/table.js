@@ -1,15 +1,24 @@
 'use strict';
 
+/** Module to send data to the table on the UI.
+*
+* @module table
+* @requires mongoose
+* @requires lodash
+**/
+
 var mongoose = require('mongoose');
 
 var _ = require('lodash');
 
 module.exports = function (BaseFrame){
-    // TODO: REMAKE THIS DOCUMENTATION!!!
-
-    /**
-    * This function will merge the issueTags with the userTags
-    * Both issueTags and userTags have _id, count, soCount.
+    /** Merge bug tags with user tags and call the given callback to handle them.
+    *
+    * @param {object} modelsTags - Each model that will be merged is a key in this object.
+        Tags must be under the name of the model they are associated with.
+    * @param {function} callback - The callback to handle the merged tags.
+    * @param {object} callbackParams - The params to pass to the callback. If empty,
+        it will have the merged tags under the property 'tags'.
     **/
     function mergeTags(modelsTags, callback, callbackParams = {}){
         callbackParams.tags = {};
@@ -38,6 +47,12 @@ module.exports = function (BaseFrame){
         callback(callbackParams);
     }
 
+    /** Calculate the cosine similarity based on the given bug and developer tags.
+    *
+    * @param {array} nodesJson - Array with each of the tags, with their respective
+        counters (bug, user, common). If the tag is a JSON, it's parsed to Object
+        inside the function.
+    **/
     function cosineSimilarity(nodesJson){
         var num = 0;
         var sum_bug = 0;
@@ -58,6 +73,12 @@ module.exports = function (BaseFrame){
         return similarity || 0;
     }
 
+    /** Calculate the jaccard similarity based on the given bug and developer tags.
+    *
+    * @param {array} nodesJson - Array with each of the tags, with their respective
+        counters (bug, user, common). If the tag is a JSON, it's parsed to Object
+        inside the function.
+    **/
     function jaccardSimilarity(nodesJson){
         var numerator = 0;
         var denominator = 0;
@@ -96,6 +117,11 @@ module.exports = function (BaseFrame){
         return numerator/denominator;
     }
 
+    /** Calculate the SSA_Z similarity
+    *
+    * @param {Object} user - Questions and answers from a user on StackOverflow.
+    * @param {array} issueTags - The tags in the bug
+    **/
     function ssaZSimilarity(user, issueTags){
         var aScore = 0;
         var qScore = 0;
@@ -120,6 +146,14 @@ module.exports = function (BaseFrame){
         return numerator/denominator;
     }
 
+    /** Descending order for the given values. If they are the same, sorts based
+    * on the usernames.
+    *
+    * @param {Number} value1 - The first value of the comparison
+    * @param {Number} value2 - The second value of the comparison
+    * @param {Number} username1 - The username related to the first value.
+    * @param {Number} username2 - The username related to the second value.
+    **/
     function sort(value1, value2, username1, username2){
         if(value1 === value2){
             if(username1 <  username2){
@@ -132,22 +166,39 @@ module.exports = function (BaseFrame){
         return value2 - value1;
     }
 
-    //Sort jaccard desc order.
+    /** Callback to Array.sort. Sorts according to the jaccard similarity.
+    *
+    * @callback
+    **/
     var sortJaccard = function (a, b){
         return sort(a.jaccard, b.jaccard, a._id.toLowerCase(), b._id.toLowerCase());
     }
 
-    //Sort cosine desc order.
+    /** Callback to Array.sort. Sorts according to the cosine similarity.
+    *
+    * @callback
+    **/
     var sortCosine = function (a, b){
         return sort(a.cosine, b.cosine, a._id.toLowerCase(), b._id.toLowerCase());
     }
 
-    // Sort ssaZ desc order.
+    /** Callback to Array.sort. Sorts according to the SSA_Z similarity.
+    *
+    * @callback
+    **/
     var sortSsaZ = function (a, b){
         return sort(a.ssaZScore, b.ssaZScore, a._id.toLowerCase(), b._id.toLowerCase());
     }
 
     return {
+        /** Calculates all the similarity metrics (jaccard, cosine, SSA_Z)
+        * for a user and a bug.
+        *
+        * @param {Number} req.params.issueId - The GitHubIssue id. This is necessary
+            to filter all the candidate assignees.
+        * @returns {Object} Sends a response (using res.send) with an Object
+            containing the similarities of this issue.
+        **/
         findMatches: function (req, res) {
             var similarities = [];
             var Developer = mongoose.model('Developer');
