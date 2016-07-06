@@ -1,5 +1,12 @@
 'use strict';
 
+/** Module to handle saving and fetching projects (and thing related to them,
+* like issues or contributors).
+*
+* @module projects
+* @requires mongoose
+**/
+
 var mongoose = require('mongoose');
 var Project  = mongoose.model('Project');
 
@@ -7,10 +14,12 @@ module.exports = function (BaseFrame){
     return {
 
         /** Saves a project if it doens't exist in the database yet. Otherwise
-        * just retrives the database that matches the params.
+        * just retrives the project that matches the params.
         *
-        * @param req - Express request.
-        * @param res - Express response.
+        * @param {Object} req - Express request.
+        * @param {Object} res - Express response.
+        * @param {Object} req.query - Object with projectId to filter Projects.
+        * @return {Object} Send the project created (or found).
         **/
         save: function(req, res){
             Project.findOne(req.query, function (err, result){
@@ -29,48 +38,41 @@ module.exports = function (BaseFrame){
             });
         },
 
-        /** Looks for a project in the databse with the given contraints
+        /** Look for a project in the databse with the given contraints
         *
-        * @param req - Express request.
-        * @param res - Express response.
+        * @param {Object} req - Express request.
+        * @param {Object} res - Express response.
+        * @param {Object} req.params - Object with projectId to filter Projects.
+        * @return {Object} Send the project found.
         **/
         get: function(req, res){
-            Project.findOne(req.params, 'name description languages', {lean: true}, function(err, project){
+            Project.findOne(req.params, 'name').lean().exec(function (err, project) {
                 res.send(project);
             });
         },
 
+        /** Look for projects in the databse with the given contraints. It is different
+        * from get because it can return zero or more projects.
+        *
+        * @param {Object} req - Express request.
+        * @param {Object} res - Express response.
+        * @param {Object} req.query - Constrainsts to filter Projects.
+        * @return {Object} Send the all projects found with theese contraints.
+        **/
         find: function (req, res) {
             Project.find(req.query, '_id name', {lean: true}, function (err, projects){
                 res.send({projects: projects});
             })
         },
 
-        /** Looks for the given user (req.params) in the database.
+        /** Look for the issues of the given repository in the database
         *
-        * @param req - Express request
-        * @param res - Express response
-        **/
-        findUsers: function (req, res){
-            var Developer = mongoose.model('Developer');
-            var filter = {
-                'ghProfile.repositories': req.params.projectId
-            };
-
-            var soAssigned = JSON.parse(req.query.soAssigned);
-            if(soAssigned){
-                filter.soProfile = { $exists: true };
-            }
-
-            Developer.find(filter).sort('-updatedAt').exec(function (err, users){
-                res.send(users);
-            });
-        },
-
-        /** Looks for the issues of the given repository in the database
-        *
-        * @param req - Express request
-        * @param res - Express response
+        * @param {Object} req - Express request.
+        * @param {Object} res - Express response.
+        * @param {Number} req.params.projectId - The projectId to filter issues.
+        * @return {Array} Send the GitHubIssues found for this project. For performance
+            issues, it restricts the results to the newest 500 issues.
+        * @todo Add pagination!
         **/
         findIssues: function (req, res){
             var GitHubIssue = mongoose.model('GitHubIssue');

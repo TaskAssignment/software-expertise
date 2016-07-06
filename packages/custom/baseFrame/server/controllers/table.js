@@ -194,6 +194,8 @@ module.exports = function (BaseFrame){
         /** Calculates all the similarity metrics (jaccard, cosine, SSA_Z)
         * for a user and a bug.
         *
+        * @param {Object} req - Express request.
+        * @param {Object} res - Express response.
         * @param {Number} req.params.issueId - The GitHubIssue id. This is necessary
             to filter all the candidate assignees.
         * @returns {Object} Sends a response (using res.send) with an Object

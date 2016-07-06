@@ -1,5 +1,9 @@
 'use strict';
 
+/** Generate the routes for the system.
+*
+* @module routes
+**/
 module.exports = function (BaseFrame, app, database) {
     //TODO: See how to nest this.
     var base = '/api/baseFrame/';
@@ -14,8 +18,6 @@ module.exports = function (BaseFrame, app, database) {
       .get(projects.save);
     app.route(base + ':projectId/issues')
       .get(projects.findIssues);
-    app.route(base + ':projectId/users')
-      .get(projects.findUsers);
 
     var admin = require(controllers + 'admin')(BaseFrame);
     app.route(base + 'generate')
