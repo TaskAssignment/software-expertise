@@ -64,7 +64,7 @@ module.exports = function (BaseFrame){
         populate: function (req, res) {
             var query = req.query;
             switch (query.option) {
-                case 'StopProject':
+                case 'StopWord':
                 case 'CoOccurrence':
                 // case 'Tag':
                     readFile(query.option);
