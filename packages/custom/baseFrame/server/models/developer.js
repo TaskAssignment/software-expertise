@@ -26,6 +26,10 @@ var DeveloperSchema = new Schema({
             type: Number,
             ref: 'StackOverflowProfile',
         }],
+        bz: [{
+            type: String,
+            ref: 'BugzillaProfile',
+        }],
         //To add a new profile: create the schema and then reference it here.
     },
 }, {
