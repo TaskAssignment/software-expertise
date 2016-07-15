@@ -27,7 +27,7 @@ var DeveloperSchema = new Schema({
             ref: 'StackOverflowProfile',
         }],
         bz: [{
-            type: String,
+            type: Number,
             ref: 'BugzillaProfile',
         }],
         //To add a new profile: create the schema and then reference it here.

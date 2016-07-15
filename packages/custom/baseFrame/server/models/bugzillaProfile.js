@@ -11,12 +11,13 @@ var Schema = mongoose.Schema;
 * @requires mongoose
 **/
 var BugzillaProfileSchema = new Schema({
-    _id: { //Bugzilla login
+    _id: { //Bugzilla id
         type: Number,
         required: true,
         unique: true,
     },
     email: String,
+    realName: String,
 }, {
     timestamps: true,
 });
