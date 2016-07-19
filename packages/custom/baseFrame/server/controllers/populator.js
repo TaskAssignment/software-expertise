@@ -1024,6 +1024,7 @@ function gitHubPopulate(option, specificUrl, callback, etag = undefined, finalUr
                     break;
                 case 304:
                     console.log('No new changes to the option on github');
+                    console.log(body, response.statusCode);
                     console.log('*** DONE ***', option);
                     populated[option] = READY;
                     break;

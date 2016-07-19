@@ -95,7 +95,8 @@ module.exports = function (BaseFrame){
                     var headers = ['_id', 'projectId', 'issueId', 'issueNumber',
                       'actor', 'commitId', 'typeOfEvent', 'assigneeId',
                       'createdAt'];
-                    writeFile('Event', headers);
+                    writeFile('Event', headers, undefined, 'Events.tsv',
+                      '-updatedAt -__v', {isPrEvent: false});
                     break;
                 case 'IssueComment':
                     writeIssueComments();
