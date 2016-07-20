@@ -1,0 +1,5 @@
+#!/bin/sh
+
+cd ../TaskAssignment.github.io/
+git push origin master
+exit 0
