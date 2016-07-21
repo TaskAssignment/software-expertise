@@ -1,6 +1,8 @@
 #!/bin/sh
 
-SSH="$(git rev-parse HEAD)"
+# ***** Don't remove this file. Just copy it to .git/hooks/post-commit *****
+
+SHA="$(git rev-parse HEAD)"
 rm ../TaskAssignment.github.io/api/* -rf
 
 cd packages/custom/baseFrame
@@ -12,10 +14,10 @@ rm out/ -rf
 cd ../../../../TaskAssignment.github.io/
 git add .
 cat > .message << EOL
-Update documentation
+Update jsdoc
 
 This commit was generated automatically from the following source:
-  SSH: ${SSH}
+  Commit SHA: ${SHA}
   Repo: https://github.com/TaskAssignment/software-expertise
 EOL
 git commit -F .message

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# ***** Don't remove this file. Just copy it to .git/hooks/pre-push *****
+
 cd ../TaskAssignment.github.io/
 git push origin master
 exit 0
