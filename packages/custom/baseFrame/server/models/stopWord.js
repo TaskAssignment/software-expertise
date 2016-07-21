@@ -10,6 +10,12 @@ var Schema = mongoose.Schema;
 * @requires mongoose
 **/
 var StopWordSchema = new Schema({
+    /** The word to be removed from the text
+    *
+    * @inner
+    * @memberof StopWord
+    * @type {String}
+    **/
     _id: String
 });
 

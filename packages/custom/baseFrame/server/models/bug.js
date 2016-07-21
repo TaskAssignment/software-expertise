@@ -125,8 +125,11 @@ var BugSchema = new Schema({
     * into words and those are compared with StackOverflow tags.
     *
     * @inner
-    * @type {Array<Tag>}
     * @memberof Bug
+    * @property {String} _id - The tag name
+    * @property {Number} bugCount - How many times this tag has appeared on the text
+    * @property {Number} soCount - How many times this tag has been used in the whole StackOverflow
+    * @type {Array<Object>}
     **/
     tags: [TagSchema],
 });

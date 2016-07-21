@@ -11,12 +11,32 @@ var Schema = mongoose.Schema;
 * @requires mongoose
 **/
 var TagSchema = new Schema({
+    /** The tag name
+    *
+    * @inner
+    * @memberof Tag
+    * @type {String}
+    **/
     _id: {
         type: String,
         required: true,
         unique: true
     },
+
+    /** Synonyms for this Tag
+    *
+    * @inner
+    * @memberof Tag
+    * @type {Array<String>}
+    **/
     synonyms: [String],
+
+    /** How many times this tag has been used in the whole StackOverflow
+    *
+    * @inner
+    * @memberof Tag
+    * @type {Number}
+    **/
     soTotalCount: Number
 });
 
