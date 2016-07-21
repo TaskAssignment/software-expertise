@@ -4,7 +4,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 /** This is a bug from Bugzilla. It has more information than the basic bug and
-* it references a Bug. Using mongoose, the bug can be accessed if populate was
+* it references a Bug. Using mongoose, the bug can be accessed if populate is
 * used
 *
 * @class BugzillaBug
@@ -12,30 +12,103 @@ var Schema = mongoose.Schema;
 * @requires mongoose
 **/
 var BugzillaBugSchema = new Schema({
+    /** The id on the source. Since this is a Bugzilla bug, this number should be
+    * unique on their database.
+    *
+    * @inner
+    * @type {Number}
+    * @memberof BugzillaBug
+    **/
     _id: Number,
+
+    /** Indicates the severity of this bug
+    *
+    * @inner
+    * @type {String}
+    * @memberof BugzillaBug
+    **/
     severity: String,
+
+    /** This is the reference to the generic Bug on the database. (Like a Foreign
+    * Key on a relational database)
+    *
+    * @inner
+    * @type {String}
+    * @memberof BugzillaBug
+    * @see Bug
+    **/
     bugId: {
         type: String,
         ref: 'Bug',
     },
+
+    /** This is references the assignee on this database
+    *
+    * @inner
+    * @type {Number}
+    * @memberof BugzillaBug
+    * @see BugzillaProfile
+    **/
     assignee: {
-        username: String,
-        id: Number,
-        name: String,
-        email: String,
+        type: Number,
+        ref: 'BugzillaProfile',
     },
+
+    /** List of users that may help on the resolution of this bug.
+    *
+    * @inner
+    * @type {Array}
+    * @memberof BugzillaBug
+    * @see BugzillaProfile
+    **/
     ccUsers: [{
-        username: String,
-        id: Number,
-        name: String,
-        email: String,
+        type: Number,
+        ref: 'BugzillaProfile',
     }],
+
+    /** Classification of this bug
+    *
+    * @inner
+    * @type {String}
+    * @memberof BugzillaBug
+    **/
     classification: String,
+
+    /** Component that this bug is related to/occurs at
+    *
+    * @inner
+    * @type {String}
+    * @example Firefox Accounts, New Tab Page
+    * @memberof BugzillaBug
+    **/
     component: String,
+
+    /** Product version that this bug is happening on.
+    *
+    * @inner
+    * @type {String}
+    * @example 47 Branch
+    * @memberof BugzillaBug
+    **/
     version: String,
+
+    /** The OS that the bug is happening on.
+    *
+    * @inner
+    * @type {String}
+    * @example x86_64 Windows, Linux
+    * @memberof BugzillaBug
+    **/
     platform: String,
+
+    /** The Product that produces this bug
+    *
+    * @inner
+    * @type {String}
+    * @example Firefox for iOS, Firefox
+    * @memberof BugzillaBug
+    **/
     product: String,
-    summary: String,
 });
 
 mongoose.model('BugzillaBug', BugzillaBugSchema);
