@@ -2,7 +2,22 @@
     "templates": {
         "default": {
             "outputSourceFiles": false,
-            "outputSourcePath": true
+            "outputSourcePath": true,
+            "includeDate": false
         }
+    },
+
+    "opts": {
+        "encoding": "utf8",
+        "template": "node_modules/minami",
+        "destination": "../../../../TaskAssignment.github.io/api/",
+        "recurse": true
+    },
+
+    "source": {
+        "include": [ "server", "public" ],
+        "exclude": [ "public/assets", "public/views" ],
+        "includePattern": ".+\\.js(doc)?$",
+        "excludePattern": "(^|\\/|\\\\)_"
     }
 }

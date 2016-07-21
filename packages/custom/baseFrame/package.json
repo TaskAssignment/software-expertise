@@ -13,5 +13,8 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "bower install"
+  },
+  "devDependencies": {
+    "minami": "^1.1.1"
   }
 }

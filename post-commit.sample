@@ -6,11 +6,8 @@ SHA="$(git rev-parse HEAD)"
 rm ../TaskAssignment.github.io/api/* -rf
 
 cd packages/custom/baseFrame
-./node_modules/jsdoc/jsdoc.js server/models/* server/controllers/* server/routes/* \
-public/controllers/* public/routes/* public/services/* -c conf.json
+./node_modules/jsdoc/jsdoc.js -c conf.json
 
-mv out/* ../../../../TaskAssignment.github.io/api/
-rm out/ -rf
 cd ../../../../TaskAssignment.github.io/
 git add .
 cat > .message << EOL
