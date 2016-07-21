@@ -9,7 +9,20 @@ var Schema = mongoose.Schema;
 * @requires mongoose
 **/
 var GenerateFileLogSchema = new Schema({
+    /** The model that has a file generated
+    *
+    * @inner
+    * @memberof GenerateFileLog
+    * @type {String}
+    **/
     model: String,
+
+    /** Timestamp for this model
+    *
+    * @inner
+    * @memberof GenerateFileLog
+    * @type {Date}
+    **/
     timestamp: Date,
 });
 mongoose.model('GenerateFileLog', GenerateFileLogSchema);
