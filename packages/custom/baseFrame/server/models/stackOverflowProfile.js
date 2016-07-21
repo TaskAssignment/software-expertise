@@ -43,9 +43,40 @@ var TagSchema = new Schema({
 * @requires mongoose
 **/
 var StackOverflowProfileSchema = new Schema({
+    /** The id of this user on StackOverflow
+    *
+    * @inner
+    * @memberof StackOverflowProfile
+    * @type {Number}
+    **/
     _id: Number,
+
+    /** The display name on StackOverflow
+    *
+    * @inner
+    * @memberof StackOverflowProfile
+    * @type {String}
+    **/
     displayName: String,
+
+    /** Email on StackOverflow
+    *
+    * @inner
+    * @memberof StackOverflowProfile
+    * @type {String}
+    **/
     email: String,
+
+    /** This shows if the user data from StackOverflow was populated already.
+    *
+    * @inner
+    * @memberof StackOverflowProfile
+    * @property {Boolean} tags=false - True if tags were populated for this user
+    * @property {Boolean} questions=false - True if questions were populated for this user
+    * @property {Boolean} answers=false - True if answers were populated for this user
+    * @property {Boolean} all=false - True if all above were populated
+    * @type {Object}
+    **/
     isPopulated: {
         tags: {
             type: Boolean,
@@ -64,8 +95,49 @@ var StackOverflowProfileSchema = new Schema({
             default: false,
         },
     },
+
+    /** The tags this user has activity on StackOverflow
+    *
+    * @inner
+    * @memberof StackOverflowProfile
+    * @property {String} _id - The tag name
+    * @property {Array<String>} synonyms - Synonyms for this Tag
+    * @property {Number} count - How many times this user has used this tag
+    * @property {Number} soCount - How many times this tag has been used in the whole StackOverflow
+    * @type {Array<Object>}
+    **/
     tags: [TagSchema],
+
+    /** The questions this user has asked on StackOverflow.
+    *
+    * @inner
+    * @memberof StackOverflowProfile
+    * @property {Number} _id - The question id on StackOverflow
+    * @property {String} title - A short description of the question
+    * @property {String} body - The longer description.
+    * @property {Array<String>} tags - The tags this question has. (List of tags names)
+    * @property {Number} score - The score of this question on StackOverflow
+    * @property {Date} createdAt - The creation date of this question on StackOverflow
+    * @property {Date} updatedAt - The updated date of this question on StackOverflow
+    * @type {Array<Object>}
+    **/
     questions: [QuestionSchema],
+
+    /** The answers this user has answered on StackOverflow
+    *
+    * @inner
+    * @memberof StackOverflowProfile
+    * @property {Number} _id - The answer id on StackOverflow
+    * @property {String} title - The question short description
+    * @property {String} body - The answer body.
+    * @property {String} questionId - The id of the question this answer answers to.
+    * @property {Array<String>} tags - The question tags
+    * @property {Number} favoriteCount - How many people favorited this answer.
+    * @property {Number} score - The score of this answer on StackOverflow
+    * @property {Date} createdAt - The creation date of this answer on StackOverflow
+    * @property {Date} updatedAt - The update date of this answer on StackOverflow
+    * @type {Array<Object>}
+    **/
     answers: [AnswerSchema],
 }, {
     timestamps: true
