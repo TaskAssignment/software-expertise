@@ -8,17 +8,38 @@ var Schema = mongoose.Schema;
 * information from multiple profiles.
 *
 * @class GitHubProfile
-* @see Project
 * @see Developer
 * @requires mongoose
 **/
 var GitHubProfileSchema = new Schema({
+    /** The GitHub LOGIN of the user.
+    *
+    * @inner
+    * @memberof GitHubProfile
+    * @type {String}
+    **/
     _id: { //GitHub login
         type: String,
         required: true,
         unique: true,
     },
+
+    /** The public email on GitHub
+    *
+    * @inner
+    * @memberof GitHubProfile
+    * @type {String}
+    **/
     email: String,
+
+    /** The repositories that this user CONTRIBUTES to. These are updated when a
+    * new project is added to the database, by getting its contributors
+    *
+    * @inner
+    * @memberof GitHubProfile
+    * @type {Array<Number>}
+    * @see Project
+    **/
     repositories: [{
         type: Number,
         ref: 'Project',
