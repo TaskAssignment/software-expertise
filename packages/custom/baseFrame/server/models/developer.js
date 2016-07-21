@@ -29,7 +29,10 @@ var DeveloperSchema = new Schema({
     *
     * @inner
     * @memberof Developer
-    * @type  {Object}
+    * @type {Object}
+    * @property {Array<String>} gh - The GitHub profiles related to this developer}
+    * @property {Array<Number>} so - The StackOverflow profiles related to this developer}
+    * @property {Array<Number>} bz - The Bugzilla profiles related to this developer}
     * @see GitHubProfile
     * @see StackOverflowProfile
     * @see BugzillaProfile

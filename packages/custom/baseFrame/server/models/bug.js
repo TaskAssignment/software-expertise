@@ -58,7 +58,7 @@ var BugSchema = new Schema({
     /** The labels related to this bug. It's not required.
     *
     * @inner
-    * @type {Array}
+    * @type {Array<String>}
     * @memberof Bug
     **/
     labels: [String],
@@ -125,7 +125,7 @@ var BugSchema = new Schema({
     * into words and those are compared with StackOverflow tags.
     *
     * @inner
-    * @type {Array}
+    * @type {Array<Tag>}
     * @memberof Bug
     **/
     tags: [TagSchema],

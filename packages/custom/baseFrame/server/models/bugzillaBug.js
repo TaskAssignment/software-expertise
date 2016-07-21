@@ -57,7 +57,7 @@ var BugzillaBugSchema = new Schema({
     /** List of users that may help on the resolution of this bug.
     *
     * @inner
-    * @type {Array}
+    * @type {Array<Number>}
     * @memberof BugzillaBug
     * @see BugzillaProfile
     **/
