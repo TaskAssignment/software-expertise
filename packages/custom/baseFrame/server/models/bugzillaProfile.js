@@ -11,12 +11,40 @@ var Schema = mongoose.Schema;
 * @requires mongoose
 **/
 var BugzillaProfileSchema = new Schema({
-    _id: { //Bugzilla id
+    /** Id from Bugzilla
+    *
+    * @inner
+    * @type {Number}
+    * @memberof BugzillaProfile
+    **/
+    _id: {
         type: Number,
         required: true,
         unique: true,
     },
+
+    /** Username on Bugzilla
+    *
+    * @inner
+    * @type {String}
+    * @memberof BugzillaProfile
+    **/
+    username: String,
+
+    /** User's email
+    *
+    * @inner
+    * @type {String}
+    * @memberof BugzillaProfile
+    **/
     email: String,
+
+    /** The real name on Bugzilla
+    *
+    * @inner
+    * @type {String}
+    * @memberof BugzillaProfile
+    **/
     realName: String,
 }, {
     timestamps: true,
