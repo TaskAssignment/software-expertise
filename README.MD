@@ -9,7 +9,7 @@ This will ensure that the online documentation found [here](https://TaskAssignme
 ### Linux:
 OBS: All these steps require you to be on the root folder of this repo, unless otherwise stated.
 
-1. Install git, mongodb (3.2.6), nodejs (6.2.2) and npm (3.9.6)
+1. Install git, mongodb (^3.2.6), nodejs (^6.2.2) and npm (^3.9.6)
 2. Run `cp post-commit.sample .git/hooks/post-commit`
 3. Run `cp pre-push.sample .git/hooks/pre-push`
 4. Make these two files executable: `chmod +x .git/hooks/post-commit .git/hooks/pre-push`
