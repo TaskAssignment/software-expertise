@@ -15,6 +15,6 @@
     "postinstall": "bower install"
   },
   "devDependencies": {
-    "minami": "^1.1.1"
+      "ink-docstrap": "^1.2.1"
   }
 }

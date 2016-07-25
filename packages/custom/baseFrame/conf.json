@@ -1,15 +1,15 @@
 {
     "templates": {
-        "default": {
-            "outputSourceFiles": false,
-            "outputSourcePath": true,
-            "includeDate": false
-        }
+        "outputSourceFiles": false,
+        "outputSourcePath": true,
+        "includeDate": false,
+        "theme": "cosmo",
+        "inverseNav": true
     },
 
     "opts": {
         "encoding": "utf8",
-        "template": "node_modules/minami",
+        "template": "./node_modules/ink-docstrap/template",
         "destination": "../../../../TaskAssignment.github.io/api/",
         "recurse": true
     },
