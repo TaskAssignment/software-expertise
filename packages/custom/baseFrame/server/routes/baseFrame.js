@@ -10,30 +10,21 @@ module.exports = function (BaseFrame, app, database) {
     var controllers = '../controllers/';
 
     var projects = require(controllers + 'projects')(BaseFrame);
-    app.route(base + 'project/get/:name')
-      .get(projects.get);
-    app.route(base + 'project/find')
-      .get(projects.find);
-    app.route(base + 'project/new/')
-      .get(projects.save);
-    app.route(base + ':projectId/issues')
-      .get(projects.findIssues);
+    app.route(base + 'project/get/:name').get(projects.get);
+    app.route(base + 'project/find').get(projects.find);
+    app.route(base + 'project/new/').get(projects.save);
+    app.route(base + ':projectId/issues').get(projects.findIssues);
 
-    var admin = require(controllers + 'admin')(BaseFrame);
-    app.route(base + 'generate')
-      .get(admin.generate);
-    app.route(base + 'populate')
-      .get(admin.populate);
-    app.route(base + 'download')
-      .get(admin.download);
-    app.route(base + 'check')
-      .get(admin.check);
-    app.route(base + 'timestamps')
-      .get(admin.timestamps);
-    app.route(base + 'oauth')
-      .get(admin.oauth);
+    var importer = require(controllers + 'import')(BaseFrame);
+    app.route(base + 'populate/:source/:option').get(importer.populate);
+
+    var admin = require(controllers + 'export')(BaseFrame);
+    app.route(base + 'generate').get(admin.generate);
+    app.route(base + 'download').get(admin.download);
+    app.route(base + 'check').get(admin.check);
+    app.route(base + 'timestamps').get(admin.timestamps);
+    app.route(base + 'oauth').get(admin.oauth);
 
     var table = require(controllers + 'table')(BaseFrame);
-    app.route(base + 'find/:issueId/matches')
-      .get(table.findMatches);
+    app.route(base + 'find/:issueId/matches').get(table.findMatches);
 };

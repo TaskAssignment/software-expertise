@@ -22,7 +22,7 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
         </div>
         <div class="col-md-11">
             <h3>
-                <select ng-model="selected" ng-change="select(selected)" class="form-control">
+                <select ng-model="selected" class="form-control">
                     <option ng-repeat="(key, value) in sources" value="{{key}}">
                         {{value.label}}
                     </option>
@@ -31,11 +31,14 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-12">
-            <p ng-repeat="option in sources[selected].options">
-                {{ option }}
-            </p>
+    <div class="row" ng-repeat="option in sources[selected].options">
+        <div class="col-md-11">
+            {{ option.label }}
+        </div>
+        <div class="col-md-1">
+            <button ng-click="populate(option.key)" class="btn btn-default">
+                Populate
+            </button>
         </div>
     </div>
 </section>
