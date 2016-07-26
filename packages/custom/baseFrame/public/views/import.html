@@ -1,79 +1,19 @@
-<section ng-controller="AdminController"
-class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
-<div class="row">
-    <div class="col-md-12 col-lg-12">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th class="col-md-3 col-lg-3"> Option </th>
-                    <th class="col-md-2 col-lg-2"> Populate </th>
-                    <th class="col-md-2 col-lg-2"> Last Generated File (timestamp) </th>
-                    <th class="col-md-2 col-lg-2"> Regenerate File </th>
-                    <th class="col-md-1 col-lg-1"> Download </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr ng-repeat="(model, option) in generalOptions">
-                    <td> {{ option.label }} </td>
-                    <td ng-if="!option.projectSpecific">
-                        <button ng-click="populate(model)" class="btn btn-default">
-                            Populate
-                        </button>
-                        <i class="fa fa-spinner fa-pulse fa-fw"
-                        ng-if="option.populated === false"></i>
-                        <i class="fa fa-check"
-                        ng-if="option.populated"></i>
-                    </td>
-                    <td ng-if="option.projectSpecific">
-                        <div class="form-inline">
-                            <select ng-if="model === 'Project'" ng-model="selected"
-                              ng-options="project.name for project in projects"
-                              class="form-control" ng-change="select(selected)">
-                              <option value="">---Please select---</option>
-                            </select>
-                        </div>
-                        <div ng-if="model !== 'Project'">
-                        <button ng-if="projectSelected() && !option.noModel"
-                          ng-click="populate(model)" class="btn btn-default">
-                            Populate {{ option.label }} for {{ selectedProject.name }}
-                        </button>
-                        <i class="fa fa-spinner fa-pulse fa-fw"
-                        ng-if="option.populated === false"></i>
-                        <i class="fa fa-check"
-                        ng-if="option.populated"></i>
-                        <p ng-if="!projectSelected()">
-                            This is project specific. Select a project to populate it.
-                        </p>
-                        <p ng-if="option.noModel">
-                            This is populated with {{ option.parent }}
-                        </p>
-                    </td>
-                    <td> {{ option.timestamp }} </td>
-                    <td ng-if="!option.noModel">
-                        <button ng-click="generate(model)" class="btn btn-default">
-                            Generate
-                        </button>
-                        <i class="fa fa-spinner fa-pulse fa-fw"
-                        ng-if="option.generated === false"></i>
-                        <i class="fa fa-check"
-                        ng-if="option.generated"></i>
-                    </td>
-                    <td ng-if="option.noModel">
-                        This is generated with {{ option.parent }}.
-                    </td>
-                    <td>
-                        <button ng-click="download(model)" class="btn btn-default">
-                            Download
-                        </button>
-                        <i class="fa fa-spinner fa-pulse fa-fw"
-                        ng-if="option.downloaded === false"></i>
-                        <i class="fa fa-check"
-                        ng-if="option.downloaded"></i>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
 
+<section ng-controller="ImportController"
+class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
+    <h1> Import Data </h1>
+
+    <p>
+        This is where you can import data from several sources to find the best
+        assignee for an issue. You can import different data from each place. Choose
+        the place you want to import data from and you will see your options
+    </p>
+
+    <h3>
+        Source:
+    </h3>
+    <select ng-model="selected" ng-change="select(selected)" class="form-control">
+        <option
+        ng-repeat="(key, value) in sources" value="{{key}}"> {{value}}</option>
+    </select>
 </section>
