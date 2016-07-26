@@ -3,12 +3,6 @@
 var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('ImportController', function ($scope, $interval, $http, $location){
     $scope.selected = undefined
-    $scope.sources = {
-        file: 'File',
-        gh: 'GitHub',
-        so: 'StackOverflow',
-        bz: 'Bugzilla',
-    }
 
     $scope.select = function (project) {
         console.log($scope.selected);
@@ -69,5 +63,24 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
         }, function (response){
             $scope.projects = undefined;
         })
+    }
+
+    $scope.sources = {
+        file: {
+            label: 'File',
+            options: [ 'StopWords', 'CoOccurrences', 'Common Users'],
+        },
+        gh: {
+            label: 'GitHub',
+            options: [ 'Issues', 'Pull Requests', 'Events', 'Commits', 'Comments'],
+        },
+        so: {
+            label: 'StackOverflow',
+            options: [ 'Tags', 'Answers', 'Questions'],
+        },
+        bz: {
+            label: 'Bugzilla',
+            options: [ 'Bugs', 'Developers'],
+        },
     }
 });
