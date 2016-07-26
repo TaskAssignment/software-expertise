@@ -6,18 +6,14 @@
             </div>
         </div>
 
-        <div class="collapse navbar-collapse" ng-class="!isCollapsed && 'in'">
-            <div class="left pull-left">
-                <ul class="navbar-nav nav">
-                    <li ui-route="/{{item.link}}" ng-class="{active: $uiRoute}" ng-repeat="item in hdrctr.menus.main">
-                        <a mean-token="item.link" ui-sref='{{item.link}}'>{{item.title}}</a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="right pull-right">
-                <ul class="navbar-nav nav">
-                    <li><a href="/admin">Manage Data</a></li>
+        <div class="collapse navbar-collapse pull-right" ng-class="!isCollapsed && 'in'">
+            <div class="btn-group" uib-dropdown is-open="status.isopen">
+                <button type="button" class="btn btn-default" uib-dropdown-toggle ng-disabled="disabled">
+                    Manage Data <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="single-button">
+                    <li role="menuitem"><a href="/import">Import</a></li>
+                    <li role="menuitem"><a href="/export">Export</a></li>
                 </ul>
             </div>
         </div>
