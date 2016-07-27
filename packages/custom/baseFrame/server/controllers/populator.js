@@ -62,7 +62,6 @@ module.exports = function (BaseFrame) {
     return {
         GitHub: function (option, id) {
             var Project = mongoose.model('Project');
-            console.log(id);
             Project.findById(id, function(err, project){
                 if(err){
                     console.log('=== Error Project: ' + err.message);
@@ -82,7 +81,7 @@ module.exports = function (BaseFrame) {
                     case 'Developer':
                         populateContributors(id);
                         break;
-                    case 'Bug':
+                    case 'Issue':
                         var StopWord = mongoose.model('StopWord');
                         StopWord.find().lean().exec(function (err, words) {
                             stopWords = words.map(function (word){

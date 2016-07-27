@@ -25,6 +25,7 @@ module.exports = function (BaseFrame){
     return {
         populate: function (req, res) {
             var params = req.params;
+            var query = req.query;
             switch (params.source) {
                 case 'file':
                     if(params.option === 'CommonUser') {
@@ -34,8 +35,9 @@ module.exports = function (BaseFrame){
                     }
                     break;
                 case 'gh':
+                    populate(params.option, query.project);
+                    break;
                 case 'so':
-                    populate(params.option, params.project);
                     break;
                 case 'bz':
                     break;
@@ -141,12 +143,11 @@ function readDevs(){
 function populate(option, project = undefined){
     var populator = require('../controllers/populator')();
     if(project){
-        var repo = JSON.parse(project);
         if(option === 'Contributor'){
-            populator.GitHub('Developer', repo._id);
-            populator.StackOverflow('Developer', repo._id);
+            populator.GitHub('Developer', project);
+            populator.StackOverflow('Developer', project);
         } else {
-            populator.GitHub(option, repo._id);
+            populator.GitHub(option, project);
         }
     } else {
         // changeStatus(option, READY, 'populated');

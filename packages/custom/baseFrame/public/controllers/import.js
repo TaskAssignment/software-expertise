@@ -6,13 +6,17 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
     $scope.project = undefined;
 
     $scope.populate = function (option) {
-        console.log($scope.selected, $scope.project);
-        // $http.get('/api/baseFrame/populate/' + $scope.selected + '/' + option)
-        // .then(function (response){
-        //     console.log(response);
-        // }, function(response){
-        //     console.log(response);
-        // });
+        var config = {
+            params: {
+                project: $scope.project,
+            }
+        }
+        $http.get('/api/baseFrame/populate/' + $scope.selected + '/' + option, config)
+        .then(function (response){
+            console.log(response);
+        }, function(response){
+            console.log(response);
+        });
     }
 
     $scope.findProjects = function () {
