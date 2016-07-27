@@ -5,6 +5,10 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
     $scope.selected = 'file';
     $scope.project = undefined;
 
+    /** Populate the given option on the database
+    *
+    * @param option {String} - one of the sources (file, gh, bz, so)
+    **/
     $scope.populate = function (option) {
         var config = {
             params: {
@@ -19,7 +23,10 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
         });
     }
 
+    /** Get the github projects on the database
+    **/
     $scope.findProjects = function () {
+        $scope.project = undefined;
         if($scope.selected === 'gh'){
             $http.get('api/baseFrame/project/find/').then(function (response){
                 $scope.projects = response.data.projects;
@@ -29,35 +36,13 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
         }
     }
 
+    /** Marks a project to populate
+    *
+    * @param {String} project - The project id (github and this database)
+    **/
     $scope.selectProject = function (project) {
         $scope.project = project;
     }
-    // function checkPopulate(option){
-    //     var delay = 5000;
-    //     $scope.generalOptions[option].populated = false;
-    //
-    //     var interval = $interval(function () {
-    //         var params = {
-    //             params: {
-    //                 resource: option,
-    //                 populate: true
-    //             }
-    //         };
-    //
-    //         $http.get('/api/baseFrame/check', params).then(function (response) {
-    //             if(response.status === 200){
-    //                 stop();
-    //             }
-    //         })
-    //     }, delay);
-    //
-    //     function stop(){
-    //         $interval.cancel(interval);
-    //         $scope.generalOptions[option].populated = true;
-    //
-    //     }
-    // }
-    //
 
     $scope.sources = {
         file: {
@@ -80,10 +65,7 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
             options: [
                 {
                     key: 'Issue',
-                    label: 'Issues',
-                }, {
-                    key: 'PullRequest',
-                    label: 'Pull Requests',
+                    label: 'Issues and Pull Requests',
                 }, {
                     key: 'Event',
                     label: 'Events',
@@ -104,13 +86,7 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
             options: [
                 {
                     key: 'Tag',
-                    label: 'Stack Overflow Tags',
-                }, {
-                    key: 'Answer',
-                    label: 'Answers',
-                }, {
-                    key: 'Question',
-                    label: 'Questions',
+                    label: 'Tags',
                 },
             ],
         },
