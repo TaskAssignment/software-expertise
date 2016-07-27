@@ -2,17 +2,32 @@
 
 var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('ImportController', function ($scope, $interval, $http, $location){
-    $scope.selected = undefined
+    $scope.selected = 'file';
+    $scope.project = undefined;
 
     $scope.populate = function (option) {
-        $http.get('/api/baseFrame/populate/' + $scope.selected + '/' + option)
-        .then(function (response){
-            console.log(response);
-        }, function(response){
-            console.log(response);
-        });
+        console.log($scope.selected, $scope.project);
+        // $http.get('/api/baseFrame/populate/' + $scope.selected + '/' + option)
+        // .then(function (response){
+        //     console.log(response);
+        // }, function(response){
+        //     console.log(response);
+        // });
     }
 
+    $scope.findProjects = function () {
+        if($scope.selected === 'gh'){
+            $http.get('api/baseFrame/project/find/').then(function (response){
+                $scope.projects = response.data.projects;
+            }, function (response){
+                $scope.projects = undefined;
+            });
+        }
+    }
+
+    $scope.selectProject = function (project) {
+        $scope.project = project;
+    }
     // function checkPopulate(option){
     //     var delay = 5000;
     //     $scope.generalOptions[option].populated = false;
@@ -39,13 +54,6 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
     //     }
     // }
     //
-    // function findProjects(){
-    //     $http.get('api/baseFrame/project/find/').then(function (response){
-    //         $scope.projects = response.data.projects;
-    //     }, function (response){
-    //         $scope.projects = undefined;
-    //     })
-    // }
 
     $scope.sources = {
         file: {
