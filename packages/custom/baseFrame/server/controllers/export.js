@@ -61,27 +61,6 @@ function initialStatus(){
 }
 module.exports = function (BaseFrame){
     return {
-        populate: function (req, res) {
-            var query = req.query;
-            switch (query.option) {
-                case 'StopWord':
-                case 'CoOccurrence':
-                // case 'Tag':
-                    readFile(query.option);
-                    break;
-                case 'Developer':
-                    readDevs();
-                    break;
-                case 'PullRequest':
-                    populate('Bug', query.project);
-                    break;
-                default:
-                    populate(query.option, query.project);
-            }
-
-            res.sendStatus(NOT_READY);
-        },
-
         generate: function (req, res) {
             var option = req.query.resource;
 
@@ -116,32 +95,6 @@ module.exports = function (BaseFrame){
                     break;
             }
             res.sendStatus(NOT_READY);
-        },
-
-        oauth: function (req, res) {
-            var request = require('request');
-            var clientId = req.query.client_id;
-            var config = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                uri: 'https://stackexchange.com/oauth/access_token',
-                form: {
-                    'client_id': clientId,
-                    'scope': 'no_expiry',
-                    'client_secret': SO_APPS[clientId].client_secret,
-                    'code': req.query.code,
-                    'redirect_uri': 'http://localhost:3000/admin'
-                }
-            };
-            request(config, function (err, response, body){
-                var equalsIndex = body.lastIndexOf('=') + 1;
-                var accessToken = body.substring(equalsIndex);
-
-                SO_APPS[clientId].access_token = accessToken;
-                res.sendStatus(200);
-            });
         },
 
         download: function (req, res) {
@@ -456,125 +409,6 @@ function writeDevs() {
 
     writeFile('Developer', headers, transform, 'Developers.tsv',
       '-updatedAt -__v', {}, 'profiles.so profiles.gh');
-}
-
-/** Basic flow to read files. It's assumed that, whatever the file name, it's
-* located on 'files/' (from the root of the project).
-*
-* @param {string} modelName - The Model name that will be import.
-* @param {function} transformCallback - The function that will transform the data before
-    writing it to the database.
-* @param {boolean|array} headers - If true, it will consider the first line
-    of the file as headers. If an array is given, each entry will be a header.
-* @param {String} fileName - The name of file to be read. This should be a .tsv.
-    Default is modelName pluralized. E.g: modelName = Issue, fileName = Issues.tsv
-**/
-function readFile(modelName,
-            transformCallback = undefined,
-            savingOnTransform = false,
-            headers = true,
-            fileName = modelName + 's.tsv'){
-
-    var MongooseModel = mongoose.model(modelName);
-
-    var path = 'files/' + fileName;
-    var options = {
-        delimiter: '\t',
-        headers: headers,
-        ignoreEmpty: true,
-    }
-    console.log('** Reading file! **');
-
-    var readable = fs.createReadStream(path, {encoding: 'utf8'});
-    var readStream = csv.fromStream(readable, options);
-
-    if(transformCallback){
-        readStream.on('data', function(data){
-            transformCallback(data)
-        });
-    }
-
-    if(!savingOnTransform){
-        var models = [];
-        readStream.on('data', function(model){
-            models.push(model);
-        }).on('end', function () {
-            MongooseModel.collection.insert(models, function (err) {
-                if(err){
-                    console.log(err.message);
-                } else {
-                    console.log(modelName + 's populated');
-                    console.log('***** DONE *****');
-                }
-                changeStatus(modelName, READY, 'populated');
-            });
-        });
-    } else {
-        readStream.on('end', function(){
-            changeStatus(modelName, READY, 'populated');
-        });
-    }
-
-}
-
-/** Generates the callback to populate the common users.
-**/
-function readDevs(){
-    var GitHubProfile = mongoose.model('GitHubProfile');
-    var StackOverflowProfile = mongoose.model('StackOverflowProfile');
-    var Developer = mongoose.model('Developer');
-
-    var transform = function (data) {
-        StackOverflowProfile.create({_id: data.soId, email: data.email}, function (err){
-            if(err){
-                console.log(err.message);
-            }
-        });
-
-        GitHubProfile.create(data, function (err){
-            if(err){
-                console.log(err.message);
-            }
-        });
-
-        var dev = {
-            email: data.email,
-        }
-        var updateFields = {
-            $addToSet: {
-                'profiles.gh': data._id,
-                'profiles.so': data.soId,
-            },
-        }
-        var options = {
-            upsert: true,
-        }
-
-        Developer.update(dev, updateFields, options, function (err){
-            if(err){
-                console.log(err.message);
-            }
-        });
-    }
-
-    var savingOnTransform = true;
-    readFile('Developer', transform, savingOnTransform);
-}
-
-function populate(option, project = undefined){
-    var populator = require('../controllers/populator')();
-    if(project){
-        var repo = JSON.parse(project);
-        if(option === 'Contributor'){
-            populator.GitHub('Developer', repo._id);
-            populator.StackOverflow('Developer', repo._id);
-        } else {
-            populator.GitHub(option, repo._id);
-        }
-    } else {
-        changeStatus(option, READY, 'populated');
-        populator.StackOverflow(option);
-    }
 }
 
 function getStatus(model, option = 'generated'){

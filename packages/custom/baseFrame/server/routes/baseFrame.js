@@ -18,12 +18,11 @@ module.exports = function (BaseFrame, app, database) {
     var importer = require(controllers + 'import')(BaseFrame);
     app.route(base + 'populate/:source/:option').get(importer.populate);
 
-    var admin = require(controllers + 'export')(BaseFrame);
-    app.route(base + 'generate').get(admin.generate);
-    app.route(base + 'download').get(admin.download);
-    app.route(base + 'check').get(admin.check);
-    app.route(base + 'timestamps').get(admin.timestamps);
-    app.route(base + 'oauth').get(admin.oauth);
+    var exporter = require(controllers + 'export')(BaseFrame);
+    app.route(base + 'generate').get(exporter.generate);
+    app.route(base + 'download').get(exporter.download);
+    app.route(base + 'check').get(exporter.check);
+    app.route(base + 'timestamps').get(exporter.timestamps);
 
     var table = require(controllers + 'table')(BaseFrame);
     app.route(base + 'find/:issueId/matches').get(table.findMatches);
