@@ -11,6 +11,9 @@ var mongoose = require('mongoose');
 
 var fs = require('fs');
 var csv = require('fast-csv');
+var PythonShell = require('python-shell');
+var extractorRoute = 'packages/custom/baseFrame/server/bugzilla-python/generalextractor.py'
+
 
 var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
@@ -45,7 +48,30 @@ module.exports = function (BaseFrame){
 
             res.sendStatus(NOT_READY);
         },
+
+        bugzillaServices: function (req, res) {
+            integratePython(req.params, res);
+        },
+
+        bugzillaProjects: function (req, res) {
+            integratePython(req.params, res);
+        },
     }
+}
+
+/** Run a python code to import Bugzilla data.
+*
+* @param {Object} args - The arguments to be passed to the python interpreter
+* @param {res} res - The express response to send the results
+**/
+function integratePython(args, res) {
+    var pyArgs = Object.keys(args).map(function (key) {
+        return args[key];
+    });
+
+    PythonShell.run(extractorRoute, {args: pyArgs}, function (err, results) {
+        res.send(results);
+    });
 }
 
 /** Basic flow to read files. It's assumed that, whatever the file name, it's

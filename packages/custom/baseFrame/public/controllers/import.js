@@ -27,11 +27,19 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
     **/
     $scope.findProjects = function () {
         $scope.project = undefined;
+        $scope.bugzillaProject = undefined;
         if($scope.selected === 'gh'){
-            $http.get('api/baseFrame/project/find/').then(function (response){
+            $http.get('api/baseFrame/project/find/').then(function (response) {
                 $scope.projects = response.data.projects;
             }, function (response){
                 $scope.projects = undefined;
+            });
+        } else if($scope.selected === 'bz'){
+            console.log('Bugzilla')
+            $http.get('api/baseFrame/bugzilla/showservices/').then(function (response) {
+                console.log(response.data);
+            }, function (response){
+                console.log(response);
             });
         }
     }
