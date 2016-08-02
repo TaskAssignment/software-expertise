@@ -313,8 +313,8 @@ def parsecomments(filename, bugid, commentnumber, date, comment):
     mozilla_bugs_comments = db.bugzillacomments
 
     bugCommentSchema = {
-        "bugid": bugid,
-        "commentnumber": commentnumber,
+        "bugId": bugid,
+        "commentNumber": commentnumber,
         "date": date,
         "comment": comment
     }
@@ -346,10 +346,12 @@ def saveUser(data):
     id = info["id"]
     name = info["name"]
     real_name = info["real_name"]
-    profile = {"_id": id,
+    profile = {
+                "_id": id,
                "email": name,
                "realName": real_name,
-               "createdAt": datetime.datetime.utcnow()}
+               "createdAt": datetime.datetime.utcnow()
+              }
     # make the insertion
     bp = db.bugzillaprofiles
     try:
@@ -380,7 +382,7 @@ def saveHistory(data):
             "_id": bugid,
             "when": bugwhen,
             "who": bugwho,
-            "histoyr": bughistory
+            "history": bughistory
         }
         collection = db.bugzillabugshistory
         a = collection.update({'_id': bugid}, {'$set': historyobject}, upsert=True)
