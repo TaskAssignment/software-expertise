@@ -4,6 +4,7 @@ var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('ImportController', function ($scope, $interval, $http, $location){
     $scope.selected = 'file';
     $scope.project = undefined;
+    $scope.bugzillaService = undefined;
 
     /** Populate the given option on the database
     *
@@ -37,8 +38,9 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
         } else if($scope.selected === 'bz'){
             console.log('Bugzilla')
             $http.get('api/baseFrame/bugzilla/showservices/').then(function (response) {
-                console.log(response.data);
+                $scope.bugzillaServices = response.data;
             }, function (response){
+                $scope.bugzillaServices = undefined;
                 console.log(response);
             });
         }

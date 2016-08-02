@@ -47,6 +47,23 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
         </h4>
     </div>
 
+    <div class="row"  ng-if="selected === 'bz'">
+        <h4>
+            <div class="col-md-4 col-sm-6 col-xs-3">
+                First, choose the project you want to populate
+            </div>
+            <div class="col-md-8 col-sm-6 col-xs-9">
+                <select ng-model="bugzillaService" class="form-control" ng-change="selectProject(project)">
+                    <option value=""> --- Select one --- </option>
+                    <option ng-repeat="service in bugzillaServices" value="{{service}}">
+                        {{service}}
+                    </option>
+                </select>
+            </div>
+        </h4>
+    </div>
+
+
     <br>
 
     <div ng-repeat="option in sources[selected].options">

@@ -70,7 +70,13 @@ function integratePython(args, res) {
     });
 
     PythonShell.run(extractorRoute, {args: pyArgs}, function (err, results) {
-        res.send(results);
+        if(err){
+            console.log(err);
+            res.sendStatus(500);
+        } else {
+            console.log(results);
+            res.send(results);
+        }
     });
 }
 
