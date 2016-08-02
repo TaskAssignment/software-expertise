@@ -68,7 +68,7 @@ class bcolors:
 
 
 def main(parameters):
-    print(bcolors.OKBLUE + "Welcome to the bug extractor" + bcolors.ENDC)
+    #print(bcolors.OKBLUE + "Welcome to the bug extractor" + bcolors.ENDC)
 
     noparameters = len(parameters)
 
