@@ -7,7 +7,7 @@ import sys
 import re
 import datetime
 import pymongo
-# import random
+# showservices, showprojects mozilla, mozilla aus
 
 USERNAME = "c4736290@trbvn.com"
 PASSWORD = "uAlberta_2016"
@@ -69,8 +69,10 @@ class bcolors:
 
 def main(parameters):
     print(bcolors.OKBLUE + "Welcome to the bug extractor" + bcolors.ENDC)
+
     noparameters = len(parameters)
-    p1 = parameters[0]
+
+    p1 = parameters[1]
     p2 = parameters[2]
 
     if p1 == "showservices":
@@ -94,19 +96,9 @@ def main(parameters):
 
 
 def getlistofproducts(service):
-    # url = ""
 
     url = urls[service]
-    """
-        if service == "eclipse":
-            url = BugList.eclipse
-        elif service == "mozilla":
-            url = BugList.mozilla
-        elif service == "kernel":
-            url = BugList.kernel
-        elif service == "libreoffice":
-            url = BugList.libreoffice
-    """
+
     page = requests.get(url)
     # change to authenticated
     tree = html.fromstring(page.content)
@@ -119,10 +111,10 @@ def getlistofproducts(service):
         return getComponents("mozilla", products)
     elif service == "kernel":
         #return getComponents("kernel", products)
-        print("in development")
+        print("This resource is in development and isn't ready yet")
     elif service == "libreoffice":
         #return getComponents("libreoffice", products)
-        print("in development")
+        print("This resource is in development and isn't ready yet")
 
 
 def getComponents(service, products):
@@ -131,18 +123,14 @@ def getComponents(service, products):
     for i in range(len(products)):
         list_components = ""
         if service == "eclipse":
-            #products[i] = products[i].strip()
             list_components = BugList.eclipse + "?product=" + products[i]
             print(list_components)
         elif service == "mozilla":
-            #product = product.strip()
             list_components = BugList.mozilla + "?product=" + products[i]
             print(list_components)
         elif service == "kernel":
-            #products[i] = products[i].strip()
             list_components = BugList.kernel + "?product=" + products[i]
         elif service == "libreoffice":
-            #products[i] = products[i].strip()
             list_components = BugList.libreoffice + "?product=" + products[i]
 
         url = list_components
@@ -156,19 +144,14 @@ def getComponents(service, products):
 
 def getComponent(service, product):
     auxList = []
-    #for i in range(len(products)):
     list_components = ""
     if service == "eclipse":
-        #products[i] = products[i].strip()
         list_components = BugList.eclipse + "?product=" + product
     elif service == "mozilla":
-        #product = product.strip()
         list_components = BugList.mozilla + "?product=" + product
     elif service == "kernel":
-        #products[i] = products[i].strip()
         list_components = BugList.kernel + "?product=" + product
     elif service == "libreoffice":
-        #products[i] = products[i].strip()
         list_components = BugList.libreoffice + "?product=" + product
 
     url = list_components
@@ -183,7 +166,6 @@ def getComponent(service, product):
 def readlistofbugs(url):
     result = session_requests.post(LOGIN_URL, data=payload, headers=dict(referer=LOGIN_URL))
     r = session_requests.get(url, headers=dict(referer=url))
-    # r = requests.get(url)
     return r.text
 
 
@@ -201,19 +183,9 @@ def readauxlist(list):
             # divide by two because there are two lists exactly same structured
             s = int(len(bugs)/2)
             bugs = bugs[:s]
-            # this will bee changed for supporting more bugzilla repositories
-            """
-            if service == "eclipse":
-                list_bugs = BugExtract.eclipse + bugs[0]
-            elif service == "mozilla":
-                list_bugs = BugExtract.mozilla + bugs[0]
-            elif service == "kernel":
-                list_bugs = BugExtract.kernel + bugs[0]
-            elif service == "libreoffice":
-                list_bugs = BugExtract.libreoffice + bugs[0]
-            """
+            # this must be changed for supporting more bugzilla repositories
             auxlist = ','.join(bugs)
-            #print(auxlist)
+
             print(bcolors.BOLD+"New list of bugs gotten from a new component"+bcolors.ENDC)
             list_bugs = BugExtract.mozilla + auxlist
             print(list_bugs)
@@ -222,7 +194,7 @@ def readauxlist(list):
 
 def parseinformation(filename, data):
     root = ET.fromstring(data)
-    #with open("data/"+filename+"_bugs.tsv","a") as f:
+
     for bug in root.findall('bug'):
         if str(bug.attrib) == "{}":
             id = bug.find('bug_id').text
@@ -308,29 +280,25 @@ def parseinformation(filename, data):
             except pymongo.errors.DuplicateKeyError as e:
                 print(str(e))
 
-            # save to tsv file
-            #print("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (product, component, id, assigneeEmail, url, severity, title, status, classification, createdTime,  cc, version, op_sys),file=f)
             print(bcolors.OKGREEN + "Bug "+id+" info saved to TSV files" + bcolors.ENDC)
         else:
             print("=== Bug not defined ===")
             print(bcolors.FAIL+"Bug wasn't saved! \nCheck the names"+bcolors.ENDC)
 
-    f.close()
-
 
 def parsecomments(filename, bugid, commentnumber, date, comment):
+
     mozilla_bugs_comments = db.bugzillacomments
+
     bugCommentSchema = {
-        "bugid":bugid,
-        "commentnumber":commentnumber,
-        "date":date,
-        "comment":comment
+        "bugid": bugid,
+        "commentnumber": commentnumber,
+        "date": date,
+        "comment": comment
     }
+
     mozilla_bugs_comments.insert(bugCommentSchema)
-    """
-    with open("data/"+filename+".tsv","a") as f:
-        print("%s\t%s\t%s\t%s" % (bugid, commentnumber, date, comment), file=f)
-    """
+
 
 def parseUser(email):
     # method to find Users using the email find at the reporter
@@ -340,10 +308,8 @@ def parseUser(email):
 
 
 def saveUser(data):
-    #name, email, created, permission, bugsfield, commetedon
-
     j = json.loads(data)
-    #info = j["users"][0]
+
     try:
         a = j["users"]
     except KeyError as e:
@@ -380,19 +346,23 @@ def parseHistory(bugid):
 
 def saveHistory(data):
     j = json.loads(data)
-
-    #print(j)
     bugschanges = j["bugs"][0]
-
+    #print(bugschanges)
     # save the data to the database
-
-    historyobject = bugschanges
-
-    collection = db.bugzillabugshistory
-    collection.insert(historyobject)
-
-    # save the data to the TSV file
     bugid = bugschanges["id"]
+    for i in bugschanges["history"]:
+        bugwhen = i["when"]
+        bugwho = i["who"]
+        bughistory = i["changes"]
+        historyobject = {
+            "_id": bugid,
+            "when": bugwhen,
+            "who": bugwho,
+            "histoyr": bughistory
+        }
+        collection = db.bugzillabugshistory
+        a = collection.update({'_id': bugid}, {'$set': historyobject}, upsert=True)
+        print(a)
 
 def showservices():
     services = []
@@ -421,7 +391,6 @@ def showprojects(service):
     productsaux = []
     for i in range(len(products)):
         productsaux.append(products[i].replace("\xa0"," "))
-        #print(products[i].replace("\xa0", "%20"))
 
     print(productsaux)
     return products
