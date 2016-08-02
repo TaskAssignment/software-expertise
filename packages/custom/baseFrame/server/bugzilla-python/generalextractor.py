@@ -1,3 +1,25 @@
+"""
+General Extractor
+
+This python3 script crawls the BugZilla platforms to read
+and extract all the information related to the bugs that
+are reported on these platforms
+
+ - Mozilla
+ - Eclipse
+
+ To add more projects please add the urls and the (some of them are specified)
+
+
+The commands to run this script are
+
+ showservices,
+ showprojects mozilla,
+ mozilla aus
+
+"""
+
+
 from lxml import html
 from pymongo import MongoClient
 import xml.etree.ElementTree as ET
@@ -7,7 +29,7 @@ import sys
 import re
 import datetime
 import pymongo
-# showservices, showprojects mozilla, mozilla aus
+
 
 USERNAME = "c4736290@trbvn.com"
 PASSWORD = "uAlberta_2016"
@@ -79,6 +101,7 @@ def main(parameters):
         p2 = parameters[2]
         showprojects(p2)
     else:
+        p2 = parameters[2]
         if noparameters < 2:
             if noparameters == 1:
                 service = p1
@@ -346,7 +369,7 @@ def parseHistory(bugid):
 def saveHistory(data):
     j = json.loads(data)
     bugschanges = j["bugs"][0]
-    #print(bugschanges)
+
     # save the data to the database
     bugid = bugschanges["id"]
     for i in bugschanges["history"]:
