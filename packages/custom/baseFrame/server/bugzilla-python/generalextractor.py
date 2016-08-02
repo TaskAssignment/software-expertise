@@ -34,6 +34,13 @@ payload = {
     "Bugzilla_login_token": authenticity_token
 }
 
+urls = {
+        "eclipse": "https://bugs.eclipse.org/bugs/describecomponents.cgi",
+        "mozilla": "https://bugzilla.mozilla.org/describecomponents.cgi?full=1",
+        "libreoffice": "https://bugs.documentfoundation.org/describecomponents.cgi",
+        "kernel": "https://bugs.kernel.org/describecomponents.cgi",
+        }
+
 class BugList:
     eclipse = "https://bugs.eclipse.org/bugs/describecomponents.cgi"
     mozillafull = "https://bugzilla.mozilla.org/describecomponents.cgi?full=1"
@@ -60,52 +67,46 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 
-def main():
+def main(parameters):
     print(bcolors.OKBLUE + "Welcome to the bug extractor" + bcolors.ENDC)
-
-    pr = []
-    line = sys.stdin
-    noparameters = 0
-    for i in line:
-        noparameters = noparameters +1
-        pr.append(i)
-
-    p1 = pr[0].strip()
-    p2 = pr[1].strip()
+    noparameters = len(parameters)
+    p1 = parameters[0]
+    p2 = parameters[2]
 
     if p1 == "showservices":
         showservices()
     elif p2 == "showprojects":
-        showprojects(sys.argv[2])
+        showprojects(p2)
     else:
         if noparameters < 2:
             if noparameters == 1:
                 service = p1
                 print(bcolors.WARNING+"Extracting all the information from  "+service+"..."+bcolors.ENDC)
-                #createHeadersTSV(service)
                 readauxlist(getlistofproducts(service))
             elif noparameters == 0:
                 print(bcolors.FAIL + "How to run - Example \"python3 bugextractor.py mozilla firefox\"" + bcolors.ENDC)
         else:
             service = p1
             project = p2
-            print(bcolors.WARNING + "Extracting information from " +service+" in the project "+project+"..."+bcolors.ENDC)
-            #createHeadersTSV(service)
+            print(bcolors.WARNING + "Extracting information from " + service + " in the project " + project+"..." +bcolors.ENDC)
             readauxlist(getComponent(service, project))
     return 0
 
 
 def getlistofproducts(service):
-    url = ""
-    if service == "eclipse":
-        url = BugList.eclipse
-    elif service == "mozilla":
-        url = BugList.mozilla
-    elif service == "kernel":
-        url = BugList.kernel
-    elif service == "libreoffice":
-        url = BugList.libreoffice
+    # url = ""
 
+    url = urls[service]
+    """
+        if service == "eclipse":
+            url = BugList.eclipse
+        elif service == "mozilla":
+            url = BugList.mozilla
+        elif service == "kernel":
+            url = BugList.kernel
+        elif service == "libreoffice":
+            url = BugList.libreoffice
+    """
     page = requests.get(url)
     # change to authenticated
     tree = html.fromstring(page.content)
@@ -427,4 +428,4 @@ def showprojects(service):
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv)
