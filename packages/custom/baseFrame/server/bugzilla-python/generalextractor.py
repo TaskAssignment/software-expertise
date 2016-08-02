@@ -68,16 +68,15 @@ class bcolors:
 
 
 def main(parameters):
-    #print(bcolors.OKBLUE + "Welcome to the bug extractor" + bcolors.ENDC)
-
     noparameters = len(parameters)
 
     p1 = parameters[1]
-    p2 = parameters[2]
+    p2 = ""
 
     if p1 == "showservices":
         showservices()
-    elif p2 == "showprojects":
+    elif p1 == "showprojects":
+        p2 = parameters[2]
         showprojects(p2)
     else:
         if noparameters < 2:
@@ -364,24 +363,16 @@ def saveHistory(data):
         a = collection.update({'_id': bugid}, {'$set': historyobject}, upsert=True)
         print(a)
 
+
 def showservices():
-    services = []
-    services.append("mozilla")
-    services.append("eclipse")
-    print(services)
+    print("mozilla")
+    print("eclipse")
 
 
 def showprojects(service):
     print("Projects from "+service)
-    url = ""
-    if service == "eclipse":
-        url = BugList.eclipse
-    elif service == "mozilla":
-        url = BugList.mozilla
-    elif service == "kernel":
-        url = BugList.kernel
-    elif service == "libreoffice":
-        url = BugList.libreoffice
+
+    url = urls[service]
 
     page = requests.get(url)
     # change to authenticated
@@ -390,10 +381,11 @@ def showprojects(service):
     products = tree.xpath('//th//a/text() | //td/h2/a/text()')
     productsaux = []
     for i in range(len(products)):
-        productsaux.append(products[i].replace("\xa0"," "))
+        print(products[i].replace("\xa0"," "))
+        #productsaux.append(products[i].replace("\xa0"," "))
 
-    print(productsaux)
-    return products
+    #print(productsaux)
+    return 0
 
 
 if __name__ == '__main__':
