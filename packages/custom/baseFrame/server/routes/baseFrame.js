@@ -26,4 +26,32 @@ module.exports = function (BaseFrame, app, database) {
 
     var table = require(controllers + 'table')(BaseFrame);
     app.route(base + 'find/:issueId/matches').get(table.findMatches);
+
+    var PythonShell = require('python-shell');
+    var extractorRoute = "../bugzilla-python/generalextractor.py"
+
+    app.get("/run/:command", function(req,res){
+      var pyshell = new PythonShell(extractorRoute)
+      console.log(req.params.command);
+    });
+
+    app.get("/run/:service/:project", function(req,res){
+      var pyshell = new PythonShell(extractorRoute);
+
+      // sends a message to the Python script via stdin
+      pyshell.send(req.params.service);
+      pyshell.send(req.params.project);
+
+      pyshell.on('message', function (message) {
+        // received a message sent from the Python script (a simple "print" statement)
+        console.log(message);
+      });
+
+      // end the input stream and allow the process to exit
+      pyshell.end(function (err) {
+        if (err) throw err;
+        console.log('\n');
+        res.send("done")
+      });
+    });
 };
