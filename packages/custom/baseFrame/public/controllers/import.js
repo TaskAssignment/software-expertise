@@ -13,9 +13,11 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
     $scope.populate = function (option) {
         var config = {
             params: {
+                service: $scope.bugzillaService,
                 project: $scope.project,
             }
         }
+        console.log(option, config);
         $http.get('/api/baseFrame/populate/' + $scope.selected + '/' + option, config)
         .then(function (response){
             console.log(response);
@@ -28,7 +30,7 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
     **/
     $scope.findProjects = function () {
         $scope.project = undefined;
-        $scope.bugzillaProject = undefined;
+        $scope.bugzillaService = undefined;
         if($scope.selected === 'gh'){
             $http.get('api/baseFrame/project/find/').then(function (response) {
                 $scope.projects = response.data.projects;
@@ -36,7 +38,6 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
                 $scope.projects = undefined;
             });
         } else if($scope.selected === 'bz'){
-            console.log('Bugzilla')
             $http.get('api/baseFrame/bugzilla/showservices/').then(function (response) {
                 $scope.bugzillaServices = response.data;
             }, function (response){
@@ -44,6 +45,16 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
                 console.log(response);
             });
         }
+    }
+
+    $scope.findBugzillaProjects = function (service) {
+        $scope.bugzillaService = service;
+        $http.get('api/baseFrame/bugzilla/showprojects/' + service).then(function (response) {
+            $scope.bugzillaProjects = response.data;
+        }, function (response){
+            $scope.bugzillaProjects = undefined;
+            console.log(response);
+        });
     }
 
     /** Marks a project to populate
@@ -108,10 +119,7 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
             options: [
                 {
                     key: 'BugzillaBug',
-                    label: 'Bugs',
-                }, {
-                    key: 'BugzillaProfile',
-                    label: 'Developers',
+                    label: 'Bugs (contributors and bug history is also populated)',
                 },
             ],
         },

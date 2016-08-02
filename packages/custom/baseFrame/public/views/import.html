@@ -47,13 +47,13 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
         </h4>
     </div>
 
-    <div class="row"  ng-if="selected === 'bz'">
+    <div class="row"  ng-if="selected === 'bz' && bugzillaServices">
         <h4>
             <div class="col-md-4 col-sm-6 col-xs-3">
-                First, choose the project you want to populate
+                First, choose the service you want to populate
             </div>
             <div class="col-md-8 col-sm-6 col-xs-9">
-                <select ng-model="bugzillaService" class="form-control" ng-change="selectProject(project)">
+                <select ng-model="service" class="form-control" ng-change="findBugzillaProjects(service)">
                     <option value=""> --- Select one --- </option>
                     <option ng-repeat="service in bugzillaServices" value="{{service}}">
                         {{service}}
@@ -63,6 +63,22 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
         </h4>
     </div>
 
+    <div class="row"  ng-if="selected === 'bz' && bugzillaProjects">
+        <h4>
+            <div class="col-md-4 col-sm-6 col-xs-3">
+                Now, choose the project of this service you want to populate
+            </div>
+            <div class="col-md-8 col-sm-6 col-xs-9">
+                <select ng-model="project" class="form-control" ng-change="selectProject(project)">
+                    <option value=""> --- Select one --- </option>
+                    <option value="all"> All projects (this may take a really long time) </option>
+                    <option ng-repeat="project in bugzillaProjects" value="{{project}}">
+                        {{project}}
+                    </option>
+                </select>
+            </div>
+        </h4>
+    </div>
 
     <br>
 
