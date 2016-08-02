@@ -78,7 +78,10 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
                 }, {
                     key: 'IssueComment',
                     label: 'Issue/PR Comments',
-                },
+                }, {
+                    key: 'Developer',
+                    label: 'Developers (and their StackOverflow answers, questions and tags)'
+                }
             ],
         },
         so: {
