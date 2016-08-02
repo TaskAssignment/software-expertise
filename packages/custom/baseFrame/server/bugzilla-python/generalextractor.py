@@ -62,9 +62,12 @@ class bcolors:
 
 def main():
     print(bcolors.OKBLUE + "Welcome to the bug extractor" + bcolors.ENDC)
-    noparameters = len(sys.stdin)
+
     pr = []
+    line = sys.stdin
+    noparameters = 0
     for i in line:
+        noparameters = noparameters +1
         pr.append(i)
 
     p1 = pr[0].strip()
@@ -79,7 +82,7 @@ def main():
             if noparameters == 1:
                 service = p1
                 print(bcolors.WARNING+"Extracting all the information from  "+service+"..."+bcolors.ENDC)
-                createHeadersTSV(service)
+                #createHeadersTSV(service)
                 readauxlist(getlistofproducts(service))
             elif noparameters == 0:
                 print(bcolors.FAIL + "How to run - Example \"python3 bugextractor.py mozilla firefox\"" + bcolors.ENDC)
@@ -87,24 +90,9 @@ def main():
             service = p1
             project = p2
             print(bcolors.WARNING + "Extracting information from " +service+" in the project "+project+"..."+bcolors.ENDC)
-            createHeadersTSV(service)
+            #createHeadersTSV(service)
             readauxlist(getComponent(service, project))
     return 0
-
-
-def createHeadersTSV(service):
-    print("Generating the TSV Files")
-    with open("data/"+service+"_bugs.tsv","w") as f:
-        print("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % ("product", "component", "id", "assigneeEmail", "url", "severity", "description", "status", "classification", "createdTime", "cc", "version", "op_sys"), file=f)
-
-    with open("data/"+service+"_comments.tsv","w") as f:
-        print("%s\t%s\t%s\t%s" % ("bugid", "commentnumber", "date", "comment"), file = f)
-
-    with open("data/"+service+"_history.tsv", "w") as f:
-        print("%s\t%s\t%s\t%s" % ("bugid","when","who","changes"), file = f)
-
-    with open("data/"+service+"_users.tsv", "w") as f:
-        print("%s\t%s\t%s" % ("id", "name", "real_name"), file = f)
 
 
 def getlistofproducts(service):
@@ -233,106 +221,103 @@ def readauxlist(list):
 
 def parseinformation(filename, data):
     root = ET.fromstring(data)
-    with open("data/"+filename+"_bugs.tsv","a") as f:
-        for bug in root.findall('bug'):
-            if str(bug.attrib) == "{}":
-                id = bug.find('bug_id').text
-                title = bug.find('short_desc').text
-                url = "https://bugzilla.mozilla.org/show_bug.cgi?id="+id
-                severity = bug.find('bug_severity').text
-                status = bug.find('bug_status').text
-                classification = bug.find('classification').text
-                component = bug.find('component').text
-                createdTime = bug.find('creation_ts').text
-                assigneeEmail = bug.find('assigned_to').text
+    #with open("data/"+filename+"_bugs.tsv","a") as f:
+    for bug in root.findall('bug'):
+        if str(bug.attrib) == "{}":
+            id = bug.find('bug_id').text
+            title = bug.find('short_desc').text
+            url = "https://bugzilla.mozilla.org/show_bug.cgi?id="+id
+            severity = bug.find('bug_severity').text
+            status = bug.find('bug_status').text
+            classification = bug.find('classification').text
+            component = bug.find('component').text
+            createdTime = bug.find('creation_ts').text
+            assigneeEmail = bug.find('assigned_to').text
 
-                parseUser(bug.find('reporter').text)
-                parseHistory(bug.find('bug_id').text)
-                cc = []
-                if str(bug.find('cc'))=="None":
-                    cc = "None"
-                else:
-                    for i in bug.findall('cc'):
-                        cc.append(i.text)
-                cc = str(cc)
-                op_sys = bug.find('op_sys').text
-                version = bug.find('version').text
-                product = bug.find('product').text
-                platform = bug.find('platform')
-
-                commentid = ""
-                summary = ""
-                date = ""
-
-                for comment in bug.find('long_desc'):
-                    if comment.tag == "bug_when":
-                        date = comment.text
-                    if comment.tag == "thetext":
-                        summary = str(comment.text)
-                        notabs = re.sub('\t', " ", summary)
-                        nobacks = re.sub('(?:\r\n|\r|\n)', " ", notabs)
-                        noweird = re.sub('[\x00-\x1F\x7F-\x9F]', " ", nobacks)
-                        summary = noweird
-                    if comment.tag == "commentid":
-                        commentid = comment.text
-
-                parsecomments("mozilla_comments", id, commentid, date, summary)
-
-                # save to database
-
-                bug = {"_id": "BZ"+id,
-                       "title": title,
-                       "body": summary,
-                       "status": status,
-                       "labels": [],
-                       "createdAt": createdTime,
-                       "author": bug.find('reporter').text,
-                       "closedBy": "",
-                       "closedAt": "",
-                       "url": url,
-                       "updatedAt": datetime.datetime.utcnow(),
-                       "parsed": False,
-                       "tags": []
-                      }
-
-                bugzillabug = {
-                    "_id": id,
-                    "severity": severity,
-                    "bugId": 'BZ' + id,
-                    "asignee": assigneeEmail,
-                    "ccUsers": cc,
-                    "classification": classification,
-                    "component": component,
-                    "version": version,
-                    "platform": platform,
-                    "product": product,
-                    "summary": summary
-                }
-                # make the insertion
-                bb = db.bugzillabugs
-                b = db.bugs
-
-                try:
-                    rbb = bb.insert_one(bugzillabug).inserted_id
-                    rb = b.insert_one(bug).inserted_id
-                    print(rb)
-                except pymongo.errors.DuplicateKeyError as e:
-                    print(str(e))
-
-                # save to tsv file
-                print("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" %
-                    (product, component, id, assigneeEmail, url, severity, title, status, classification, createdTime,  cc, version, op_sys),
-                    file=f)
-                print(bcolors.OKGREEN + "Bug "+id+" info saved to TSV files" + bcolors.ENDC)
+            parseUser(bug.find('reporter').text)
+            parseHistory(bug.find('bug_id').text)
+            cc = []
+            if str(bug.find('cc'))=="None":
+                cc = "None"
             else:
-                print("=== Bug not defined ===")
-                print(bcolors.FAIL+"Bug wasn't saved! \nCheck the names"+bcolors.ENDC)
+                for i in bug.findall('cc'):
+                    cc.append(i.text)
+            cc = str(cc)
+            op_sys = bug.find('op_sys').text
+            version = bug.find('version').text
+            product = bug.find('product').text
+            platform = bug.find('platform')
+
+            commentid = ""
+            summary = ""
+            date = ""
+
+            for comment in bug.find('long_desc'):
+                if comment.tag == "bug_when":
+                    date = comment.text
+                if comment.tag == "thetext":
+                    summary = str(comment.text)
+                    notabs = re.sub('\t', " ", summary)
+                    nobacks = re.sub('(?:\r\n|\r|\n)', " ", notabs)
+                    noweird = re.sub('[\x00-\x1F\x7F-\x9F]', " ", nobacks)
+                    summary = noweird
+                if comment.tag == "commentid":
+                    commentid = comment.text
+
+            parsecomments("mozilla_comments", id, commentid, date, summary)
+
+            # save to database
+
+            bug = {"_id": "BZ"+id,
+                   "title": title,
+                   "body": summary,
+                   "status": status,
+                   "labels": [],
+                   "createdAt": createdTime,
+                   "author": bug.find('reporter').text,
+                   "closedBy": "",
+                   "closedAt": "",
+                   "url": url,
+                   "updatedAt": datetime.datetime.utcnow(),
+                   "parsed": False,
+                   "tags": []
+                  }
+
+            bugzillabug = {
+                "_id": id,
+                "severity": severity,
+                "bugId": 'BZ' + id,
+                "asignee": assigneeEmail,
+                "ccUsers": cc,
+                "classification": classification,
+                "component": component,
+                "version": version,
+                "platform": platform,
+                "product": product,
+                "summary": summary
+            }
+            # make the insertion
+            bb = db.bugzillabugs
+            b = db.bugs
+
+            try:
+                rbb = bb.insert_one(bugzillabug).inserted_id
+                rb = b.insert_one(bug).inserted_id
+                print(rb)
+            except pymongo.errors.DuplicateKeyError as e:
+                print(str(e))
+
+            # save to tsv file
+            #print("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (product, component, id, assigneeEmail, url, severity, title, status, classification, createdTime,  cc, version, op_sys),file=f)
+            print(bcolors.OKGREEN + "Bug "+id+" info saved to TSV files" + bcolors.ENDC)
+        else:
+            print("=== Bug not defined ===")
+            print(bcolors.FAIL+"Bug wasn't saved! \nCheck the names"+bcolors.ENDC)
 
     f.close()
 
 
 def parsecomments(filename, bugid, commentnumber, date, comment):
-
     mozilla_bugs_comments = db.bugzillacomments
     bugCommentSchema = {
         "bugid":bugid,
@@ -341,10 +326,10 @@ def parsecomments(filename, bugid, commentnumber, date, comment):
         "comment":comment
     }
     mozilla_bugs_comments.insert(bugCommentSchema)
-
+    """
     with open("data/"+filename+".tsv","a") as f:
         print("%s\t%s\t%s\t%s" % (bugid, commentnumber, date, comment), file=f)
-
+    """
 
 def parseUser(email):
     # method to find Users using the email find at the reporter
@@ -385,9 +370,6 @@ def saveUser(data):
         print(str(e))
         return
 
-    with open("data/mozilla_users" + ".tsv", "a") as f:
-        print("%s\t%s\t%s" % (id, name, real_name), file=f)
-
 
 def parseHistory(bugid):
     historyUrl = HISTORY_URL + bugid + "/history"
@@ -410,10 +392,6 @@ def saveHistory(data):
 
     # save the data to the TSV file
     bugid = bugschanges["id"]
-    with open("data/mozilla_history.tsv", "a") as f:
-        for i in bugschanges["history"]:
-            print("%s\t%s\t%s\t%s" % (bugid, i["when"], i["who"], i["changes"]), file=f)
-
 
 def showservices():
     services = []
