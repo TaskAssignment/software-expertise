@@ -370,7 +370,6 @@ def showservices():
 
 
 def showprojects(service):
-    print("Projects from "+service)
 
     url = urls[service]
 
@@ -382,9 +381,7 @@ def showprojects(service):
     productsaux = []
     for i in range(len(products)):
         print(products[i].replace("\xa0"," "))
-        #productsaux.append(products[i].replace("\xa0"," "))
 
-    #print(productsaux)
     return 0
 
 
