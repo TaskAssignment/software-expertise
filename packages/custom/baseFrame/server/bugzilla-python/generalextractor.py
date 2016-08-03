@@ -242,17 +242,18 @@ def parseinformation(service, data):
             summary = ""
             date = ""
 
-            for comment in bug.find('long_desc'):
-                if comment.tag == "bug_when":
-                    date = comment.text
-                if comment.tag == "thetext":
-                    summary = str(comment.text)
-                    notabs = re.sub('\t', " ", summary)
-                    nobacks = re.sub('(?:\r\n|\r|\n)', " ", notabs)
-                    noweird = re.sub('[\x00-\x1F\x7F-\x9F]', " ", nobacks)
-                    summary = noweird
-                if comment.tag == "commentid":
-                    commentid = comment.text
+            for c in bug.findall('long_desc'):
+                for comment in c:  #bug.find('long_desc'):
+                    if comment.tag == "bug_when":
+                        date = comment.text
+                    if comment.tag == "thetext":
+                        summary = str(comment.text)
+                        notabs = re.sub('\t', " ", summary)
+                        nobacks = re.sub('(?:\r\n|\r|\n)', " ", notabs)
+                        noweird = re.sub('[\x00-\x1F\x7F-\x9F]', " ", nobacks)
+                        summary = noweird
+                    if comment.tag == "commentid":
+                        commentid = comment.text
 
             parsecomments(service, id, commentid, date, summary)
 
@@ -277,7 +278,7 @@ def parseinformation(service, data):
             bugzillabug = {
                 "_id": prefix[service] + id,
                 "severity": severity,
-                "bugId": id,
+                "bugId": prefix[service] + id,
                 "service": service,
                 "asignee": assigneeEmail,
                 "ccUsers": cc,
@@ -312,7 +313,7 @@ def parsecomments(service, bugid, commentnumber, date, comment):
 
     bugCommentSchema = {
         "bugId": bugid,
-        "commentNumber": commentnumber,
+        "_id": prefix[service]+commentnumber,
         "date": date,
         "comment": comment,
         "service": service
@@ -336,7 +337,7 @@ def saveUser(data):
     try:
         a = j["users"]
     except KeyError as e:
-        print(e)
+        #print(e)
         return
     except IndexError as i:
         print(str(i)+" User not saved")
@@ -357,7 +358,7 @@ def saveUser(data):
     bp = db.bugzillaprofiles
     try:
         pf = bp.insert_one(profile).inserted_id
-        print(pf)
+        #print(pf)
     except pymongo.errors.DuplicateKeyError as e:
         print(str(e))
         return
@@ -386,8 +387,8 @@ def saveHistory(data):
             "history": bughistory
         }
         collection = db.bugzillabugshistory
-        a = collection.update({'_id': bugid}, {'$set': historyobject}, upsert=True)
-        print(a)
+        collection.update({'_id': bugid}, {'$set': historyobject}, upsert=True)
+        #print(a)
 
 """
 Prints to console the services
