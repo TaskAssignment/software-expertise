@@ -237,6 +237,7 @@ def parseinformation(service, data):
             version = bug.find('version').text
             product = bug.find('product').text
             platform = bug.find('rep_platform').text
+            updatedAt = bug.find('delta_ts').text
 
             commentid = ""
             summary = ""
@@ -270,7 +271,7 @@ def parseinformation(service, data):
                     "closedBy": "",
                     "closedAt": "",
                     "url": url,
-                    "updatedAt": datetime.datetime.utcnow(),
+                    "updatedAt": updatedAt,
                     "parsed": False,
                     "tags": []
                   }
