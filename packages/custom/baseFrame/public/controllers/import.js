@@ -31,6 +31,9 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
     $scope.findProjects = function () {
         $scope.project = undefined;
         $scope.bugzillaService = undefined;
+        $scope.bugzillaServices = undefined;
+        $scope.projects = undefined;
+
         if($scope.selected === 'gh'){
             $http.get('api/baseFrame/project/find/').then(function (response) {
                 $scope.projects = response.data.projects;
