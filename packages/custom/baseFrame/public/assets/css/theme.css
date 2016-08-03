@@ -24,6 +24,14 @@ svg {
 }
 
 body {
-    font-family: "Abel";
+    font-family: 'Josefin Sans', sans-serif;
     font-size: medium;
+}
+
+.custom-background {
+    background-color: #4169e1;
+}
+
+.custom-navbar-text {
+    color: #fff;
 }
