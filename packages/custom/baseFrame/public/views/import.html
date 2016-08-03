@@ -31,53 +31,31 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
 
     <br>
 
-    <div class="row"  ng-if="selected === 'gh'">
-        <h4>
-            <div class="col-md-4 col-sm-6 col-xs-3">
-                First, choose the project you want to populate
-            </div>
-            <div class="col-md-8 col-sm-6 col-xs-9">
-                <select ng-model="project" class="form-control" ng-change="selectProject(project)">
-                    <option value=""> --- Select one --- </option>
-                    <option ng-repeat="project in projects" value="{{project._id}}">
-                        {{project.name}}
-                    </option>
-                </select>
-            </div>
-        </h4>
+    <div class="container-fluid" ng-if="selected === 'gh'"
+        ng-include="'baseFrame/views/import_github.html'">
     </div>
 
-    <div class="row"  ng-if="selected === 'bz'">
-        <h4>
-            <div class="col-md-4 col-sm-6 col-xs-3">
-                First, choose the project you want to populate
-            </div>
-            <div class="col-md-8 col-sm-6 col-xs-9">
-                <select ng-model="bugzillaService" class="form-control" ng-change="selectProject(project)">
-                    <option value=""> --- Select one --- </option>
-                    <option ng-repeat="service in bugzillaServices" value="{{service}}">
-                        {{service}}
-                    </option>
-                </select>
-            </div>
-        </h4>
+    <div class="container-fluid" ng-if="selected === 'bz'"
+        ng-include="'baseFrame/views/import_bugzilla.html'">
     </div>
-
 
     <br>
 
-    <div ng-repeat="option in sources[selected].options">
-        <div class="row">
-            <div class="col-md-11 col-sm-10 col-xs-9">
-                {{ option.label }}
+    <div class="container-fluid" ng-if="selected !== 'bz' && selected !== 'gh'">
+        <div ng-repeat="option in sources[selected].options">
+            <div class="row">
+                <div class="col-md-11 col-sm-10 col-xs-9">
+                    {{ option.label }}
+                </div>
+                <div class="col-md-1 col-sm-2 col-xs-3">
+                    <button ng-click="populate(option.key)" class="btn btn-default">
+                        Populate
+                    </button>
+                </div>
             </div>
-            <div class="col-md-1 col-sm-2 col-xs-3">
-                <button ng-click="populate(option.key)" class="btn btn-default">
-                    Populate
-                </button>
-            </div>
+            <hr>
         </div>
-        <hr>
     </div>
+
 
 </section>

@@ -43,6 +43,7 @@ module.exports = function (BaseFrame){
                 case 'so':
                     break;
                 case 'bz':
+                    integratePython(query, res);
                     break;
             }
 
@@ -65,19 +66,28 @@ module.exports = function (BaseFrame){
 * @param {res} res - The express response to send the results
 **/
 function integratePython(args, res) {
-    var pyArgs = Object.keys(args).map(function (key) {
-        return args[key];
-    });
+    var pyArgs = [];
+    //Just to make sure this is executed in this order
+    for (var key of ['command', 'service', 'project']) {
+        if (args.hasOwnProperty(key)) {
+            pyArgs.push(args[key]);
+        }
+    }
 
-    PythonShell.run(extractorRoute, {args: pyArgs}, function (err, results) {
+    var options = {
+        args: pyArgs,
+        pythonPath: '/usr/bin/python3',
+    }
+
+    PythonShell.run(extractorRoute, options, function (err, results) {
         if(err){
             console.log(err);
-            res.sendStatus(500);
+            if(!res.headersSent) res.sendStatus(500);
         } else {
-            console.log(results);
-            res.send(results);
+            if(!res.headersSent) res.send(results);
         }
     });
+
 }
 
 /** Basic flow to read files. It's assumed that, whatever the file name, it's
