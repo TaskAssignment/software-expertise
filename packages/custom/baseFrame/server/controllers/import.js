@@ -74,7 +74,12 @@ function integratePython(args, res) {
         }
     }
 
-    PythonShell.run(extractorRoute, {args: pyArgs}, function (err, results) {
+    var options = {
+        args: pyArgs,
+        pythonPath: '/usr/bin/python3',
+    }
+
+    PythonShell.run(extractorRoute, options, function (err, results) {
         if(err){
             console.log(err);
             if(!res.headersSent) res.sendStatus(500);
