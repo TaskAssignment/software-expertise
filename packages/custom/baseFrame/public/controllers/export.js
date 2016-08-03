@@ -5,7 +5,7 @@ baseFrame.controller('ExportController', function ($scope, $interval, $http, $lo
     getLastTimestamps();
 
     $scope.generate = function (option) {
-        $scope.generalOptions[option].generated = false;
+        $scope.options[option].generated = false;
         $http.get('/api/baseFrame/generate', {params:{resource: option}})
         .then(function (response) {
             checkGenerate(option);
@@ -13,11 +13,7 @@ baseFrame.controller('ExportController', function ($scope, $interval, $http, $lo
     }
 
     $scope.download = function(option){
-        $scope.generalOptions[option].downloaded = false;
-        if(option === 'Contributor'){
-            $scope.generalOptions[option].downloaded = true;
-            option = 'Developer';
-        }
+        $scope.options[option].downloaded = false;
         $http.get('/api/baseFrame/download', {params:{resource: option}})
         .then(function (response) {
             var a = document.createElement('a');
@@ -31,7 +27,7 @@ baseFrame.controller('ExportController', function ($scope, $interval, $http, $lo
             a.click();
             document.body.removeChild(a);
 
-            $scope.generalOptions[option].downloaded = true;
+            $scope.options[option].downloaded = true;
         }, function (response) {
             console.log(response);
         });
@@ -52,21 +48,24 @@ baseFrame.controller('ExportController', function ($scope, $interval, $http, $lo
         function stop(){
             $interval.cancel(interval);
             getLastTimestamps();
-            $scope.generalOptions[option].generated = true;
+            $scope.options[option].generated = true;
         }
     }
 
     function getLastTimestamps(){
         $http.get('api/baseFrame/timestamps').then(function (response){
             for(var model in response.data){
-                $scope.generalOptions[model].timestamp = new Date(response.data[model]).toLocaleString();
+                if($scope.options.hasOwnProperty(model)){
+                    $scope.options[model].timestamp =
+                    new Date(response.data[model]).toLocaleString();
+                }
             }
         }, function (response){
             console.log(response);
         });
     }
 
-    $scope.generalOptions = {
+    $scope.options = {
         StopWord: {
             label: 'StopWords',
             noModel: false,
@@ -79,27 +78,23 @@ baseFrame.controller('ExportController', function ($scope, $interval, $http, $lo
             label: 'CoOccurrences',
             noModel: false,
         },
-        Developer: {
-            label: 'Common Users (SO/GH)',
-            noModel: false,
-        },
         Project: {
             label: 'Projects',
             noModel: false,
         },
-        Contributor: {
-            label: 'Contributors',
+        Developer: {
+            label: 'Developers',
             noModel: false,
         },
         Answer: {
             label: 'SO Answers',
             noModel: true,
-            parent: 'Contributor',
+            parent: 'Developer',
         },
         Question: {
             label: 'SO Questions',
             noModel: true,
-            parent: 'Contributor',
+            parent: 'Developer',
         },
         Commit: {
             label: 'Commit',

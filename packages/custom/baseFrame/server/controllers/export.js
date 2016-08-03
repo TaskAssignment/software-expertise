@@ -2,7 +2,7 @@
 
 /** Handles import and export requests from the UI
 *
-* @module admin
+* @module export
 * @requires mongoose
 * @requires fs
 * @requires fast-csv
@@ -52,10 +52,7 @@ function initialStatus(){
       'Project', 'Event', 'StopWord'];
 
     for(var model of models){
-        statuses[model] = {
-            populated: NOT_READY,
-            generated: NOT_READY,
-        }
+        statuses[model] = NOT_READY;
     }
 
 }
@@ -66,7 +63,6 @@ module.exports = function (BaseFrame){
 
             switch (option) {
                 case 'Developer':
-                case 'Contributor':
                     writeAnswersAndQuestions();
                     writeDevs();
                     break;
@@ -104,30 +100,7 @@ module.exports = function (BaseFrame){
 
         check: function (req, res) {
             var option = getModelName(req.query.resource);
-            var populate = false;
-            if(req.query.populate){
-                populate = true;
-            }
-
-            if(populate){
-                var populator = require('../controllers/populator')();
-                switch (option) {
-                    case 'Contributor':
-                        res.sendStatus(populator.check('Developer'));
-                        break;
-                    case 'StopWord':
-                    case 'Developer':
-                    case 'CoOccurrence':
-                    case 'Tag':
-                        res.sendStatus(getStatus(option, 'populated'));
-                        break;
-                    default:
-                        res.sendStatus(populator.check(option));
-                        break;
-                }
-            } else {
-                res.sendStatus(getStatus(option, 'generated'));
-            }
+            res.sendStatus(statuses[option]);
         },
 
         timestamps: function (req, res) {
@@ -411,15 +384,15 @@ function writeDevs() {
       '-updatedAt -__v', {}, 'profiles.so profiles.gh');
 }
 
-function getStatus(model, option = 'generated'){
+function getStatus(model){
     model = getModelName(model);
-    return statuses[model][option];
+    return statuses[model];
 }
 
-function changeStatus(model, status, option = 'generated'){
+function changeStatus(model, status){
     model = getModelName(model);
-    statuses[model][option] = status;
-    if(status === READY && option === 'generated'){
+    statuses[model] = status;
+    if(status === READY){
         saveTimestamp(model);
     }
 }
@@ -430,10 +403,6 @@ function getModelName(option){
         case 'IssueComment':
         case 'Comment':
             option = 'Comment';
-            break;
-        case 'Developer':
-        case 'Contributor':
-            option = 'Developer';
             break;
         case 'Bug':
         case 'Issue':

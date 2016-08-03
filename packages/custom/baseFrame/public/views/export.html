@@ -12,7 +12,7 @@ class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="(model, option) in generalOptions">
+                <tr ng-repeat="(model, option) in options">
                     <td> {{ option.label }} </td>
                     <td> {{ option.timestamp }} </td>
                     <td ng-if="!option.noModel">
