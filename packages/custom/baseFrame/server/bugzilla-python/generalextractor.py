@@ -8,7 +8,10 @@ are reported on these platforms
  - Mozilla
  - Eclipse
 
- To add more projects please add the urls and the (some of them are specified)
+ To add more projects please add the urls and the
+ XPATH directions (some of them are specified)
+ to learn more about integrating more platforms to the
+ system please check the documentation
 
 
 The commands to run this script are
@@ -25,12 +28,11 @@ python3 generalextractor.py kernel acpi
 python3 generalextractor.py eclipse birt
 
 
-The first parameter is the service and the second
- is the name of the project,
+The first parameter is the service and the
+ second one is the name of the project
 
 
 """
-
 
 from lxml import html
 from pymongo import MongoClient
@@ -43,36 +45,23 @@ import datetime
 import pymongo
 
 """
-Login information for the authenticacion on the system
+Login information for the authenticacion on the service
 The website doesn't provide the complete information if you aren't logged in
 """
 
 USERNAME = "f1763724@mvrht.com"
 PASSWORD = "uAlberta_2016"
 
-LOGIN_URL = "https://bugzilla.mozilla.org/index.cgi"
-
 PROFILE_URL = "https://bugzilla.mozilla.org/rest/user?names="
 
 HISTORY_URL = "https://bugzilla.mozilla.org/rest/bug/"
 
-# Authentication server
-# Get Token
-session_requests = requests.session()
-result = session_requests.get(LOGIN_URL)
-tree = html.fromstring(result.text)
-authenticity_token = tree.xpath("//input[@name='Bugzilla_login_token']/@value")
 
-# Database settings
-client = MongoClient("162.246.157.171")
-# access database objects (name of the database)
-db = client['mean-prod']  # db = client.primer
-
-# Create payload
-payload = {
-    "Bugzilla_login": USERNAME,
-    "Bugzilla_password": PASSWORD,
-    "Bugzilla_login_token": authenticity_token
+login_urls = {
+    "eclipse": "https://bugs.eclipse.org/bugs/index.cgi",
+    "mozilla": "https://bugzilla.mozilla.org/index.cgi",
+    "libreoffice": "https://bugs.documentfoundation.org/index.cgi",
+    "kernel": "https://bugzilla.kernel.org/",
 }
 
 urls = {
@@ -104,6 +93,7 @@ prefix = {
     "kernel": "KN"
 }
 
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -113,6 +103,37 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+
+if sys.argv[1] != "showservices" and sys.argv[1] != "showprojects":
+    service = login_urls[sys.argv[1]]
+    LOGIN_URL = service
+else:
+    LOGIN_URL = "https://bugzilla.mozilla.org/index.cgi"
+
+# Authentication server
+# Get Token
+session_requests = requests.session()
+result = session_requests.get(LOGIN_URL)
+tree = html.fromstring(result.text)
+authenticity_token = tree.xpath("//input[@name='Bugzilla_login_token']/@value")
+
+# Create payload
+payload = {
+    "Bugzilla_login": USERNAME,
+    "Bugzilla_password": PASSWORD,
+    "Bugzilla_login_token": authenticity_token
+}
+
+# Database settings
+client = MongoClient("162.246.157.171")
+# access database objects (name of the database)
+db = client['mean-prod']  # db = client.primer
+
+"""
+   Main method to handle the parameters passed and
+   start the process of extraction
+"""
 
 
 def main(parameters):
@@ -134,6 +155,13 @@ def main(parameters):
         print(bcolors.WARNING + "Extracting information from " + service + " in the project " + project+"..." +bcolors.ENDC)
         readauxlist(service, getComponent(service, project))
     return 0
+
+
+"""
+Reads the product (project) url and then crawls
+ the website to obtain the list of bugs
+
+"""
 
 
 def getComponent(service, product):
@@ -196,7 +224,6 @@ def parseinformation(service, data):
             component = bug.find('component').text
             createdTime = bug.find('creation_ts').text
             assigneeEmail = bug.find('assigned_to').text
-
             parseUser(bug.find('reporter').text)
             parseHistory(bug.find('bug_id').text)
             cc = []
@@ -209,7 +236,7 @@ def parseinformation(service, data):
             op_sys = bug.find('op_sys').text
             version = bug.find('version').text
             product = bug.find('product').text
-            platform = bug.find('platform')
+            platform = bug.find('rep_platform').text
 
             commentid = ""
             summary = ""
@@ -232,7 +259,7 @@ def parseinformation(service, data):
             # save to database
 
             bug = {
-                    "_id": "BZ"+id,
+                    "_id": prefix[service] + id,
                     "title": title,
                     "body": summary,
                     "status": status,
@@ -248,9 +275,9 @@ def parseinformation(service, data):
                   }
 
             bugzillabug = {
-                "_id": id,
+                "_id": prefix[service] + id,
                 "severity": severity,
-                "bugId": 'BZ' + id,
+                "bugId": id,
                 "service": service,
                 "asignee": assigneeEmail,
                 "ccUsers": cc,
@@ -259,9 +286,7 @@ def parseinformation(service, data):
                 "version": version,
                 "platform": platform,
                 "product": product,
-                "op_sys": op_sys,
-                "summary": summary
-
+                "op_sys": op_sys
             }
 
             # make the insertion
@@ -295,9 +320,11 @@ def parsecomments(service, bugid, commentnumber, date, comment):
 
     mozilla_bugs_comments.insert(bugCommentSchema)
 
+"""
+This methods saves the users information using the service api
+"""
 
 def parseUser(email):
-    # method to find Users using the email find at the reporter
     profileurl = PROFILE_URL+email
     profilepage = requests.get(profileurl)
     saveUser(profilepage.text)
@@ -362,10 +389,20 @@ def saveHistory(data):
         a = collection.update({'_id': bugid}, {'$set': historyobject}, upsert=True)
         print(a)
 
+"""
+Prints to console the services
+available by looping trough
+the main dictionary of URL's
+"""
+
 
 def showservices():
     for i in urls:
         print(i)
+
+"""
+Th
+"""
 
 
 def showprojects(service):
