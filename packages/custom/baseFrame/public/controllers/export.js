@@ -18,10 +18,10 @@ baseFrame.controller('ExportController', function ($scope, $interval, $http, $lo
         .then(function (response) {
             var a = document.createElement('a');
             a.style = 'display: none';
-            var blob = new Blob([response.data], {type: 'plain/text'}),
+            var blob = new Blob([response.data], {type: 'data:application/zip;base64,'}),
             url = window.URL.createObjectURL(blob);
             a.href = url;
-            a.download = option + 's.tsv';
+            a.download = 'out.zip';
 
             document.body.appendChild(a);
             a.click();

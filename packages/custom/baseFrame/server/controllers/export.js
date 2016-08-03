@@ -60,42 +60,58 @@ module.exports = function (BaseFrame){
     return {
         generate: function (req, res) {
             var option = req.query.resource;
+            var JSZip = require("jszip");
 
-            switch (option) {
-                case 'Developer':
-                    writeAnswersAndQuestions();
-                    writeDevs();
-                    break;
-                case 'Event':
-                    var headers = ['_id', 'projectId', 'issueId', 'issueNumber',
-                      'actor', 'commitId', 'typeOfEvent', 'assigneeId',
-                      'createdAt'];
-                    writeFile('Event', headers, undefined, 'Events.tsv',
-                      '-updatedAt -__v', {isPrEvent: false});
-                    break;
-                case 'IssueComment':
-                    writeIssueComments();
-                    break;
-                case 'Bug':
-                    writeBugs();
-                    writeBugs(true);
-                    break;
-                case 'Commit':
-                    writeCommits();
-                    break;
-                case 'CommitComment':
-                    writeCommitComments();
-                    break;
-                default:
-                    writeFile(option);
-                    break;
-            }
+            var zip = new JSZip();
+            zip.file('Bugs.tsv', fs.readFileSync('files/Bugs.tsv'));
+            zip.file('Commits.tsv', fs.readFileSync('files/Commits.tsv'));
+            zip.file('Answers.tsv', fs.readFileSync('files/Answers.tsv'));
+
+            // ... and other manipulations
+
+            zip
+            .generateNodeStream({type:'nodebuffer',streamFiles:true})
+            .pipe(fs.createWriteStream('files/out.zip'))
+            .on('finish', function () {
+                // JSZip generates a readable stream with a "end" event,
+                // but is piped here in a writable stream which emits a "finish" event.
+                console.log("out.zip written.");
+            });
+            // switch (option) {
+            //     case 'Developer':
+            //         writeAnswersAndQuestions();
+            //         writeDevs();
+            //         break;
+            //     case 'Event':
+            //         var headers = ['_id', 'projectId', 'issueId', 'issueNumber',
+            //           'actor', 'commitId', 'typeOfEvent', 'assigneeId',
+            //           'createdAt'];
+            //         writeFile('Event', headers, undefined, 'Events.tsv',
+            //           '-updatedAt -__v', {isPrEvent: false});
+            //         break;
+            //     case 'IssueComment':
+            //         writeIssueComments();
+            //         break;
+            //     case 'Bug':
+            //         writeBugs();
+            //         writeBugs(true);
+            //         break;
+            //     case 'Commit':
+            //         writeCommits();
+            //         break;
+            //     case 'CommitComment':
+            //         writeCommitComments();
+            //         break;
+            //     default:
+            //         writeFile(option);
+            //         break;
+            // }
             res.sendStatus(NOT_READY);
         },
 
         download: function (req, res) {
             var option = req.query.resource;
-            res.download('files/' + option + 's.tsv');
+            res.download('files/out.zip');
         },
 
         check: function (req, res) {
