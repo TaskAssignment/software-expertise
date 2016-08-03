@@ -1,45 +1,35 @@
 <section ng-controller="ExportController"
-class="col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
-<div class="row">
-    <div class="col-md-12 col-lg-12">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th class="col-md-2 col-lg-2"> Option </th>
-                    <th class="col-md-1 col-lg-1"> Last Generated File (timestamp) </th>
-                    <th class="col-md-2 col-lg-2"> Regenerate File </th>
-                    <th class="col-md-1 col-lg-1"> Download </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr ng-repeat="(model, option) in options">
-                    <td> {{ option.label }} </td>
-                    <td> {{ option.timestamp }} </td>
-                    <td ng-if="!option.noModel">
-                        <button ng-click="generate(model)" class="btn btn-default">
-                            Generate
-                        </button>
-                        <i class="fa fa-spinner fa-pulse fa-fw"
-                        ng-if="option.generated === false"></i>
-                        <i class="fa fa-check"
-                        ng-if="option.generated"></i>
-                    </td>
-                    <td ng-if="option.noModel">
-                        This is generated with {{ option.parent }}.
-                    </td>
-                    <td>
-                        <button ng-click="download(model)" class="btn btn-default">
-                            Download
-                        </button>
-                        <i class="fa fa-spinner fa-pulse fa-fw"
-                        ng-if="option.downloaded === false"></i>
-                        <i class="fa fa-check"
-                        ng-if="option.downloaded"></i>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
+class="col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
+    <div class="row">
+        <div class="col-md-12">
+            <h1> Export Data </h1>
 
+            <p>
+                Here you have access to all the data we have on our databases. The download is
+                a .zip file with the things related to the topic you selected. Each topic has
+                shows what files and information will be on the zip.
+            </p>
+        </div>
+    </div>
+
+    <div class="container" ng-repeat="(model, option) in options">
+        <div class="row">
+            <h3> {{option.label}} </h3>
+        </div>
+        <div class="row">
+            <div class="col-xs-6 col-sm-8 col-md-10 col-lg-10">
+                <p> {{option.description}} </p>
+            </div>
+            <div class="col-xs-3 col-sm-2 col-md-1 col-lg-1">
+                <button disabled ng-click="generate(model)" class="btn btn-default">
+                    Generate
+                </button>
+            </div>
+            <div class="col-xs-3 col-sm-2 col-md-1 col-lg-1">
+                <button disabled ng-click="download(model)" class="btn btn-default">
+                    Download <i class="fa fa-download" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 </section>

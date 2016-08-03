@@ -66,60 +66,29 @@ baseFrame.controller('ExportController', function ($scope, $interval, $http, $lo
     }
 
     $scope.options = {
-        StopWord: {
-            label: 'StopWords',
-            noModel: false,
-        },
-        Tag: {
-            label: 'SO Tags',
-            noModel: false,
-        },
-        CoOccurrence: {
-            label: 'CoOccurrences',
-            noModel: false,
-        },
-        Project: {
-            label: 'Projects',
-            noModel: false,
-        },
-        Developer: {
-            label: 'Developers',
-            noModel: false,
-        },
-        Answer: {
-            label: 'SO Answers',
-            noModel: true,
-            parent: 'Developer',
-        },
-        Question: {
-            label: 'SO Questions',
-            noModel: true,
-            parent: 'Developer',
-        },
-        Commit: {
-            label: 'Commit',
-            noModel: false,
-        },
-        CommitComment: {
-            label: 'Commit Comments',
-            noModel: false,
-        },
         Bug: {
-            label: 'Issues',
-            noModel: false,
+            label: 'Bugs',
+            description: 'GitHub Issues and their comments and history. Bugzilla Bugs, their comments and history (where it was able to fetch them). 6 files.',
         },
         PullRequest: {
             label: 'Pull Requests',
-            noModel: true,
-            parent: 'Issues',
+            description: 'GitHub Pull Requests with their comments and history. 3 files.',
         },
-        Event: {
-            label: 'Issue Events',
-            noModel: false,
+        Commit: {
+            label: 'Commits',
+            description: 'GitHub commits with their comments. 2 files.',
         },
-        IssueComment: {
-            label: 'Issue Comments',
-            noModel: false,
+        Project: {
+            label: 'Projects',
+            description: 'GitHub repositories and Bugzilla services. 2 files.',
+        },
+        Developer: {
+            label: 'Developers',
+            description: 'Information from StackOverflow, GitHub and Bugzilla profiles, answers and questions from StackOverflow. 3 files',
+        },
+        Meta: {
+            label: 'Metadata',
+            description: 'StackOverflow Tags and CoOccurrences, StopWords to analise text. 3 files.',
         },
     }
 });
