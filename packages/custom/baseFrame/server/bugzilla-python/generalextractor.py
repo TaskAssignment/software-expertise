@@ -100,6 +100,13 @@ HISTORY_URLS = {
    "kernel": "https://bugzilla.kernel.org/show_activity.cgi?id=",
 }
 
+PROFILE_URLS = {
+    "eclipse": "https://bugs.eclipse.org/bugs/show_bug.cgi?id=",
+    "mozilla": "https://bugzilla.mozilla.org/show_bug.cgi?id=",
+    "libreoffice": "https://bugs.documentfoundation.org/show_bug.cgi?id=",
+    "kernel": "https://bugzilla.kernel.org/show_bug.cgi?id=",
+}
+
 PREFIX = {
     "eclipse": "EC",
     "mozilla": "MZ",
@@ -201,7 +208,6 @@ def showprojects(service):
 
     for i in range(len(products)):
         print(products[i].replace("\xa0", " "))
-
 
 
 """
@@ -318,8 +324,8 @@ def saveBugs(service, data):
                         commentid = comment.text
                 saveComment(service, id, commentid, date, summary)
 
-            # parseUser(bug.find('reporter').text)
-            extractHistory(service, bug.find('bug_id').text)
+            extractHistory(service, id)
+            saveUsers(service, id)
 
             # save to database
 
@@ -412,7 +418,6 @@ def extractHistory(service, bugid):
         auxList.append(components[i])
         j += 1
         if j % 5 == 0:
-            print(auxList)
             historySchema = {
                 "bugId": PREFIX[service] + bugid,
                 "who": auxList[0],
@@ -423,8 +428,32 @@ def extractHistory(service, bugid):
             }
             mbh = db.bugzillabugshistory
             mbh.insert(historySchema)
-            print("==========")
             auxList = []
+
+
+"""
+    This method gets the id of a bug
+    and extracts the users related
+    including in the cc list
+"""
+
+
+def saveUsers(service, bugid):
+    url = PROFILE_URLS[service] + bugid
+    website = authRequest(url)
+
+    tree = html.fromstring(website)
+    xpath = '//a[@class="email"]/@title'
+    components = tree.xpath(xpath)
+
+    for email in components:
+        if email != "":
+           BUS = {
+               "bugId": bugid,
+               "email": email
+           }
+           mui = db.bugzillaprofiles
+           mui.insert(BUS)
 
 
 if __name__ == '__main__':
