@@ -63,14 +63,21 @@ module.exports = function (BaseFrame){
             var JSZip = require("jszip");
 
             var zip = new JSZip();
+            zip.file('Answers.tsv', fs.readFileSync('files/Answers.tsv'));
             zip.file('Bugs.tsv', fs.readFileSync('files/Bugs.tsv'));
             zip.file('Commits.tsv', fs.readFileSync('files/Commits.tsv'));
-            zip.file('Answers.tsv', fs.readFileSync('files/Answers.tsv'));
-
+            zip.file('Hello.txt', 'Vamos testar essa droga');
             // ... and other manipulations
 
-            zip
-            .generateNodeStream({type:'nodebuffer',streamFiles:true})
+            zip//.generateAsync()
+            .generateNodeStream({
+                type: 'nodebuffer',
+                platform: process.platform,
+                compression: 'DEFLATE',
+                compressionOptions: {
+                    level: 9,
+                },
+            })
             .pipe(fs.createWriteStream('files/out.zip'))
             .on('finish', function () {
                 // JSZip generates a readable stream with a "end" event,
@@ -111,7 +118,8 @@ module.exports = function (BaseFrame){
 
         download: function (req, res) {
             var option = req.query.resource;
-            res.download('files/out.zip');
+            res.sendFile('out.zip', {root:'files/'});
+            // res.download('files/out.zip');
         },
 
         check: function (req, res) {
