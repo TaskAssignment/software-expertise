@@ -48,6 +48,32 @@ var SO_APPS = {
 }
 
 function initialStatus(){
+    var statuses = {
+        Bug: {
+            GitHubIssue: true,
+            description: 'GitHub Issues and their comments and history. Bugzilla Bugs, their comments and history (where it was able to fetch them). 6 files.',
+        },
+        PullRequest: {
+            label: 'Pull Requests',
+            description: 'GitHub Pull Requests with their comments and history. 3 files.',
+        },
+        Commit: {
+            label: 'Commits',
+            description: 'GitHub commits with their comments. 2 files.',
+        },
+        Project: {
+            label: 'Projects',
+            description: 'GitHub repositories and Bugzilla services. 2 files.',
+        },
+        Developer: {
+            label: 'Developers',
+            description: 'Information from StackOverflow, GitHub and Bugzilla profiles, answers and questions from StackOverflow. 3 files',
+        },
+        Meta: {
+            label: 'Metadata',
+            description: 'StackOverflow Tags and CoOccurrences, StopWords to analise text. 3 files.',
+        },
+    }
     var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit', 'Comment',
       'Project', 'Event', 'StopWord'];
 
@@ -60,58 +86,94 @@ module.exports = function (BaseFrame){
     return {
         generate: function (req, res) {
             var option = req.query.resource;
-            var JSZip = require("jszip");
+            switch (option) {
+                case 'Bug':
+                    writeIssues();
+                    writeIssueComments();
 
-            var zip = new JSZip();
-            zip.file('Bugs.tsv', fs.readFileSync('files/Bugs.tsv'));
-            zip.file('Commits.tsv', fs.readFileSync('files/Commits.tsv'));
-            zip.file('Answers.tsv', fs.readFileSync('files/Answers.tsv'));
+                    var headers = ['_id', 'projectId', 'issueId', 'issueNumber',
+                    'actor', 'commitId', 'typeOfEvent', 'assigneeId',
+                    'createdAt'];
+                    writeFile('Event', headers, undefined, 'IssueEvents.tsv',
+                    '-updatedAt -__v', {isPrEvent: false});
 
-            // ... and other manipulations
+                    break;
+                case 'PullRequest':
+                    writeIssues(true);
 
-            zip
-            .generateNodeStream({type:'nodebuffer',streamFiles:true})
-            .pipe(fs.createWriteStream('files/out.zip'))
-            .on('finish', function () {
-                // JSZip generates a readable stream with a "end" event,
-                // but is piped here in a writable stream which emits a "finish" event.
-                console.log("out.zip written.");
-            });
-            // switch (option) {
-            //     case 'Developer':
-            //         writeAnswersAndQuestions();
-            //         writeDevs();
-            //         break;
-            //     case 'Event':
-            //         var headers = ['_id', 'projectId', 'issueId', 'issueNumber',
-            //           'actor', 'commitId', 'typeOfEvent', 'assigneeId',
-            //           'createdAt'];
-            //         writeFile('Event', headers, undefined, 'Events.tsv',
-            //           '-updatedAt -__v', {isPrEvent: false});
-            //         break;
-            //     case 'IssueComment':
-            //         writeIssueComments();
-            //         break;
-            //     case 'Bug':
-            //         writeBugs();
-            //         writeBugs(true);
-            //         break;
-            //     case 'Commit':
-            //         writeCommits();
-            //         break;
-            //     case 'CommitComment':
-            //         writeCommitComments();
-            //         break;
-            //     default:
-            //         writeFile(option);
-            //         break;
-            // }
+                    var headers = ['_id', 'projectId', 'issueId', 'issueNumber',
+                    'actor', 'commitId', 'typeOfEvent', 'assigneeId',
+                    'createdAt'];
+                    writeFile('Event', headers, undefined, 'PullRequestEvents.tsv',
+                    '-updatedAt -__v', {isPrEvent: true});
+
+                    break;
+                    break;
+                case 'Commit':
+                    writeCommits();
+                    writeCommitComments();
+                    break;
+                case 'Project':
+                    writeFile(option);
+                    break;
+                case 'Developer':
+                    writeAnswersAndQuestions();
+                    writeDevs();
+                    break;
+                case 'Meta':
+                    writeFile('Tag');
+                    writeFile('CoOccurrence');
+                    writeFile('StopWord');
+                    break;
+            }
             res.sendStatus(NOT_READY);
         },
 
         download: function (req, res) {
+            var JSZip = require("jszip");
+            var zip = new JSZip();
+
             var option = req.query.resource;
-            res.download('files/out.zip');
+            switch (option) {
+                case 'Bug':
+                    zip.file('Issues.tsv', fs.readFileSync('files/Issues.tsv'));
+                    zip.file('IssueEvents.tsv', fs.readFileSync('files/IssueEvents.tsv'));
+                    zip.file('IssueComments.tsv', fs.readFileSync('files/IssueComments.tsv'));
+                    break;
+                case 'PullRequest':
+                    zip.file('PullRequests.tsv', fs.readFileSync('files/PullRequests.tsv'));
+                    zip.file('PullRequestEvents.tsv', fs.readFileSync('files/PullRequestEvents.tsv'));
+                    break;
+                case 'Commit':
+                    zip.file('Commits.tsv', fs.readFileSync('files/Commits.tsv'));
+                    zip.file('CommitComments.tsv', fs.readFileSync('files/CommitComments.tsv'));
+                    break;
+                case 'Project':
+                    zip.file('Projects.tsv', fs.readFileSync('files/Projects.tsv'));
+                    break;
+                case 'Developer':
+                    zip.file('Questions.tsv', fs.readFileSync('files/Questions.tsv'));
+                    zip.file('Answers.tsv', fs.readFileSync('files/Answers.tsv'));
+                    zip.file('Developers.tsv', fs.readFileSync('files/Developers.tsv'));
+                    break;
+                case 'Meta':
+                    zip.file('Tags.tsv', fs.readFileSync('files/Tags.tsv'));
+                    zip.file('CoOccurrences.tsv', fs.readFileSync('files/CoOccurrences.tsv'));
+                    zip.file('StopWords.tsv', fs.readFileSync('files/StopWords.tsv'));
+                    break;
+            }
+
+            zip.generateNodeStream({
+                type: 'nodebuffer',
+                platform: process.platform,
+                compression: 'DEFLATE',
+                compressionOptions: {
+                    level: 5,
+                },
+            }).pipe(fs.createWriteStream('files/' + option + '.zip'))
+            .on('finish', function () {
+                res.sendFile(option + '.zip', {root:'files/'});
+            });
         },
 
         check: function (req, res) {
@@ -198,7 +260,7 @@ function writeFile(modelName,
 
 /** Export bugs to file
 **/
-function writeBugs(isPR = false){
+function writeIssues(isPR = false){
     var headers = ['_id', 'projectId', 'number', 'title',
       'body', 'labels', 'status', 'reporterLogin',
       'assigneesLogins', 'createdAt', 'url'];
@@ -226,11 +288,13 @@ function writeBugs(isPR = false){
     }
 
     var modelName = 'GitHubIssue';
-    var fileName = 'Bugs.tsv';
     var filter = { isPR: isPR };
 
+    var fileName = '';
     if(isPR){
         fileName = 'PullRequests.tsv';
+    } else {
+        fileName = 'Issues.tsv';
     }
 
     writeFile(modelName, headers, transform, fileName, '-updatedAt -__v',
