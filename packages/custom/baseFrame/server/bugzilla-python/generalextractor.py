@@ -53,7 +53,6 @@ USERNAME = "f1763724@mvrht.com"
 PASSWORD = "uAlberta_2016"
 
 PROFILE_URL = "https://bugzilla.mozilla.org/rest/user?names="
-
 HISTORY_URL = "https://bugzilla.mozilla.org/rest/bug/"
 
 
@@ -64,7 +63,7 @@ login_urls = {
     "kernel": "https://bugzilla.kernel.org/",
 }
 
-urls = {
+BASE_URLS = {
     "eclipse": "https://bugs.eclipse.org/bugs/",
     "mozilla": "https://bugzilla.mozilla.org/",
     "libreoffice": "https://bugs.documentfoundation.org/",
@@ -84,6 +83,13 @@ bugurl = {
     "mozilla": "https://bugzilla.mozilla.org/show_bug.cgi?ctype=xml&id=",
     "libreoffice": "https://bugs.documentfoundation.org/show_bug.cgi?ctype=xml&id=",
     "kernel": "https://bugzilla.kernel.org/show_bug.cgi?ctype=xml&id=",
+}
+
+historyurl = {
+   "eclipse": "https://bugs.eclipse.org/bugs/show_activity.cgi?id=",
+   "mozilla": "https://bugzilla.mozilla.org/show_activity.cgi?id=",
+   "libreoffice": "https://bugs.documentfoundation.org/show_activity.cgi?id=",
+   "kernel": "https://bugzilla.kernel.org/show_activity.cgi?id=",
 }
 
 prefix = {
@@ -158,59 +164,65 @@ def main(parameters):
 
 
 """
+This method performs the authenticated extraction
+of information for each url that is requested
+"""
+
+
+def readlistofbugs(url):
+    # performs login
+    result = session_requests.post(LOGIN_URL, data=payload, headers=dict(referer=LOGIN_URL))
+    # scrape url
+    r = session_requests.get(url, headers=dict(referer=url))
+    return r.text
+
+"""
 Reads the product (project) url and then crawls
- the website to obtain the list of bugs
+ the website to obtain the list of bugs for each
+ component in the website
 
 """
 
 
 def getComponent(service, product):
-    auxList = []
-
     list_components = componentsURL[service] + "?product=" + product
-
-    print(list_components)
-
     url = list_components
     url = '%20'.join(url.split())
     page = readlistofbugs(url)  # change to authenticated
     tree = html.fromstring(page)
     components = tree.xpath('//div[@class="component_name"]/a/@href | //td[@class="component_name"]/a/@href')
-    print(components)
-    auxList.append(components)
-    return auxList
+    return components
 
-
-def readlistofbugs(url):
-    result = session_requests.post(LOGIN_URL, data=payload, headers=dict(referer=LOGIN_URL))
-    r = session_requests.get(url, headers=dict(referer=url))
-    return r.text
+"""
+This methods obtains the complete list of ID's by obtaining
+the href link to each of them
+"""
 
 
 def readauxlist(service, list):
     # Get the auth ready
     for i in range(len(list)):
-        for j in range(2, (len(list[i]))):
-            url = urls[service]+list[i][j]
-            page = session_requests.get(url, headers=dict(referer=url))
-            # page = requests.get(url)
-            tree = html.fromstring(page.content)
+        print(bcolors.BOLD + "New list of bugs gotten from a new component" + bcolors.ENDC)
 
-            # selects all the inputs with attribute name="id"
-            bugs = tree.xpath('//input[@name="id"]/@value')
-            # divide by two because there are two lists exactly same structured
-            s = int(len(bugs)/2)
-            bugs = bugs[:s]
-            auxlist = ','.join(bugs)
+        #list[i] = list[i].replace("&resolution=---", "") # remove this line if you only want to retrieve the ones you see on the website
+        url = BASE_URLS[service] + list[i]
+        page = session_requests.get(url, headers=dict(referer=url))
+        tree = html.fromstring(page.content)
+        bugs = tree.xpath('//input[@name="id"]/@value')
 
-            # this must be changed for supporting more bugzilla repositories
-            print(bcolors.BOLD+"New list of bugs gotten from a new component"+bcolors.ENDC)
-            list_bugs = bugurl[service] + auxlist
-            print(list_bugs)
-            parseinformation(service, readlistofbugs(list_bugs))
+        # divide by two because there are two lists exactly same structured
+        s = int(len(bugs) / 2)
+        bugs = bugs[:s]
+        auxlist = ','.join(bugs)
+
+        list_bugs = bugurl[service] + auxlist
+        print(list_bugs)
+
+        parseinformation(service, readlistofbugs(list_bugs))
 
 
 def parseinformation(service, data):
+
     root = ET.fromstring(data)
 
     for bug in root.findall('bug'):
@@ -224,8 +236,7 @@ def parseinformation(service, data):
             component = bug.find('component').text
             createdTime = bug.find('creation_ts').text
             assigneeEmail = bug.find('assigned_to').text
-            parseUser(bug.find('reporter').text)
-            parseHistory(bug.find('bug_id').text)
+
             cc = []
             if str(bug.find('cc')) == "None":
                 cc = "None"
@@ -255,8 +266,10 @@ def parseinformation(service, data):
                         summary = noweird
                     if comment.tag == "commentid":
                         commentid = comment.text
+                parsecomments(service, id, commentid, date, summary)
 
-            parsecomments(service, id, commentid, date, summary)
+            # parseUser(bug.find('reporter').text)
+            # parseHistory(bug.find('bug_id').text)
 
             # save to database
 
@@ -307,14 +320,18 @@ def parseinformation(service, data):
             print("=== Bug not defined ===")
             print(bcolors.FAIL+"Bug wasn't saved! \nCheck the names"+bcolors.ENDC)
 
+"""
+This method saves the user's comments on the bug to
+the daabase
+"""
 
 def parsecomments(service, bugid, commentnumber, date, comment):
 
     mozilla_bugs_comments = db.bugzillacomments
 
     bugCommentSchema = {
-        "bugId": bugid,
-        "_id": prefix[service]+commentnumber,
+        "bugId": prefix[service]+bugid,
+        "commentNumber": commentnumber,
         "date": date,
         "comment": comment,
         "service": service
@@ -323,7 +340,7 @@ def parsecomments(service, bugid, commentnumber, date, comment):
     mozilla_bugs_comments.insert(bugCommentSchema)
 
 """
-This methods saves the users information using the service api
+This method gets the users information using the service api
 """
 
 def parseUser(email):
@@ -399,11 +416,11 @@ the main dictionary of URL's
 
 
 def showservices():
-    for i in urls:
+    for i in BASE_URLS:
         print(i)
 
 """
-Th
+This mehtods shows the list of projects available of each user
 """
 
 
