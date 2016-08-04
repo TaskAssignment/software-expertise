@@ -64,7 +64,7 @@ USERNAME = "f1763724@mvrht.com"
 PASSWORD = "uAlberta_2016"
 
 
-login_urls = {
+LOGIN_URLS = {
     "eclipse": "https://bugs.eclipse.org/bugs/index.cgi",
     "mozilla": "https://bugzilla.mozilla.org/index.cgi",
     "libreoffice": "https://bugs.documentfoundation.org/index.cgi",
@@ -119,7 +119,7 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 if sys.argv[1] != "showservices" and sys.argv[1] != "showprojects":
-    service = login_urls[sys.argv[1]]
+    service = LOGIN_URLS[sys.argv[1]]
     LOGIN_URL = service
 else:
     LOGIN_URL = "https://bugzilla.mozilla.org/index.cgi"
@@ -184,6 +184,7 @@ def authRequest(url):
     r = session_requests.get(url, headers=dict(referer=url))
     return r.text
 
+
 """
     Reads the product (project) url and then crawls
     the website to obtain the list of bugs for each
@@ -231,8 +232,8 @@ def getBugs(service, list):
 
 
 """
-    This method, receives the service and the data
-    in XML format to read and parse every bug and
+    This method receives the service and the data
+    in XML format to read it, parse every bug and
     then save each of them to the database
 """
 
@@ -370,8 +371,8 @@ def showservices():
 
 
 """
-This method shows the list of projects available for
-each component on the system and is printed to the console
+    This method shows the list of projects available for
+    each component on the system and is printed to the console
 """
 
 
