@@ -172,6 +172,39 @@ def main(parameters):
 
 
 """
+    Prints to console the services
+    available by looping trough
+    the main dictionary of URL's
+"""
+
+
+def showservices():
+    for i in BASE_URLS:
+        print(i)
+
+
+"""
+    This method shows the list of projects available for
+    each component on the system and is printed to the console
+"""
+
+
+def showprojects(service):
+    if service == "mozilla":
+        service = "mozillafull"
+    url = COMPONENTS_URL[service]
+    page = requests.get(url)
+    # change to authenticated
+    tree = html.fromstring(page.content)
+    # selects all the products within the table"
+    products = tree.xpath('//th//a/text() | //td/h2/a/text()')
+
+    for i in range(len(products)):
+        print(products[i].replace("\xa0", " "))
+
+
+
+"""
     This method performs the authenticated extraction
     of information for each url that is requested
 """
@@ -214,7 +247,7 @@ def getBugs(service, list):
     for i in range(len(list)):
         print(bcolors.BOLD + "New list of bugs gotten from a new component" + bcolors.ENDC)
 
-        #list[i] = list[i].replace("&resolution=---", "") # remove this line if you only want to retrieve all in the website
+        #list[i] = list[i].replace("&resolution=---", "") # remove this line if you only want to retrieve info in the website
         url = BASE_URLS[service] + list[i]
         page = session_requests.get(url, headers=dict(referer=url))
         tree = html.fromstring(page.content)
@@ -286,7 +319,7 @@ def saveBugs(service, data):
                 saveComment(service, id, commentid, date, summary)
 
             # parseUser(bug.find('reporter').text)
-            # parseHistory(bug.find('bug_id').text)
+            extractHistory(service, bug.find('bug_id').text)
 
             # save to database
 
@@ -359,35 +392,39 @@ def saveComment(service, bugid, commentnumber, date, comment):
 
 
 """
-    Prints to console the services
-    available by looping trough
-    the main dictionary of URL's
+    This method performs the history extraction of a given
+    service and the bugid and saves the info to the db
 """
 
 
-def showservices():
-    for i in BASE_URLS:
-        print(i)
+def extractHistory(service, bugid):
+    url = HISTORY_URLS[service] + bugid
+    website = authRequest(url)
 
+    tree = html.fromstring(website)
+    xpath = '//tr/td[position() = 1 or position() = 2  or position() = 3 or position() = 4 or position() = 5]/text()'
+    components = tree.xpath(xpath)
 
-"""
-    This method shows the list of projects available for
-    each component on the system and is printed to the console
-"""
-
-
-def showprojects(service):
-    if service == "mozilla":
-        service = "mozillafull"
-    url = COMPONENTS_URL[service]
-    page = requests.get(url)
-    # change to authenticated
-    tree = html.fromstring(page.content)
-    # selects all the products within the table"
-    products = tree.xpath('//th//a/text() | //td/h2/a/text()')
-
-    for i in range(len(products)):
-        print(products[i].replace("\xa0", " "))
+    j = 0
+    auxList = []
+    for i in range(2, len(components)):
+        components[i] = components[i].strip()
+        auxList.append(components[i])
+        j += 1
+        if j % 5 == 0:
+            print(auxList)
+            historySchema = {
+                "bugId": PREFIX[service] + bugid,
+                "who": auxList[0],
+                "when": auxList[1],
+                "what": auxList[2],
+                "removed": auxList[3],
+                "added": auxList[4]
+            }
+            mbh = db.bugzillabugshistory
+            mbh.insert(historySchema)
+            print("==========")
+            auxList = []
 
 
 if __name__ == '__main__':
