@@ -11,14 +11,14 @@ var Schema = mongoose.Schema;
 * @requires mongoose
 **/
 var BugzillaProfileSchema = new Schema({
-    /** Id from Bugzilla
+    /** Email from Bugzilla!
     *
     * @inner
-    * @type {Number}
+    * @type {String}
     * @memberof BugzillaProfile
     **/
     _id: {
-        type: Number,
+        type: String,
         required: true,
         unique: true,
     },
@@ -30,14 +30,6 @@ var BugzillaProfileSchema = new Schema({
     * @memberof BugzillaProfile
     **/
     username: String,
-
-    /** User's email
-    *
-    * @inner
-    * @type {String}
-    * @memberof BugzillaProfile
-    **/
-    email: String,
 
     /** The real name on Bugzilla
     *

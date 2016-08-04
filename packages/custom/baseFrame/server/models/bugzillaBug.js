@@ -13,13 +13,15 @@ var Schema = mongoose.Schema;
 **/
 var BugzillaBugSchema = new Schema({
     /** The id on the source. Since this is a Bugzilla bug, this number should be
-    * unique on their database.
+    * unique on their database. However, since Bugzilla is an open source sofware,
+    * we use the service to assure the uniqueness of this id. E.g: If this bug comes
+    * from mozilla, it will have _id = 'MZ' + id.
     *
     * @inner
-    * @type {Number}
+    * @type {String}
     * @memberof BugzillaBug
     **/
-    _id: Number,
+    _id: String,
 
     /** Indicates the severity of this bug
     *
@@ -45,24 +47,24 @@ var BugzillaBugSchema = new Schema({
     /** This is references the assignee on this database
     *
     * @inner
-    * @type {Number}
+    * @type {String}
     * @memberof BugzillaBug
     * @see BugzillaProfile
     **/
     assignee: {
-        type: Number,
+        type: String,
         ref: 'BugzillaProfile',
     },
 
     /** List of users that may help on the resolution of this bug.
     *
     * @inner
-    * @type {Array<Number>}
+    * @type {Array<String>}
     * @memberof BugzillaBug
     * @see BugzillaProfile
     **/
     ccUsers: [{
-        type: Number,
+        type: String,
         ref: 'BugzillaProfile',
     }],
 

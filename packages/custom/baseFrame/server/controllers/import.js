@@ -41,6 +41,7 @@ module.exports = function (BaseFrame){
                     populate(params.option, query.project);
                     break;
                 case 'so':
+                    populate(params.option);
                     break;
                 case 'bz':
                     integratePython(query, res);
@@ -67,6 +68,13 @@ module.exports = function (BaseFrame){
 **/
 function integratePython(args, res) {
     var pyArgs = [];
+
+    if(process.env.NODE_ENV === 'production'){
+        pyArgs.push('mean-prod');
+    } else {
+        pyArgs.push('mean-dev');
+    }
+    console.log(pyArgs);
     //Just to make sure this is executed in this order
     for (var key of ['command', 'service', 'project']) {
         if (args.hasOwnProperty(key)) {

@@ -146,9 +146,9 @@ payload = {
 }
 
 # Database settings
-client = MongoClient("162.246.157.171")
+client = MongoClient("localhost")
 # access database objects (name of the database)
-db = client['mean-prod']  # db = client.primer
+db = client['mean-dev']  # db = client.primer
 
 
 """
