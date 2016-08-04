@@ -5,7 +5,7 @@ baseFrame.controller('ExportController', function ($scope, $interval, $http, $lo
     getLastTimestamps();
 
     $scope.generate = function (option) {
-        $scope.generalOptions[option].generated = false;
+        $scope.options[option].generated = false;
         $http.get('/api/baseFrame/generate', {params:{resource: option}})
         .then(function (response) {
             checkGenerate(option);
@@ -13,25 +13,21 @@ baseFrame.controller('ExportController', function ($scope, $interval, $http, $lo
     }
 
     $scope.download = function(option){
-        $scope.generalOptions[option].downloaded = false;
-        if(option === 'Contributor'){
-            $scope.generalOptions[option].downloaded = true;
-            option = 'Developer';
-        }
+        $scope.options[option].downloaded = false;
         $http.get('/api/baseFrame/download', {params:{resource: option}})
         .then(function (response) {
             var a = document.createElement('a');
             a.style = 'display: none';
-            var blob = new Blob([response.data], {type: 'plain/text'}),
+            var blob = new Blob([response.data], {type: 'data:application/zip;base64,'}),
             url = window.URL.createObjectURL(blob);
             a.href = url;
-            a.download = option + 's.tsv';
+            a.download = 'out.zip';
 
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
 
-            $scope.generalOptions[option].downloaded = true;
+            $scope.options[option].downloaded = true;
         }, function (response) {
             console.log(response);
         });
@@ -52,79 +48,47 @@ baseFrame.controller('ExportController', function ($scope, $interval, $http, $lo
         function stop(){
             $interval.cancel(interval);
             getLastTimestamps();
-            $scope.generalOptions[option].generated = true;
+            $scope.options[option].generated = true;
         }
     }
 
     function getLastTimestamps(){
         $http.get('api/baseFrame/timestamps').then(function (response){
             for(var model in response.data){
-                $scope.generalOptions[model].timestamp = new Date(response.data[model]).toLocaleString();
+                if($scope.options.hasOwnProperty(model)){
+                    $scope.options[model].timestamp =
+                    new Date(response.data[model]).toLocaleString();
+                }
             }
         }, function (response){
             console.log(response);
         });
     }
 
-    $scope.generalOptions = {
-        StopWord: {
-            label: 'StopWords',
-            noModel: false,
-        },
-        Tag: {
-            label: 'SO Tags',
-            noModel: false,
-        },
-        CoOccurrence: {
-            label: 'CoOccurrences',
-            noModel: false,
-        },
-        Developer: {
-            label: 'Common Users (SO/GH)',
-            noModel: false,
-        },
-        Project: {
-            label: 'Projects',
-            noModel: false,
-        },
-        Contributor: {
-            label: 'Contributors',
-            noModel: false,
-        },
-        Answer: {
-            label: 'SO Answers',
-            noModel: true,
-            parent: 'Contributor',
-        },
-        Question: {
-            label: 'SO Questions',
-            noModel: true,
-            parent: 'Contributor',
-        },
-        Commit: {
-            label: 'Commit',
-            noModel: false,
-        },
-        CommitComment: {
-            label: 'Commit Comments',
-            noModel: false,
-        },
+    $scope.options = {
         Bug: {
-            label: 'Issues',
-            noModel: false,
+            label: 'Bugs',
+            description: 'GitHub Issues and their comments and history. Bugzilla Bugs, their comments and history (where it was able to fetch them). 6 files.',
         },
         PullRequest: {
             label: 'Pull Requests',
-            noModel: true,
-            parent: 'Issues',
+            description: 'GitHub Pull Requests with their comments and history. 3 files.',
         },
-        Event: {
-            label: 'Issue Events',
-            noModel: false,
+        Commit: {
+            label: 'Commits',
+            description: 'GitHub commits with their comments. 2 files.',
         },
-        IssueComment: {
-            label: 'Issue Comments',
-            noModel: false,
+        Project: {
+            label: 'Projects',
+            description: 'GitHub repositories and Bugzilla services. 2 files.',
+        },
+        Developer: {
+            label: 'Developers',
+            description: 'Information from StackOverflow, GitHub and Bugzilla profiles, answers and questions from StackOverflow. 3 files',
+        },
+        Meta: {
+            label: 'Metadata',
+            description: 'StackOverflow Tags and CoOccurrences, StopWords to analise text. 3 files.',
         },
     }
 });

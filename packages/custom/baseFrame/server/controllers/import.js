@@ -185,11 +185,9 @@ function readDevs(){
 function populate(option, project = undefined){
     var populator = require('../controllers/populator')();
     if(project){
-        if(option === 'Contributor'){
-            populator.GitHub('Developer', project);
-            populator.StackOverflow('Developer', project);
-        } else {
-            populator.GitHub(option, project);
+        populator.GitHub(option, project);
+        if(option === 'Developer'){
+            populator.StackOverflow(option, project);
         }
     } else {
         // changeStatus(option, READY, 'populated');
