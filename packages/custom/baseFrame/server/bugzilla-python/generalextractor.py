@@ -1,5 +1,10 @@
 """
-General Extractor
+General Extractor v2
+
+** Diego Zamora Rodriguez **
+** zamoraro@ualberta.ca **
+
+
 
 This python3 script crawls the BugZilla platforms to read
 and extract all the information related to the bugs that
@@ -7,12 +12,19 @@ are reported on these platforms
 
  - Mozilla
  - Eclipse
+ - Kernel
+ - LibreOffice
 
  To add more projects please add the urls and the
  XPATH directions (some of them are specified)
  to learn more about integrating more platforms to the
- system please check the documentation
+ system please check the TaskAssignment documentation
 
+
+
+To install the dependencies use
+
+  $ pip3 install -r requirements.txt
 
 The commands to run this script are
 
@@ -30,7 +42,8 @@ python3 generalextractor.py eclipse birt
 
 The first parameter is the service and the
  second one is the name of the project
-
+    - Please notice that if the name of the project
+      contains any space replace it with "%20"
 
 """
 
@@ -38,22 +51,17 @@ from lxml import html
 from pymongo import MongoClient
 import xml.etree.ElementTree as ET
 import requests
-import json
 import sys
 import re
-import datetime
 import pymongo
 
 """
-Login information for the authenticacion on the service
+Login information for the authentication on the service
 The website doesn't provide the complete information if you aren't logged in
 """
 
 USERNAME = "f1763724@mvrht.com"
 PASSWORD = "uAlberta_2016"
-
-PROFILE_URL = "https://bugzilla.mozilla.org/rest/user?names="
-HISTORY_URL = "https://bugzilla.mozilla.org/rest/bug/"
 
 
 login_urls = {
@@ -70,29 +78,29 @@ BASE_URLS = {
     "kernel": "https://bugzilla.kernel.org/",
 }
 
-componentsURL = {
-        "eclipse": "https://bugs.eclipse.org/bugs/describecomponents.cgi",
-        "mozillafull": "https://bugzilla.mozilla.org/describecomponents.cgi?full=1",
-        "mozilla": "https://bugzilla.mozilla.org/describecomponents.cgi",
-        "libreoffice": "https://bugs.documentfoundation.org/describecomponents.cgi",
-        "kernel": "https://bugzilla.kernel.org/describecomponents.cgi",
-        }
+COMPONENTS_URL = {
+    "eclipse": "https://bugs.eclipse.org/bugs/describecomponents.cgi",
+    "mozillafull": "https://bugzilla.mozilla.org/describecomponents.cgi?full=1",
+    "mozilla": "https://bugzilla.mozilla.org/describecomponents.cgi",
+    "libreoffice": "https://bugs.documentfoundation.org/describecomponents.cgi",
+    "kernel": "https://bugzilla.kernel.org/describecomponents.cgi",
+}
 
-bugurl = {
+BUGS_URL = {
     "eclipse": "https://bugs.eclipse.org/bugs/show_bug.cgi?ctype=xml&id=",
     "mozilla": "https://bugzilla.mozilla.org/show_bug.cgi?ctype=xml&id=",
     "libreoffice": "https://bugs.documentfoundation.org/show_bug.cgi?ctype=xml&id=",
     "kernel": "https://bugzilla.kernel.org/show_bug.cgi?ctype=xml&id=",
 }
 
-historyurl = {
+HISTORY_URLS = {
    "eclipse": "https://bugs.eclipse.org/bugs/show_activity.cgi?id=",
    "mozilla": "https://bugzilla.mozilla.org/show_activity.cgi?id=",
    "libreoffice": "https://bugs.documentfoundation.org/show_activity.cgi?id=",
    "kernel": "https://bugzilla.kernel.org/show_activity.cgi?id=",
 }
 
-prefix = {
+PREFIX = {
     "eclipse": "EC",
     "mozilla": "MZ",
     "libreoffice": "LO",
@@ -109,7 +117,6 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
-
 
 if sys.argv[1] != "showservices" and sys.argv[1] != "showprojects":
     service = login_urls[sys.argv[1]]
@@ -136,6 +143,7 @@ client = MongoClient("162.246.157.171")
 # access database objects (name of the database)
 db = client['mean-prod']  # db = client.primer
 
+
 """
    Main method to handle the parameters passed and
    start the process of extraction
@@ -159,17 +167,17 @@ def main(parameters):
         project = p2
 
         print(bcolors.WARNING + "Extracting information from " + service + " in the project " + project+"..." +bcolors.ENDC)
-        readauxlist(service, getComponent(service, project))
+        getBugs(service, getComponent(service, project))
     return 0
 
 
 """
-This method performs the authenticated extraction
-of information for each url that is requested
+    This method performs the authenticated extraction
+    of information for each url that is requested
 """
 
 
-def readlistofbugs(url):
+def authRequest(url):
     # performs login
     result = session_requests.post(LOGIN_URL, data=payload, headers=dict(referer=LOGIN_URL))
     # scrape url
@@ -177,34 +185,35 @@ def readlistofbugs(url):
     return r.text
 
 """
-Reads the product (project) url and then crawls
- the website to obtain the list of bugs for each
- component in the website
-
+    Reads the product (project) url and then crawls
+    the website to obtain the list of bugs for each
+    component in the website
 """
 
 
 def getComponent(service, product):
-    list_components = componentsURL[service] + "?product=" + product
+    list_components = COMPONENTS_URL[service] + "?product=" + product
     url = list_components
     url = '%20'.join(url.split())
-    page = readlistofbugs(url)  # change to authenticated
+    page = authRequest(url)  # change to authenticated
     tree = html.fromstring(page)
     components = tree.xpath('//div[@class="component_name"]/a/@href | //td[@class="component_name"]/a/@href')
     return components
 
+
 """
-This methods obtains the complete list of ID's by obtaining
-the href link to each of them
+    This methods obtains the complete list of bug's IDs  for each component
+    by obtaining the href link to each of them and them
+    calling the parseInformation method to save the data extracted with
 """
 
 
-def readauxlist(service, list):
+def getBugs(service, list):
     # Get the auth ready
     for i in range(len(list)):
         print(bcolors.BOLD + "New list of bugs gotten from a new component" + bcolors.ENDC)
 
-        #list[i] = list[i].replace("&resolution=---", "") # remove this line if you only want to retrieve the ones you see on the website
+        #list[i] = list[i].replace("&resolution=---", "") # remove this line if you only want to retrieve all in the website
         url = BASE_URLS[service] + list[i]
         page = session_requests.get(url, headers=dict(referer=url))
         tree = html.fromstring(page.content)
@@ -215,13 +224,20 @@ def readauxlist(service, list):
         bugs = bugs[:s]
         auxlist = ','.join(bugs)
 
-        list_bugs = bugurl[service] + auxlist
+        list_bugs = BUGS_URL[service] + auxlist
         print(list_bugs)
 
-        parseinformation(service, readlistofbugs(list_bugs))
+        saveBugs(service, authRequest(list_bugs))
 
 
-def parseinformation(service, data):
+"""
+    This method, receives the service and the data
+    in XML format to read and parse every bug and
+    then save each of them to the database
+"""
+
+
+def saveBugs(service, data):
 
     root = ET.fromstring(data)
 
@@ -229,7 +245,7 @@ def parseinformation(service, data):
         if str(bug.attrib) == "{}":
             id = bug.find('bug_id').text
             title = bug.find('short_desc').text
-            url = bugurl[service] + id
+            url = BUGS_URL[service] + id
             severity = bug.find('bug_severity').text
             status = bug.find('bug_status').text
             classification = bug.find('classification').text
@@ -255,7 +271,7 @@ def parseinformation(service, data):
             date = ""
 
             for c in bug.findall('long_desc'):
-                for comment in c:  #bug.find('long_desc'):
+                for comment in c:
                     if comment.tag == "bug_when":
                         date = comment.text
                     if comment.tag == "thetext":
@@ -266,7 +282,7 @@ def parseinformation(service, data):
                         summary = noweird
                     if comment.tag == "commentid":
                         commentid = comment.text
-                parsecomments(service, id, commentid, date, summary)
+                saveComment(service, id, commentid, date, summary)
 
             # parseUser(bug.find('reporter').text)
             # parseHistory(bug.find('bug_id').text)
@@ -274,7 +290,7 @@ def parseinformation(service, data):
             # save to database
 
             bug = {
-                    "_id": prefix[service] + id,
+                    "_id": PREFIX[service] + id,
                     "title": title,
                     "body": summary,
                     "status": status,
@@ -290,9 +306,9 @@ def parseinformation(service, data):
                   }
 
             bugzillabug = {
-                "_id": prefix[service] + id,
+                "_id": PREFIX[service] + id,
                 "severity": severity,
-                "bugId": prefix[service] + id,
+                "bugId": PREFIX[service] + id,
                 "service": service,
                 "asignee": assigneeEmail,
                 "ccUsers": cc,
@@ -309,9 +325,8 @@ def parseinformation(service, data):
             b = db.bugs
 
             try:
-                rbb = bb.insert_one(bugzillabug).inserted_id
-                rb = b.insert_one(bug).inserted_id
-                print(rb)
+                BBID = bb.insert_one(bugzillabug).inserted_id
+                BID = b.insert_one(bug).inserted_id
             except pymongo.errors.DuplicateKeyError as e:
                 print(str(e))
 
@@ -320,17 +335,19 @@ def parseinformation(service, data):
             print("=== Bug not defined ===")
             print(bcolors.FAIL+"Bug wasn't saved! \nCheck the names"+bcolors.ENDC)
 
+
 """
-This method saves the user's comments on the bug to
-the daabase
+    This method saves all the user's comments
+    on the bug to the database
 """
 
-def parsecomments(service, bugid, commentnumber, date, comment):
+
+def saveComment(service, bugid, commentnumber, date, comment):
 
     mozilla_bugs_comments = db.bugzillacomments
 
     bugCommentSchema = {
-        "bugId": prefix[service]+bugid,
+        "bugId": PREFIX[service] + bugid,
         "commentNumber": commentnumber,
         "date": date,
         "comment": comment,
@@ -339,79 +356,11 @@ def parsecomments(service, bugid, commentnumber, date, comment):
 
     mozilla_bugs_comments.insert(bugCommentSchema)
 
-"""
-This method gets the users information using the service api
-"""
-
-def parseUser(email):
-    profileurl = PROFILE_URL+email
-    profilepage = requests.get(profileurl)
-    saveUser(profilepage.text)
-
-
-def saveUser(data):
-    j = json.loads(data)
-
-    try:
-        a = j["users"]
-    except KeyError as e:
-        #print(e)
-        return
-    except IndexError as i:
-        print(str(i)+" User not saved")
-        return
-
-    info = j["users"][0]
-
-    id = info["id"]
-    name = info["name"]
-    real_name = info["real_name"]
-    profile = {
-                "_id": id,
-                "email": name,
-                "realName": real_name,
-                "createdAt": datetime.datetime.utcnow()
-              }
-    # make the insertion
-    bp = db.bugzillaprofiles
-    try:
-        pf = bp.insert_one(profile).inserted_id
-        #print(pf)
-    except pymongo.errors.DuplicateKeyError as e:
-        print(str(e))
-        return
-
-
-def parseHistory(bugid):
-    historyUrl = HISTORY_URL + bugid + "/history"
-    history = requests.get(historyUrl)
-    saveHistory(history.text)
-
-
-def saveHistory(data):
-    j = json.loads(data)
-    bugschanges = j["bugs"][0]
-
-    # save the data to the database
-    bugid = bugschanges["id"]
-    for i in bugschanges["history"]:
-        bugwhen = i["when"]
-        bugwho = i["who"]
-        bughistory = i["changes"]
-        historyobject = {
-            "_id": bugid,
-            "when": bugwhen,
-            "who": bugwho,
-            "history": bughistory
-        }
-        collection = db.bugzillabugshistory
-        collection.update({'_id': bugid}, {'$set': historyobject}, upsert=True)
-        #print(a)
 
 """
-Prints to console the services
-available by looping trough
-the main dictionary of URL's
+    Prints to console the services
+    available by looping trough
+    the main dictionary of URL's
 """
 
 
@@ -419,13 +368,17 @@ def showservices():
     for i in BASE_URLS:
         print(i)
 
+
 """
-This mehtods shows the list of projects available of each user
+This method shows the list of projects available for
+each component on the system and is printed to the console
 """
 
 
 def showprojects(service):
-    url = componentsURL[service]
+    if service == "mozilla":
+        service = "mozillafull"
+    url = COMPONENTS_URL[service]
     page = requests.get(url)
     # change to authenticated
     tree = html.fromstring(page.content)
