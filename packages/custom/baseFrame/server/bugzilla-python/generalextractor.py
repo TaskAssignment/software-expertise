@@ -253,7 +253,8 @@ def getBugs(service, list):
     for i in range(len(list)):
         print(bcolors.BOLD + "New list of bugs gotten from a new component" + bcolors.ENDC)
 
-        #list[i] = list[i].replace("&resolution=---", "") # remove this line if you only want to retrieve info in the website
+        list[i] = list[i].replace("&resolution=---", "")
+        # remove the line above if you only want to retrieve info in the website
         url = BASE_URLS[service] + list[i]
         page = session_requests.get(url, headers=dict(referer=url))
         tree = html.fromstring(page.content)
