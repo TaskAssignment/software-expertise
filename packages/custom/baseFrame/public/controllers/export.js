@@ -18,8 +18,8 @@ baseFrame.controller('ExportController', function ($scope, $interval, $http){
         })
         .then(function (response) {
             var blob = new Blob([response.data], {type: 'application/zip'});
-            //saveAs defined in assets/js/FileSaver.js
-            saveAs(blob, 'teste.zip');
+            // saveAs is defined in assets/js/FileSaver.js
+            saveAs(blob, option + '.zip');
             $scope.options[option].downloaded = true;
         }, function (response) {
             console.log(response);
