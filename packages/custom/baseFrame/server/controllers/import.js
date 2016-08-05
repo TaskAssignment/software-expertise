@@ -74,7 +74,6 @@ function integratePython(args, res) {
     } else {
         pyArgs.push('mean-dev');
     }
-    console.log(pyArgs);
     //Just to make sure this is executed in this order
     for (var key of ['command', 'service', 'project']) {
         if (args.hasOwnProperty(key)) {

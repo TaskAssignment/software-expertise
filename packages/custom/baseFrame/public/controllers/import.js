@@ -20,7 +20,7 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
         var config = {
             params: {
                 service: $scope.bugzillaService,
-                project: $scope.project._id,
+                project: $scope.project._id || $scope.project,
             }
         }
         console.log(option, config);
@@ -76,13 +76,7 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
         $scope.bugzillaServices = undefined;
         $scope.projects = undefined;
 
-        if($scope.selected === 'gh'){
-            $http.get('api/baseFrame/project/find/').then(function (response) {
-                $scope.projects = response.data.projects;
-            }, function (response){
-                $scope.projects = undefined;
-            });
-        } else if($scope.selected === 'bz'){
+        if($scope.selected === 'bz'){
             $http.get('api/baseFrame/bugzilla/showservices/').then(function (response) {
                 $scope.bugzillaServices = response.data;
             }, function (response){

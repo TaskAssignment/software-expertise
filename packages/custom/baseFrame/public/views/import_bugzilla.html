@@ -1,7 +1,7 @@
 <div class="row" ng-if="bugzillaServices">
     <h4>
         <div class="col-md-4 col-sm-6 col-xs-3">
-            First, choose the service you want to populate
+            First, choose the service you want to import data from
         </div>
         <div class="col-md-8 col-sm-6 col-xs-9">
             <select ng-model="service" class="form-control" ng-change="findBugzillaProjects(service)">
@@ -17,7 +17,7 @@
 <div class="row" ng-if="bugzillaProjects">
     <h4>
         <div class="col-md-4 col-sm-6 col-xs-3">
-            Now, choose the project of this service you want to populate
+            Now, choose the project you want to populate
         </div>
         <div class="col-md-8 col-sm-6 col-xs-9">
             <select ng-model="project" class="form-control" ng-change="selectProject(project)">
