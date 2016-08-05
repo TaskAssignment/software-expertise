@@ -1,20 +1,36 @@
 <div class="row"  ng-if="selected === 'gh'">
     <h4>
-        <div class="col-md-4 col-sm-6 col-xs-3">
-            First, choose the project you want to populate
+        <div class="col-md-5 col-sm-6 col-xs-3">
+            First, let's search for a repository on GitHub
         </div>
-        <div class="col-md-8 col-sm-6 col-xs-9">
-            <select ng-model="project" class="form-control" ng-change="selectProject(project)">
-                <option value=""> --- Select one --- </option>
-                <option ng-repeat="project in projects" value="{{project._id}}">
-                    {{project.name}}
-                </option>
-            </select>
+        <div class="col-md-2 col-sm-5 col-xs-4">
+            <input type='text' ng-model="$parent.repoSearch.user" name="$parent.repoSearch.user" class='form-control'
+            placeholder='User or Organization'>
+        </div>
+        <div class="col-md-2 col-sm-5 col-xs-4">
+            <input type='text' ng-model="$parent.repoSearch.name" name="$parent.repoSearch.name"
+            class='form-control' placeholder='Repository name'>
+        </div>
+        <div class="col-md-1">
+            <button class="btn btn-default" ng-click="queryRepos()">
+                Search <i class="fa fa-search fa-lg" aria-hidden="true"></i>
+            </button>
         </div>
     </h4>
 </div>
 
+<div id='repoSelection' class='scrollable' ng-if='repos'>
+    <button ng-repeat="repo in repos track by repo.id" class="list-group-item"
+      ng-click="$parent.saveProject(repo)">
+        {{ repo.full_name }}
+    </button>
+</div>
+
 <br>
+
+<div class="row">
+    <h3> {{ project.name }} </h3>
+</div>
 
 <div ng-if="project" ng-repeat="option in sources[selected].options">
     <div class="row">

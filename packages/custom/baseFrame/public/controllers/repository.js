@@ -10,60 +10,9 @@ function hideLoadingScreen(){
 var baseFrame = angular.module('mean.baseFrame');
 
 var RepositoryController = function ($scope,  $http, $location, $resource) {
-    $scope.repoSearch = {
-        name: '',
-        user: '',
-        description: '',
-        readme: ''
-    };
     findProject();
 
     // *************** SCOPE FUNCTIONS ***************//
-
-    /** Looks for repositories with the given filters
-     **/
-    $scope.queryRepos = function () {
-        var search = $scope.repoSearch;
-        showLoadingScreen();
-        var URL = 'https://api.github.com/search/repositories?q=';
-        if(search.user)
-            URL += '+user:' + search.user;
-        if(search.name)
-            URL += ' ' + search.name + '+in:name';
-        if(search.description)
-            URL += '+' + search.description + '+in:description';
-        if(search.readme)
-            URL += '+' + search.readme + '+in:readme';
-        URL += '+fork:true&sort=stars&order=desc&per_page=100';
-
-        $http.get(URL).then(function (response) {
-            var results = response.data.items;
-
-            var repos = [];
-            for (var i in results) {
-                var result = results[i];
-                var repo = {
-                    name: result.full_name,
-                    _id: result.id,
-                    language: result.language,
-                    description: result.description
-                };
-                repos.push(repo);
-            }
-            $scope.repos = repos;
-            hideLoadingScreen();
-        }, function (response){
-            hideLoadingScreen();
-        });
-    }
-
-    $scope.saveProject = function(repo){
-        var Project = $resource('/api/baseFrame/project/new/');
-        Project.get(repo).$promise.then(function(project){
-            getRepoInformation(repo);
-        });
-    }
-
     /**
     * display information based on issues
     *
