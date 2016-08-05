@@ -125,8 +125,8 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-if sys.argv[1] != "showservices" and sys.argv[1] != "showprojects":
-    service = LOGIN_URLS[sys.argv[1]]
+if sys.argv[2] != "showservices" and sys.argv[2] != "showprojects":
+    service = LOGIN_URLS[sys.argv[2]]
     LOGIN_URL = service
 else:
     LOGIN_URL = "https://bugzilla.mozilla.org/index.cgi"
@@ -146,9 +146,9 @@ payload = {
 }
 
 # Database settings
-client = MongoClient("162.246.157.171")
+client = MongoClient("localhost")
 # access database objects (name of the database)
-db = client['mean-prod']  # db = client.primer
+db = client[sys.argv[1]]  # db = client.primer
 
 
 """
@@ -159,16 +159,16 @@ db = client['mean-prod']  # db = client.primer
 
 def main(parameters):
 
-    p1 = parameters[1]
+    p1 = parameters[2]
     p2 = ""
 
     if p1 == "showservices":
         showservices()
     elif p1 == "showprojects":
-        p2 = parameters[2]
+        p2 = parameters[3]
         showprojects(p2)
     else:
-        p2 = parameters[2]
+        p2 = parameters[3]
 
         service = p1
         project = p2
@@ -252,7 +252,6 @@ def getBugs(service, list):
     # Get the auth ready
     for i in range(len(list)):
         print(bcolors.BOLD + "New list of bugs gotten from a new component" + bcolors.ENDC)
-
         list[i] = list[i].replace("&resolution=---", "")
         # remove the line above if you only want to retrieve info in the website
         url = BASE_URLS[service] + list[i]
@@ -333,7 +332,7 @@ def saveBugs(service, data):
             bug = {
                     "_id": PREFIX[service] + id,
                     "title": title,
-                    "body": summary,
+                    "body": saveFirstComment(service, id),
                     "status": status,
                     "labels": [],
                     "createdAt": createdTime,
@@ -399,6 +398,26 @@ def saveComment(service, bugid, commentnumber, date, comment):
 
 
 """
+    Aux method that retrieves the first comment of a bug
+     by web scrapping the bug page
+"""
+
+
+def saveFirstComment(service, bugid):
+    url = PROFILE_URLS[service] + bugid
+    website = authRequest(url)
+
+    tree = html.fromstring(website)
+    xpath = '//pre[@id="comment_text_0"]/text()'
+    firstcomment = tree.xpath(xpath)
+    try:
+        fc = firstcomment[0]
+    except IndexError as e:
+        return "Empty"
+    return firstcomment[0]
+
+
+"""
     This method performs the history extraction of a given
     service and the bugid and saves the info to the db
 """
@@ -447,14 +466,36 @@ def saveUsers(service, bugid):
     xpath = '//a[@class="email"]/@title'
     components = tree.xpath(xpath)
 
-    for email in components:
-        if email != "":
+    for user in components:
+        if user != "":
+           try:
+            name = user[0:user.index("[")]
+           except ValueError as e:
+               name = "Nobody"
+
+           try:
+               email = user[user.index("<")+1: user.index(">")]
+           except ValueError as e:
+               email = "nobody@mozilla.org"
+           else:
+               a = ""
+
+           try:
+            username = user[user.index(":")+1:user.index("]")]
+           except ValueError as e:
+               username = "nobody"
+
            BUS = {
-               "bugId": bugid,
-               "email": email
+               "_id": email,
+               "name": name,
+               "username": username
            }
+
            mui = db.bugzillaprofiles
-           mui.insert(BUS)
+           try:
+             mui.insert(BUS)
+           except pymongo.errors.DuplicateKeyError as e:
+             print("User already exists!")
 
 
 if __name__ == '__main__':
