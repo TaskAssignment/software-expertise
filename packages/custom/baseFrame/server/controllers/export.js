@@ -43,6 +43,10 @@ module.exports = function (BaseFrame){
                     writeFile('Event', headers, undefined, 'IssueEvents.tsv',
                     '-updatedAt -__v', {isPrEvent: false});
 
+                    writeBugzillaBugs();
+                    writeBugzillaComments();
+                    writeBugzillaHistory();
+
                     break;
                 case 'PullRequest':
                     writeIssues(true);
@@ -85,6 +89,9 @@ module.exports = function (BaseFrame){
                     zip.file('Issues.tsv', fs.readFileSync('files/Issues.tsv'));
                     zip.file('IssueEvents.tsv', fs.readFileSync('files/IssueEvents.tsv'));
                     zip.file('IssueComments.tsv', fs.readFileSync('files/IssueComments.tsv'));
+                    zip.file('Bugs.tsv', fs.readFileSync('files/Bugs.tsv'));
+                    zip.file('BugzillaBugsComments.tsv', fs.readFileSync('files/BugzillaBugsComments.tsv'));
+                    zip.file('BugzillaBugsHistory.tsv', fs.readFileSync('files/BugzillaBugsHistory.tsv'));
                     break;
                 case 'PullRequest':
                     zip.file('PullRequests.tsv', fs.readFileSync('files/PullRequests.tsv'));
@@ -215,6 +222,58 @@ function writeFile(modelName,
         changeStatus(modelName, READY);
     });
 }
+function writeBugzillaHistory(){
+    var headers = ['bugId', 'who', 'removed', 'added', 'what', 'when']
+    var modelName = 'BugzillaHistory';
+    var fileName = 'BugzillaBugsHistory.tsv';
+    var transform = function (row) {
+        return row;
+    }
+
+    writeFile(modelName, headers, transform, fileName);
+}
+
+function writeBugzillaComments(){
+    var headers = ['bugId', 'commentNumber', 'service', 'comment', 'date']
+    var modelName = 'BugzillaComment';
+    var fileName = 'BugzillaBugsComments.tsv';
+    var transform = function (row) {
+        return row;
+    }
+
+    writeFile(modelName, headers, transform, fileName);
+}
+
+function writeBugzillaBugs(){
+    var headers = ['_id', 'service', 'component', 'title', 'body', 'status',
+      'author', 'asignee', 'ccUsers', 'platform', 'product', 'classification',
+      'version', 'severity', 'op_sys', 'url', 'createdAt']
+
+    var transform = function (row) {
+        row.createdAt = row.bugId.createdAt;
+        if(row.bugId.body){
+            row.body = row.bugId.body
+              .replace(/\t/g, '        ');
+            row.body = row.bugId.body
+              .replace(/(?:\r\n|\r|\n)/g, '                ');
+            row.body = row.bugId.body
+              .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
+        }
+        row.status = row.bugId.status;
+        row.author = row.bugId.author;
+        row.title = row.bugId.title;
+        row.url = row.bugId.url;
+
+        return row;
+    }
+
+    var modelName = 'BugzillaBug';
+
+    var fileName = 'Bugs.tsv';
+
+    writeFile(modelName, headers, transform, fileName, '-updatedAt -__v',
+      {}, 'bugId');
+}
 
 
 /** This calls the 'writeFile' with the right parameters to export issues to file.
@@ -227,25 +286,29 @@ function writeIssues(isPR = false){
       'assigneesLogins', 'createdAt', 'url'];
 
     var transform = function (row) {
-        if(row.bug.body){
-            row.bug.body = row.bug.body
-              .replace(/\t/g, '        ');
-            row.bug.body = row.bug.body
-              .replace(/(?:\r\n|\r|\n)/g, '                ');
-            row.bug.body = row.bug.body
-              .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
-        }
-        row.bug.createdAt = row.bug.createdAt.toISOString();
+        if(row.bug){
+            if(row.bug.body){
+                row.bug.body = row.bug.body
+                .replace(/\t/g, '        ');
+                row.bug.body = row.bug.body
+                .replace(/(?:\r\n|\r|\n)/g, '                ');
+                row.bug.body = row.bug.body
+                .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
+            }
+            row.bug.createdAt = row.bug.createdAt.toISOString();
 
-        row.bug.projectId = row.project;
-        row.bug.number = row.number;
-        row.bug.reporterLogin = row.bug.author;
-        row.bug.assigneesLogins = [];
-        for(var assignee of row.assignees){
-            row.bug.assigneesLogins.push(assignee.username);
+            row.bug.projectId = row.project;
+            row.bug.number = row.number;
+            row.bug.reporterLogin = row.bug.author;
+            row.bug.assigneesLogins = [];
+            for(var assignee of row.assignees){
+                row.bug.assigneesLogins.push(assignee.username);
+            }
+            delete row.bug.author;
+            return row.bug;
+        } else {
+            return {};
         }
-        delete row.bug.author;
-        return row.bug;
     }
 
     var modelName = 'GitHubIssue';

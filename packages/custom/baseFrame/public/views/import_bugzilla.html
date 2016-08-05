@@ -22,7 +22,6 @@
         <div class="col-md-8 col-sm-6 col-xs-9">
             <select ng-model="project" class="form-control" ng-change="selectProject(project)">
                 <option value=""> --- Select one --- </option>
-                <option value="all"> All projects (this may take a really long time) </option>
                 <option ng-repeat="project in bugzillaProjects" value="{{project}}">
                     {{project}}
                 </option>

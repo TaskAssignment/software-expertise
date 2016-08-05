@@ -20,8 +20,10 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
         var config = {
             params: {
                 service: $scope.bugzillaService,
-                project: $scope.project._id || $scope.project,
             }
+        }
+        if($scope.selected === 'gh' || $scope.selected === 'bz'){
+            config.params.project = $scope.project._id || $scope.project;
         }
         console.log(option, config);
         $http.get('/api/baseFrame/populate/' + $scope.selected + '/' + option, config)
