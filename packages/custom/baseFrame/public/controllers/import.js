@@ -2,9 +2,15 @@
 
 var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('ImportController', function ($scope, $interval, $http, $location){
-    $scope.selected = 'file';
+    $scope.selected = 'gh';
     $scope.project = undefined;
     $scope.bugzillaService = undefined;
+    $scope.repoSearch = {
+        name: '',
+        user: '',
+        description: '',
+        readme: ''
+    };
 
     /** Populate the given option on the database
     *
@@ -14,7 +20,7 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
         var config = {
             params: {
                 service: $scope.bugzillaService,
-                project: $scope.project,
+                project: $scope.project._id,
             }
         }
         console.log(option, config);
@@ -24,6 +30,42 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
         }, function(response){
             console.log(response);
         });
+    }
+
+
+    /** Looks for repositories with the given filters
+     **/
+    $scope.queryRepos = function () {
+        var search = $scope.repoSearch;
+        console.log(search);
+        var URL = 'https://api.github.com/search/repositories?q=';
+        if(search.user)
+            URL += '+user:' + search.user;
+        if(search.name)
+            URL += ' ' + search.name + '+in:name';
+        URL += '+fork:true&sort=stars&order=desc&per_page=100';
+
+        $http.get(URL).then(function (response) {
+            $scope.repos = response.data.items;
+        }, function (response){
+            console.log(response);
+        });
+    }
+
+    $scope.saveProject = function(repo){
+        $scope.project = {
+            _id: repo.id,
+            name: repo.full_name,
+            language: repo.language,
+        };
+
+        var config = {
+            params: $scope.project,
+        }
+
+        console.log(config.params);
+        $http.get('/api/baseFrame/project/new/', config);
+        $scope.repos = undefined;
     }
 
     /** Get the github projects on the database

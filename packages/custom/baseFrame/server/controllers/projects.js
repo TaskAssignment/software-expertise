@@ -13,27 +13,19 @@ var Project  = mongoose.model('Project');
 module.exports = function (BaseFrame){
     return {
 
-        /** Saves a project if it doens't exist in the database yet. Otherwise
-        * just retrives the project that matches the params.
+        /** Saves a project to the database.
         *
         * @param {Object} req - Express request.
         * @param {Object} res - Express response.
         * @param {Object} req.query - Object with projectId to filter Projects.
-        * @return {Object} Send the project created (or found).
         **/
         save: function(req, res){
-            Project.findOne(req.query, function (err, result){
-                if(result){
-                    res.send(result);
-                }else{
-                    var project = req.query;
-
-                    Project.create(project, function(err, project){
-                        if(err){
-                            res.send(err);
-                        }
-                        res.send(project);
-                    });
+            Project.create(req.query, function(err, project){
+                if(err && err.code !== 11000){
+                    console.log(err);
+                    res.sendStatus(500);
+                } else {
+                    res.sendStatus(200);
                 }
             });
         },

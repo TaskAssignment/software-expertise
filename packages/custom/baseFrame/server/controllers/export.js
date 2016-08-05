@@ -19,69 +19,15 @@ var statuses = {};
 
 initialStatus();
 
-var SO_APPS = {
-    7211: {
-        client_secret: 'yurW77OF7QW5a*M84WnxJw((',
-        access_token: '',
-        key: 'unaHxXqTCHJ5Ve6AfnIJGg((',
-    },
-    7344: {
-        client_secret: '1iPAaK1iEz1gYlrJ73Yi4w((',
-        access_token: '',
-        key: 'Ctt)0cvvDQttNSj9wmv38g((',
-    },
-    7343: {
-        client_secret: 'ae5OXiV4C2OtuPWFjVuoXQ((',
-        access_token: '',
-        key: 'LrB92oMtLUnGJ5uyZvA)bw((',
-    },
-    7342: {
-        client_secret: 'mxH2R184QmhGDrWI1TikaQ((',
-        access_token: '',
-        key: 'vqnCl1eW8aKqHEBXFabq7Q((',
-    },
-    7341: {
-        client_secret: 'aiU5CjKOd*6Nyvjjf38ALA((',
-        access_token: '',
-        key: 'vRMoDd5M)SvR0OSzLWQIfw((',
-    },
-}
-
 function initialStatus(){
-    var statuses = {
-        Bug: {
-            GitHubIssue: true,
-            description: 'GitHub Issues and their comments and history. Bugzilla Bugs, their comments and history (where it was able to fetch them). 6 files.',
-        },
-        PullRequest: {
-            label: 'Pull Requests',
-            description: 'GitHub Pull Requests with their comments and history. 3 files.',
-        },
-        Commit: {
-            label: 'Commits',
-            description: 'GitHub commits with their comments. 2 files.',
-        },
-        Project: {
-            label: 'Projects',
-            description: 'GitHub repositories and Bugzilla services. 2 files.',
-        },
-        Developer: {
-            label: 'Developers',
-            description: 'Information from StackOverflow, GitHub and Bugzilla profiles, answers and questions from StackOverflow. 3 files',
-        },
-        Meta: {
-            label: 'Metadata',
-            description: 'StackOverflow Tags and CoOccurrences, StopWords to analise text. 3 files.',
-        },
-    }
     var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit', 'Comment',
       'Project', 'Event', 'StopWord'];
 
     for(var model of models){
         statuses[model] = NOT_READY;
     }
-
 }
+
 module.exports = function (BaseFrame){
     return {
         generate: function (req, res) {
@@ -203,9 +149,22 @@ function saveTimestamp(option, path){
     GenerateFileLog.update({model: option}, update, {upsert: true}).exec();
 }
 
-/** This is responsible for writing the file with the StackOverflow data.
+/** This is responsible for writing the file with the StackOverflow data. This is
+* considered a 'private' method and all the write methods depend on it. All files
+* generated with this method will be saved on the folder 'files/'.
 *
-* @param modelName - The Model that will be exported. The file will be the name of this model pluralized.
+* @param {String} modelName - The Model that will be exported.
+* @param {boolean|Array} headers - If true, each attribute will be a header in the
+    tsv file. If array, each entry will be a header and the other attributes will
+    be ignored.
+* @param {function} transform - The callback to transform the data. If none, the
+    data will be saved the way it was read.
+* @param {String} fileName - The name of the generated file. Default is the model name.
+* @param {String} items - The items that should be included or excluded when fetching
+    the database.
+* @param {Object} filter - The filter to the database query.
+* @param {String} populate - The fields that will be populated when fetching from
+    the database.
 **/
 function writeFile(modelName,
             headers = true,
@@ -258,7 +217,9 @@ function writeFile(modelName,
 }
 
 
-/** Export bugs to file
+/** This calls the 'writeFile' with the right parameters to export issues to file.
+*
+* @param {boolean} isPR - If true, will fetch only Pull Requests from the database.
 **/
 function writeIssues(isPR = false){
     var headers = ['_id', 'projectId', 'number', 'title',
@@ -301,6 +262,8 @@ function writeIssues(isPR = false){
       filter, 'bug');
 }
 
+/** This calls the 'writeFile' with the right parameters to export issue comments.
+**/
 function writeIssueComments(){
     var headers = ['_id', 'issueNumber', 'projectId', 'body',
     'commenterLogin', 'createdAt'];
@@ -319,6 +282,8 @@ function writeIssueComments(){
     '-updatedAt -__v', {type: 'issue'});
 }
 
+/** This calls the 'writeFile' with the right parameters to export commits.
+**/
 function writeCommits(){
     var headers = ['sha', 'message', 'committerLogin', 'projectId', 'createdAt', 'url'];
     var transform = function (row) {
@@ -337,6 +302,8 @@ function writeCommits(){
     writeFile('Commit', headers, transform);
 }
 
+/** This calls the 'writeFile' with the right parameters to export commit comments.
+**/
 function writeCommitComments() {
     var headers = ['_id', 'commitSha', 'projectId', 'body',
       'commenterLogin', 'createdAt'];
@@ -356,7 +323,11 @@ function writeCommitComments() {
 }
 
 /** Writes StackOverflow answers and questions to .tsv files. They are called
-* 'Answers.tsv' and 'Questions.tsv' and are on the 'files/' folder.
+* 'Answers.tsv' and 'Questions.tsv' and are on the 'files/' folder. This is simillar
+* to writeFile, but it needs two streams to save both answers and questions.
+*
+* @todo Maybe reimplement this to use writeFile. Use one function to answers
+    and another to questions.
 **/
 function writeAnswersAndQuestions(){
     console.log('** Generating answers and questions files **');
@@ -436,6 +407,8 @@ function writeAnswersAndQuestions(){
     });
 }
 
+/** This calls the 'writeFile' with the right parameters to export developers.
+**/
 function writeDevs() {
     var transform = function (data) {
         data.tags = [];

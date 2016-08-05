@@ -11,8 +11,5 @@ function ($stateProvider){
     }).state('Export Data', {
         url: '/export',
         templateUrl: 'baseFrame/views/export.html'
-    }).state('Test Integration', {
-        url: '/testpython',
-        templateUrl: 'baseFrame/views/testpython.html'
     });
 }]);

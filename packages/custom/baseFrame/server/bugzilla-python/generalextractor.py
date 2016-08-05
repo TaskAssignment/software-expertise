@@ -148,7 +148,11 @@ payload = {
 # Database settings
 client = MongoClient("localhost")
 # access database objects (name of the database)
+<<<<<<< HEAD
 db = client[sys.argv[1]]  # db = client.primer
+=======
+db = client['mean-dev']  # db = client.primer
+>>>>>>> 4899da5ce40ffc5afac77c03d80bdc498936082f
 
 
 """
