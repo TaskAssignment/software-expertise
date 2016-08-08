@@ -25,11 +25,11 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
         if($scope.selected === 'gh' || $scope.selected === 'bz'){
             config.params.project = $scope.project._id || $scope.project;
         }
-        console.log(option, config);
         $http.get('/api/baseFrame/populate/' + $scope.selected + '/' + option, config)
         .then(function (response){
-            console.log(response);
-            checkPopulate(option);
+            config.params.source = $scope.selected;
+            config.params.resource = option
+            checkPopulate(config.params);
         }, function(response){
             console.log(response);
         });
@@ -110,12 +110,10 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
         $scope.project = project;
     }
 
-    function checkPopulate(option){
+    function checkPopulate(params){
         var checkInterval = setInterval(function () {
             $http.get('/api/baseFrame/populate/check', {
-                params: {
-                    resource: option,
-                },
+                params: params,
             })
             .then(function (response) {
                 if(response.status === 200){
@@ -130,7 +128,7 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
 
         function stopChecking() {
             clearInterval(checkInterval);
-            $scope.sources[$scope.selected]['options'][option].populating = false;
+            $scope.sources[$scope.selected]['options'][params.resource].populating = false;
         }
     }
 

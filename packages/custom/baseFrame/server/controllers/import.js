@@ -12,11 +12,13 @@ var mongoose = require('mongoose');
 var fs = require('fs');
 var csv = require('fast-csv');
 var PythonShell = require('python-shell');
-var extractorRoute = 'packages/custom/baseFrame/server/bugzilla-python/generalextractor.py'
+var populator = require('../controllers/populator')();
+var extractorRoute = 'packages/custom/baseFrame/server/bugzilla-python/generalextractor.py';
 
 
 var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
+var populated = {};
 
 var errorCallback = function (err, results) {
     if(err){
@@ -31,6 +33,7 @@ module.exports = function (BaseFrame){
             var query = req.query;
             switch (params.source) {
                 case 'file':
+                    populated[params.option] = NOT_READY;
                     if(params.option === 'CommonUser') {
                         readDevs()
                     } else {
@@ -60,8 +63,14 @@ module.exports = function (BaseFrame){
         },
 
         check: function (req, res) {
-            console.log(req.params, res.query);
-            res.sendStatus(200);
+            if(req.query.source === 'gh' || req.query.source === 'so'){
+                var status = populator.check(req.query.resource);
+                res.sendStatus(status);
+            } else if (req.query.source === 'file') {
+                res.sendStatus(populated[req.query.resource]);
+            } else {
+                res.sendStatus(200);
+            }
         }
     }
 }
@@ -151,12 +160,12 @@ function readFile(modelName,
                     console.log('***** DONE *****');
                 }
             });
-            // changeStatus(modelName, READY, 'populated');
+            populated[modelName] = READY;
         });
     } else {
-        // readStream.on('end', function(){
-        //     changeStatus(modelName, READY, 'populated');
-        // });
+        readStream.on('end', function(){
+            populated[modelName] = READY;
+        });
     }
 
 }
@@ -195,7 +204,6 @@ function readDevs(){
 }
 
 function populate(option, project = undefined){
-    var populator = require('../controllers/populator')();
     if(project){
         populator.GitHub(option, project);
         if(option === 'Developer'){

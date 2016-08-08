@@ -12,7 +12,7 @@ var mongoose = require('mongoose');
 var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
 
-var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit',
+var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit', 'Issue',
   'CommitComment', 'IssueComment', 'Language', 'Project', 'Event', 'Contributor'];
 
 var populated = {};
@@ -139,10 +139,9 @@ module.exports = function (BaseFrame) {
             }
         },
         check: function (option) {
-            if(option === 'Comment'){
-                return populated['IssueComment'];
-            }
-            return populated[option];
+            console.log(option);
+            console.log(populated);
+            return populated[option] || 202;
         }
     }
 }
@@ -898,13 +897,12 @@ function populateComments(projectId, type){
         var url = projectId;
         if(type === 'Issue'){
             url += '/issues/comments?sort=updated&direction=asc'
+            if(lastCreated){
+                lastCreated.createdAt.setSeconds(lastCreated.createdAt.getSeconds() + 1);
+                url += '&since=' + lastCreated.createdAt.toISOString();
+            }
         } else {
             url += '/comments';
-        }
-
-        if(lastCreated && type === 'Issue'){
-            lastCreated.createdAt.setSeconds(lastCreated.createdAt.getSeconds() + 1);
-            url += '&since=' + lastCreated.createdAt.toISOString();
         }
 
         gitHubPopulate(type + 'Comment', url, buildModels);
