@@ -8,8 +8,7 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
     $scope.repoSearch = {
         name: '',
         user: '',
-        description: '',
-        readme: ''
+        searching: false,
     };
 
     /** Populate the given option on the database
@@ -17,6 +16,7 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
     * @param option {String} - one of the sources (file, gh, bz, so)
     **/
     $scope.populate = function (option) {
+        $scope.sources[$scope.selected]['options'][option].populating = true;
         var config = {
             params: {
                 service: $scope.bugzillaService,
@@ -29,6 +29,7 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
         $http.get('/api/baseFrame/populate/' + $scope.selected + '/' + option, config)
         .then(function (response){
             console.log(response);
+            checkPopulate(option);
         }, function(response){
             console.log(response);
         });
@@ -38,8 +39,9 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
     /** Looks for repositories with the given filters
      **/
     $scope.queryRepos = function () {
+        $scope.repoSearch.searching = true;
         var search = $scope.repoSearch;
-        console.log(search);
+
         var URL = 'https://api.github.com/search/repositories?q=';
         if(search.user)
             URL += '+user:' + search.user;
@@ -49,8 +51,10 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
 
         $http.get(URL).then(function (response) {
             $scope.repos = response.data.items;
+            $scope.repoSearch.searching = false;
         }, function (response){
             console.log(response);
+            $scope.repoSearch.searching = false;
         });
     }
 
@@ -59,13 +63,13 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
             _id: repo.id,
             name: repo.full_name,
             language: repo.language,
+            description: repo.description,
         };
 
         var config = {
             params: $scope.project,
         }
 
-        console.log(config.params);
         $http.get('/api/baseFrame/project/new/', config);
         $scope.repos = undefined;
     }
@@ -106,63 +110,94 @@ baseFrame.controller('ImportController', function ($scope, $interval, $http, $lo
         $scope.project = project;
     }
 
+    function checkPopulate(option){
+        var checkInterval = setInterval(function () {
+            $http.get('/api/baseFrame/populate/check', {
+                params: {
+                    resource: option,
+                },
+            })
+            .then(function (response) {
+                if(response.status === 200){
+                    stopChecking();
+                }
+
+            }, function (response) {
+                console.log(response);
+                stopChecking();
+            });
+        }, 3000);
+
+        function stopChecking() {
+            clearInterval(checkInterval);
+            $scope.sources[$scope.selected]['options'][option].populating = false;
+        }
+    }
+
     $scope.sources = {
         file: {
             label: 'File',
-            options: [
-                {
-                    key: 'StopWord',
+            options: {
+                StopWord: {
                     label: 'StopWords',
-                }, {
-                    key: 'CoOccurrence',
-                    label: 'StackOverflow CoOccurrences',
-                }, {
-                    key: 'CommonUser',
-                    label: 'StackOverflow and GitHub Common Users',
+                    populating: false,
                 },
-            ],
+                CoOccurrence: {
+                    label: 'StackOverflow CoOccurrences',
+                    populating: false,
+                },
+                CommonUser: {
+                    label: 'StackOverflow and GitHub Common Users',
+                    populating: false,
+                },
+            },
         },
         gh: {
             label: 'GitHub',
-            options: [
-                {
-                    key: 'Issue',
+            options: {
+                Issue: {
                     label: 'Issues and Pull Requests',
-                }, {
-                    key: 'Event',
+                    populating: false,
+                },
+                Event: {
                     label: 'Events',
-                }, {
-                    key: 'Commit',
+                    populating: false,
+                },
+                Commit: {
                     label: 'Commits',
-                }, {
-                    key: 'CommitComment',
+                    populating: false,
+                },
+                CommitComment: {
                     label: 'Commit Comments',
-                }, {
-                    key: 'IssueComment',
+                    populating: false,
+                },
+                IssueComment: {
                     label: 'Issue/PR Comments',
-                }, {
-                    key: 'Developer',
-                    label: 'Developers (and their StackOverflow answers, questions and tags)'
+                    populating: false,
+                },
+                Developer: {
+                    label: 'Developers (and their StackOverflow answers, questions and tags)',
+                    populating: false,
                 }
-            ],
+            },
         },
         so: {
             label: 'StackOverflow',
-            options: [
-                {
-                    key: 'Tag',
+            options: {
+                Tag: {
                     label: 'Tags',
+                    populating: false,
                 },
-            ],
+            },
         },
         bz: {
             label: 'Bugzilla',
-            options: [
-                {
-                    key: 'BugzillaBug',
+            options: {
+                BugzillaBug: {
                     label: 'Bugs (contributors and bug history is also populated)',
+                    populating: false,
                 },
-            ],
+            },
         },
     }
 });

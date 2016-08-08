@@ -19,6 +19,7 @@ module.exports = function (BaseFrame, app, database) {
     app.route(base + 'populate/:source/:option').get(importer.populate);
     app.route(base + 'bugzilla/:command').get(importer.bugzillaServices);
     app.route(base + 'bugzilla/:service/:project').get(importer.bugzillaServices);
+    app.route(base + 'populate/check').get(importer.check);
 
     var exporter = require(controllers + 'export')(BaseFrame);
     app.route(base + 'generate').get(exporter.generate);

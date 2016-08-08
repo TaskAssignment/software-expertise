@@ -58,6 +58,11 @@ module.exports = function (BaseFrame){
         bugzillaProjects: function (req, res) {
             integratePython(req.params, res);
         },
+
+        check: function (req, res) {
+            console.log(req.params, res.query);
+            res.sendStatus(200);
+        }
     }
 }
 
