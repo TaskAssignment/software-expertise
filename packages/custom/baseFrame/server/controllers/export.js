@@ -467,9 +467,6 @@ function writeAnswersAndQuestions(){
 
         answerCsvStream.end();
         questionCsvStream.end();
-
-        saveTimestamp('Answer', answerFilePath);
-        saveTimestamp('Question', questionFilePath);
     });
 }
 

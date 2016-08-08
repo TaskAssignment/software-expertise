@@ -2,10 +2,10 @@
 
 var baseFrame = angular.module('mean.baseFrame');
 baseFrame.controller('ExportController', function ($scope, $interval, $http){
+    getTimestamps();
 
     $scope.generate = function (option) {
         $scope.options[option].generated = false;
-        $scope.options[option].downloadDisabled = true;
         $http.get('/api/baseFrame/generate', {params:{resource: option}}).then(
           function (response) {
             checkFiles(option);
@@ -51,8 +51,18 @@ baseFrame.controller('ExportController', function ($scope, $interval, $http){
         function stopChecking() {
             clearInterval(checkInterval);
             $scope.options[option].generated = true;
-            $scope.options[option].downloadDisabled = false;
+            getTimestamps();
         }
+    }
+
+    function getTimestamps(){
+        $http.get('api/baseFrame/timestamps').then(function (response){
+            for(var model in response.data){
+                $scope.options[model].timestamp = new Date(response.data[model]).toLocaleString();
+            }
+        }, function (response){
+            console.log(response);
+        });
     }
 
     $scope.options = {

@@ -18,6 +18,10 @@ class="col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-10 col-lg-offs
             <h3> {{option.label}} </h3>
         </div>
         <div class="row">
+            <small ng-if="option.timestamp" class="pull-right"> Last Generated {{option.timestamp}} </small>
+            <small ng-if="!option.timestamp" class="pull-right"> This file is not generated yet. Generate it and you will be able to download. </small>
+        </div>
+        <div class="row">
             <div class="col-xs-6 col-sm-8 col-md-10 col-lg-10">
                 <p> {{option.description}} </p>
             </div>
@@ -29,7 +33,7 @@ class="col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-10 col-lg-offs
                 </button>
             </div>
             <div class="col-xs-3 col-sm-2 col-md-1 col-lg-1">
-                <button ng-disabled="option.downloadDisabled" ng-click="download(model)" class="btn btn-default">
+                <button ng-disabled="!option.timestamp" ng-click="download(model)" class="btn btn-default">
                     Download
                     <i ng-if="option.downloaded === false" class="center-block fa fa-circle-o-notch fa-spin" aria-hidden="true"></i>
                     <i ng-if="option.downloaded !== false" class="fa fa-download" aria-hidden="true"></i>
