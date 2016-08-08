@@ -154,25 +154,20 @@ db = client[sys.argv[1]]  # db = client.primer
    Main method to handle the parameters passed and
    start the process of extraction
 """
-
-
 def main(parameters):
 
-    p1 = parameters[2]
-    p2 = ""
+    service = parameters[2]
 
-    if p1 == "showservices":
+    if service == "showservices":
         showservices()
-    elif p1 == "showprojects":
-        p2 = parameters[3]
-        showprojects(p2)
+    elif service == "showprojects":
+        project = parameters[3]
+        showprojects(project)
     else:
-        p2 = parameters[3]
+        project = parameters[3]
 
-        service = p1
-        project = p2
+        db.bugzillaprojects.insert_one({'_id': service + '/' + project})
 
-        print(bcolors.WARNING + "Extracting information from " + service + " in the project " + project+"..." +bcolors.ENDC)
         getBugs(service, getComponent(service, project))
     return 0
 
@@ -182,8 +177,6 @@ def main(parameters):
     available by looping trough
     the main dictionary of URL's
 """
-
-
 def showservices():
     for i in BASE_URLS:
         print(i)
@@ -193,8 +186,6 @@ def showservices():
     This method shows the list of projects available for
     each component on the system and is printed to the console
 """
-
-
 def showprojects(service):
     if service == "mozilla":
         service = "mozillafull"
@@ -213,8 +204,6 @@ def showprojects(service):
     This method performs the authenticated extraction
     of information for each url that is requested
 """
-
-
 def authRequest(url):
     # performs login
     result = session_requests.post(LOGIN_URL, data=payload, headers=dict(referer=LOGIN_URL))
@@ -228,8 +217,6 @@ def authRequest(url):
     the website to obtain the list of bugs for each
     component in the website
 """
-
-
 def getComponent(service, product):
     list_components = COMPONENTS_URL[service] + "?product=" + product
     url = list_components
@@ -245,8 +232,6 @@ def getComponent(service, product):
     by obtaining the href link to each of them and them
     calling the parseInformation method to save the data extracted with
 """
-
-
 def getBugs(service, list):
     # Get the auth ready
     for i in range(len(list)):
@@ -274,8 +259,6 @@ def getBugs(service, list):
     in XML format to read it, parse every bug and
     then save each of them to the database
 """
-
-
 def saveBugs(service, data):
 
     root = ET.fromstring(data)
@@ -356,20 +339,15 @@ def saveBugs(service, data):
                 "version": version,
                 "platform": platform,
                 "product": product,
-                "op_sys": op_sys
+                "op_sys": op_sys,
+                "project": service + '/' + product,
             }
 
             # make the insertion
-            bb = db.bugzillabugs
-            b = db.bugs
+            db.bugzillabugs.insert_one(bugzillabug)
+            db.bugs.insert_one(bug)
 
-            try:
-                BBID = bb.insert_one(bugzillabug).inserted_id
-                BID = b.insert_one(bug).inserted_id
-            except pymongo.errors.DuplicateKeyError as e:
-                print(str(e))
-
-            print(bcolors.OKGREEN + "Bug "+id+" info saved to DB" + bcolors.ENDC)
+            print(bcolors.OKGREEN + "Bug " + id + " info saved to DB" + bcolors.ENDC)
         else:
             print("=== Bug not defined ===")
             print(bcolors.FAIL+"Bug wasn't saved! \nCheck the names"+bcolors.ENDC)
@@ -379,8 +357,6 @@ def saveBugs(service, data):
     This method saves all the user's comments
     on the bug to the database
 """
-
-
 def saveComment(service, bugid, commentnumber, date, comment):
 
     mozilla_bugs_comments = db.bugzillacomments
@@ -400,8 +376,6 @@ def saveComment(service, bugid, commentnumber, date, comment):
     Aux method that retrieves the first comment of a bug
      by web scrapping the bug page
 """
-
-
 def saveFirstComment(service, bugid):
     url = PROFILE_URLS[service] + bugid
     website = authRequest(url)
@@ -412,7 +386,7 @@ def saveFirstComment(service, bugid):
     try:
         fc = firstcomment[0]
     except IndexError as e:
-        return "Empty"
+        return ""
     return firstcomment[0]
 
 
@@ -420,8 +394,6 @@ def saveFirstComment(service, bugid):
     This method performs the history extraction of a given
     service and the bugid and saves the info to the db
 """
-
-
 def extractHistory(service, bugid):
     url = HISTORY_URLS[service] + bugid
     website = authRequest(url)
@@ -455,8 +427,6 @@ def extractHistory(service, bugid):
     and extracts the users related
     including in the cc list
 """
-
-
 def saveUsers(service, bugid):
     url = PROFILE_URLS[service] + bugid
     website = authRequest(url)

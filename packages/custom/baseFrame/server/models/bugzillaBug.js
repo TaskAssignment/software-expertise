@@ -23,6 +23,14 @@ var BugzillaBugSchema = new Schema({
     **/
     _id: String,
 
+    /** The project this bug comes from in the format 'service/product'.
+    *
+    * @inner
+    * @type {String}
+    * @memberof BugzillaBug
+    **/
+    project: String,
+
     /** Indicates the severity of this bug
     *
     * @inner

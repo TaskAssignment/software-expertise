@@ -22,7 +22,7 @@ var BugSchema = new Schema({
     *
     * @inner
     * @type {String}
-    * @example A bug with Id 123 from Bugzilla will be saved here with _id = 'BZ123'
+    * @example A bug with Id 123 from Mozilla will be saved here with _id = 'MZ123'
     * @memberof Bug
     **/
     _id: String,
