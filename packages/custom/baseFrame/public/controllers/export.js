@@ -5,7 +5,11 @@ baseFrame.controller('ExportController', function ($scope, $interval, $http){
 
     $scope.generate = function (option) {
         $scope.options[option].generated = false;
-        $http.get('/api/baseFrame/generate', {params:{resource: option}});
+        $scope.options[option].downloadDisabled = true;
+        $http.get('/api/baseFrame/generate', {params:{resource: option}}).then(
+          function (response) {
+            checkFiles(option);
+        });
     }
 
     $scope.download = function(option){
@@ -22,8 +26,33 @@ baseFrame.controller('ExportController', function ($scope, $interval, $http){
             saveAs(blob, option + '.zip');
             $scope.options[option].downloaded = true;
         }, function (response) {
-            console.log(response);
+            alert('Your download failed. Try again later. If the error persists, contact the administrator!');
         });
+    }
+
+    function checkFiles(option){
+        var checkInterval = setInterval(function () {
+            $http.get('/api/baseFrame/check', {
+                params: {
+                    resource: option,
+                },
+            })
+            .then(function (response) {
+                if(response.status === 200){
+                    stopChecking();
+                }
+
+            }, function (response) {
+                console.log(response);
+                stopChecking();
+            });
+        }, 2000);
+
+        function stopChecking() {
+            clearInterval(checkInterval);
+            $scope.options[option].generated = true;
+            $scope.options[option].downloadDisabled = false;
+        }
     }
 
     $scope.options = {

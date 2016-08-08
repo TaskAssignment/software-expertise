@@ -17,21 +17,33 @@ var NOT_READY = 202; //Send accepted status code
 
 var statuses = {};
 
-initialStatus();
-
-function initialStatus(){
-    var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit', 'Comment',
-      'Project', 'Event', 'StopWord'];
-
-    for(var model of models){
-        statuses[model] = NOT_READY;
-    }
+var files = {
+    'Bug': [
+        'Issues.tsv', 'IssueEvents.tsv', 'IssueComments.tsv', 'Bugs.tsv',
+        'BugzillaBugsComments.tsv', 'BugzillaBugsHistory.tsv',
+    ],
+    'PullRequest': [
+        'PullRequests.tsv', 'PullRequestEvents.tsv',
+    ],
+    'Commit': [
+        'Commits.tsv', 'CommitComments.tsv',
+    ],
+    'Project': [
+        'Projects.tsv',
+    ],
+    'Developer': [
+        'Questions.tsv', 'Answers.tsv', 'Developers.tsv',
+    ],
+    'Meta': [
+        'Tags.tsv', 'CoOccurrences.tsv', 'StopWords.tsv',
+    ],
 }
 
 module.exports = function (BaseFrame){
     return {
         generate: function (req, res) {
             var option = req.query.resource;
+            statuses[option] = NOT_READY;
             switch (option) {
                 case 'Bug':
                     writeIssues();
@@ -76,62 +88,18 @@ module.exports = function (BaseFrame){
                     writeFile('StopWord');
                     break;
             }
+            zipFiles(option);
             res.sendStatus(NOT_READY);
         },
 
         download: function (req, res) {
-            var JSZip = require("jszip");
-            var zip = new JSZip();
-
             var option = req.query.resource;
-            switch (option) {
-                case 'Bug':
-                    zip.file('Issues.tsv', fs.readFileSync('files/Issues.tsv'));
-                    zip.file('IssueEvents.tsv', fs.readFileSync('files/IssueEvents.tsv'));
-                    zip.file('IssueComments.tsv', fs.readFileSync('files/IssueComments.tsv'));
-                    zip.file('Bugs.tsv', fs.readFileSync('files/Bugs.tsv'));
-                    zip.file('BugzillaBugsComments.tsv', fs.readFileSync('files/BugzillaBugsComments.tsv'));
-                    zip.file('BugzillaBugsHistory.tsv', fs.readFileSync('files/BugzillaBugsHistory.tsv'));
-                    break;
-                case 'PullRequest':
-                    zip.file('PullRequests.tsv', fs.readFileSync('files/PullRequests.tsv'));
-                    zip.file('PullRequestEvents.tsv', fs.readFileSync('files/PullRequestEvents.tsv'));
-                    break;
-                case 'Commit':
-                    zip.file('Commits.tsv', fs.readFileSync('files/Commits.tsv'));
-                    zip.file('CommitComments.tsv', fs.readFileSync('files/CommitComments.tsv'));
-                    break;
-                case 'Project':
-                    zip.file('Projects.tsv', fs.readFileSync('files/Projects.tsv'));
-                    break;
-                case 'Developer':
-                    zip.file('Questions.tsv', fs.readFileSync('files/Questions.tsv'));
-                    zip.file('Answers.tsv', fs.readFileSync('files/Answers.tsv'));
-                    zip.file('Developers.tsv', fs.readFileSync('files/Developers.tsv'));
-                    break;
-                case 'Meta':
-                    zip.file('Tags.tsv', fs.readFileSync('files/Tags.tsv'));
-                    zip.file('CoOccurrences.tsv', fs.readFileSync('files/CoOccurrences.tsv'));
-                    zip.file('StopWords.tsv', fs.readFileSync('files/StopWords.tsv'));
-                    break;
-            }
-
-            zip.generateNodeStream({
-                type: 'nodebuffer',
-                platform: process.platform,
-                compression: 'DEFLATE',
-                compressionOptions: {
-                    level: 5,
-                },
-            }).pipe(fs.createWriteStream('files/' + option + '.zip'))
-            .on('finish', function () {
-                res.sendFile(option + '.zip', {root:'files/'});
-            });
+            res.sendFile(option + '.zip', {root:'files/'});
         },
 
         check: function (req, res) {
-            var option = getModelName(req.query.resource);
-            res.sendStatus(statuses[option]);
+            var option = req.query.resource;
+            res.sendStatus(statuses[option] || NOT_READY);
         },
 
         timestamps: function (req, res) {
@@ -141,10 +109,45 @@ module.exports = function (BaseFrame){
                 for(var log of logs){
                     generatedLogs[log.model] = log.timestamp;
                 }
-                delete generatedLogs.Comment;
                 res.send(generatedLogs);
             });
         }
+    }
+}
+
+function zipFiles(option){
+    var zipInterval = setInterval(function () {
+        var optionReady = true;
+        for(var fileName of files[option]){
+            optionReady = optionReady && (statuses[fileName] === READY);
+        }
+        if(optionReady === true){
+            stopInterval();
+        }
+    }, 2000);
+
+    function stopInterval(){
+        clearInterval(zipInterval);
+
+        var JSZip = require("jszip");
+        var zip = new JSZip();
+
+        for (var fileName of files[option]) {
+            zip.file(fileName, fs.readFileSync('files/' + fileName));
+        }
+
+        zip.generateNodeStream({
+            type: 'nodebuffer',
+            platform: process.platform,
+            compression: 'DEFLATE',
+            compressionOptions: {
+                level: 8,
+            },
+        }).pipe(fs.createWriteStream('files/' + option + '.zip'))
+        .on('finish', function () {
+            statuses[option] = READY;
+            saveTimestamp(option, 'files/' + option + '.zip');
+        });
     }
 }
 
@@ -219,7 +222,7 @@ function writeFile(modelName,
     }).on('close', function (){
         csvStream.end();
         console.log('* Finished ' + fileName + ' *');
-        changeStatus(modelName, READY);
+        statuses[fileName] = READY;
     });
 }
 function writeBugzillaHistory(){
@@ -498,35 +501,4 @@ function writeDevs() {
 
     writeFile('Developer', headers, transform, 'Developers.tsv',
       '-updatedAt -__v', {}, 'profiles.so profiles.gh');
-}
-
-function getStatus(model){
-    model = getModelName(model);
-    return statuses[model];
-}
-
-function changeStatus(model, status){
-    model = getModelName(model);
-    statuses[model] = status;
-    if(status === READY){
-        saveTimestamp(model);
-    }
-}
-
-function getModelName(option){
-    switch (option) {
-        case 'CommitComment':
-        case 'IssueComment':
-        case 'Comment':
-            option = 'Comment';
-            break;
-        case 'Bug':
-        case 'Issue':
-        case 'PullRequest':
-        case 'GitHubIssue':
-        case 'BugzillaBug':
-            option = 'Bug';
-            break;
-    }
-    return option
 }
