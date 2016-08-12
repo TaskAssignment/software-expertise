@@ -1,0 +1,44 @@
+<section ng-controller="ExportController"
+class="col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
+    <div class="row">
+        <div class="col-md-12">
+            <h1> Export Data </h1>
+
+            <p>
+                Here you have access to all the data we have on our databases. The download is
+                a .zip file with the things related to the topic you selected. Each topic has
+                shows what files and information will be on the zip.
+            </p>
+        </div>
+    </div>
+
+    <div class="container" ng-repeat="(model, option) in options">
+        <div class="row">
+            <h3> {{option.label}} </h3>
+        </div>
+        <div class="row">
+            <small ng-if="option.timestamp" class="pull-right"> Last Generated {{option.timestamp}} </small>
+            <small ng-if="!option.timestamp" class="pull-right"> This file is not generated yet. Generate it and you will be able to download. </small>
+        </div>
+        <div class="row">
+            <div class="col-xs-6 col-sm-8 col-md-10 col-lg-10">
+                <p> {{option.description}} </p>
+            </div>
+            <div class="col-xs-3 col-sm-2 col-md-1 col-lg-1">
+                <button ng-disabled="option.generated === false" ng-click="generate(model)" class="btn btn-default">
+                    Generate
+                    <i ng-if="option.generated === false" class="center-block fa fa-circle-o-notch fa-spin" aria-hidden="true"></i>
+                    <i ng-if="option.generated !== false" class="fa fa-file-archive-o" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="col-xs-3 col-sm-2 col-md-1 col-lg-1">
+                <button ng-disabled="option.generated === false || !option.timestamp" ng-click="download(model)" class="btn btn-default">
+                    Download
+                    <i ng-if="option.downloaded === false" class="center-block fa fa-circle-o-notch fa-spin" aria-hidden="true"></i>
+                    <i ng-if="option.downloaded !== false" class="fa fa-download" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+<script type="text/javascript" src="/expertise/assets/js/FileSaver.js"></script>
