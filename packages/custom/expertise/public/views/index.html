@@ -1,9 +1,17 @@
 <section ng-controller="RepositoryController" class="row">
     <div id='leftSelectionPanel' class='col-md-4 col-lg-3'>
+        <div class="row">
+            <h4 ng-if="projects.gh"> GitHub </h4>
+            <p ng-repeat="project in projects.gh">{{project.name}}</p>
+            <h4 ng-if="projects.bz"> Bugzilla </h4>
+            <p ng-repeat="project in projects.bz">{{project._id}}</p>
+        </div>
         <div class="row" ng-if="selectedRepo.name">
             <ng-include src="'expertise/views/issues.html'"></ng-include>
         </div>
     </div>
+
+    {{projects}}
 
     <div id="rightPanel" class="col-md-8 col-lg-9">
         <div class="row">
@@ -13,6 +21,11 @@
                     ng-include="'expertise/views/table.html'"
                     ng-controller="TableController">
                 </div>
+                <!--
+                This gif was found on this website: https://dribbble.com/shots/1927432-PCPP-Loading-Boxes-Update
+                There's no reference to copyright on it, but this will
+                be removed if the owner requires
+                 -->
                 <img id="loadingImage" style='display:none;' src="/expertise/assets/img/loading.gif">
             </div>
         </div>

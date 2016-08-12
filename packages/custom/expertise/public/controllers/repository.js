@@ -9,9 +9,11 @@ function hideLoadingScreen(){
 }
 var expertise = angular.module('mean.expertise');
 
-var RepositoryController = function ($scope,  $http, $location, $resource) {
-    findProject();
+var RepositoryController = function ($scope, $http, $location, $resource) {
 
+    $scope.$on('projects', function (event, params) {
+        console.log(params);
+    })
     // *************** SCOPE FUNCTIONS ***************//
     /**
     * display information based on issues

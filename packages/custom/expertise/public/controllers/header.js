@@ -7,6 +7,17 @@ angular.module('mean.expertise').controller('HeaderController',
         project: undefined,
     }
 
+
+    $scope.countries = [
+        { name:'mozilla/firefox'},
+        { name:'mozilla/firefox-for-ios'},
+        { name:'eclipse/birt'},
+        { name:'rails/rails'},
+        { name:'django/django'},
+        { name:'eclipse/BIRT'},
+    ];
+
+    $scope.selectedCountry = $scope.countries[0]
     $scope.projects = {
         gh: undefined,
         bz: undefined,
@@ -32,7 +43,7 @@ angular.module('mean.expertise').controller('HeaderController',
 
         $http.get('/api/expertise/project/find', config).then(function (response) {
             $scope.projects[source] = response.data;
-            console.log($scope.projects);
+            $scope.$broadcast('projects', response.data);
         }, function (response) {
             console.log(response);
         });
