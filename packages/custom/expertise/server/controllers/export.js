@@ -78,8 +78,9 @@ module.exports = function (Expertise){
                     writeFile(option);
                     break;
                 case 'Developer':
-                    writeAnswers();
-                    writeQuestions();
+                    // writeAnswers();
+                    // writeQuestions();
+                    writeAnswersAndQuestions();
                     writeDevs();
                     writeBugzillaUsers();
                     writeStackOverflowUsers();
@@ -406,10 +407,10 @@ function writeAnswersAndQuestions(){
     var SoProfile = mongoose.model('StackOverflowProfile');
     var dbStream = SoProfile.find().select(items).lean().stream();
 
-    var questionFilePath = 'files/Questions.tsv';
-    var answerFilePath = 'files/Answers.tsv';
-    var questionStream = fs.createWriteStream(questionFilePath);
-    var answerStream = fs.createWriteStream(answerFilePath);
+    var questionFileName = 'Questions.tsv';
+    var answerFileName = 'Answers.tsv';
+    var questionStream = fs.createWriteStream('files/' + questionFileName);
+    var answerStream = fs.createWriteStream('files/' + answerFileName);
 
     var options = {
         delimiter: '\t',
@@ -469,6 +470,8 @@ function writeAnswersAndQuestions(){
         console.log(err);
     }).on('end', function (){
         console.log('* Finished Answers and questions! *');
+        statuses[questionFileName] = READY;
+        statuses[answerFileName] = READY;
 
         answerCsvStream.end();
         questionCsvStream.end();

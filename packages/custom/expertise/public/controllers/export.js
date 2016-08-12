@@ -83,7 +83,7 @@ expertise.controller('ExportController', function ($scope, $interval, $http){
         },
         Developer: {
             label: 'Developers',
-            description: 'Information from StackOverflow, GitHub and Bugzilla profiles, answers and questions from StackOverflow. 3 files',
+            description: 'Information from StackOverflow, GitHub and Bugzilla profiles, answers and questions from StackOverflow. 6 files',
         },
         Meta: {
             label: 'Metadata',
