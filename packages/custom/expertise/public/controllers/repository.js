@@ -10,9 +10,8 @@ function hideLoadingScreen(){
 var expertise = angular.module('mean.expertise');
 
 var RepositoryController = function ($scope, $http, $location, $resource) {
-
     $scope.$on('projects', function (event, params) {
-        console.log(params);
+        $scope.projects = params;
     })
     // *************** SCOPE FUNCTIONS ***************//
     /**
@@ -38,8 +37,6 @@ var RepositoryController = function ($scope, $http, $location, $resource) {
         $scope.repos = undefined;
         $scope.issues = [];
         $scope.selectedIssue = undefined;
-
-        $location.search('repoName', repo.name);
 
         showLoadingScreen();
         getRepoResources('issues');
