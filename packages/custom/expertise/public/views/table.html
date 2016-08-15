@@ -1,6 +1,5 @@
 <div ng-if="selectedBug">
     <h3> {{ selectedBug.bug.title }} </h3>
-    <hr>
 
     <div class="scrollable" ng-if="bestUsers">
         <table class="table table-bordered">
@@ -10,7 +9,7 @@
                         <a href="" ng-click="compare(true)" class="btn btn-default" ng-class="{disabled: selectedUsers.length < 2}">Compare</a>
                     </th>
                     <th class="col-lg-2 col-md-2">
-                        Username
+                        Email
                     </th>
                     <th class="col-lg-3 col-md-3">
                         <!-- http://blog.christianperone.com/2013/09/machine-learning-cosine-similarity-for-vector-space-models-part-iii/ -->

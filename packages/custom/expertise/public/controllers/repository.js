@@ -8,6 +8,9 @@ var RepositoryController = function ($scope, $http, $location, $resource, screen
     });
 
     $scope.select = function (project, source) {
+        if(source === 'bz'){
+            project.name = project._id;
+        }
         $scope.project = project;
         $scope.projects = undefined;
         $scope.source = source;
