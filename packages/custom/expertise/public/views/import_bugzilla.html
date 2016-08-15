@@ -1,0 +1,48 @@
+<div class="row" ng-if="bugzillaServices">
+    <h4>
+        <div class="col-md-4 col-sm-6 col-xs-3">
+            First, choose the service you want to import data from
+        </div>
+        <div class="col-md-8 col-sm-6 col-xs-9">
+            <select ng-model="service" class="form-control" ng-change="findBugzillaProjects(service)">
+                <option value=""> --- Select one --- </option>
+                <option ng-repeat="service in bugzillaServices" value="{{service}}">
+                    {{service}}
+                </option>
+            </select>
+        </div>
+    </h4>
+</div>
+
+<div class="row" ng-if="bugzillaProjects">
+    <h4>
+        <div class="col-md-4 col-sm-6 col-xs-3">
+            Now, choose the project you want to populate
+        </div>
+        <div class="col-md-8 col-sm-6 col-xs-9">
+            <select ng-model="project" class="form-control" ng-change="selectProject(project)">
+                <option value=""> --- Select one --- </option>
+                <option ng-repeat="project in bugzillaProjects" value="{{project}}">
+                    {{project}}
+                </option>
+            </select>
+        </div>
+    </h4>
+</div>
+
+<br>
+
+<div ng-if="project" ng-repeat="(key, option) in sources[selected].options">
+    <div class="row">
+        <div class="col-md-11 col-sm-10 col-xs-9">
+            {{ option.label }}
+            <small class="pull-right"> We can't provide status of bugzilla population yet. Sorry :(</small>
+        </div>
+        <div class="col-md-1 col-sm-2 col-xs-3">
+            <button ng-click="populate(key)" class="btn btn-default">
+                Populate
+            </button>
+        </div>
+    </div>
+    <hr>
+</div>

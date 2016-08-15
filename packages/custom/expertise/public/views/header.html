@@ -1,0 +1,27 @@
+<nav class="navbar navbar-default custom-background navbar-fixed-top" data-role="navigation" ng-controller="HeaderController">
+    <div class="navbar-header">
+        <div class="logo pull-left">
+            <a href="/" class="navbar-brand"><span class="custom-navbar-text">Software Expertise</span></a>
+        </div>
+    </div>
+
+    <div class="navbar-form navbar-left">
+        <div ng-if="showBar" class="form-group">
+            <input type="text" ng-model="variables.project" class="form-control animate-if" placeholder="Search for a project">
+        </div>
+        <button ng-mouseover="on()" ng-click="off()" type="submit" class="btn btn-link"><i class="fa fa-search custom-navbar-text"></i></button>
+    </div>
+
+    <div class="collapse navbar-collapse pull-right" ng-class="!isCollapsed && 'in'">
+        <div uib-dropdown is-open="status.isopen">
+            <a role="button" class="navbar-brand" uib-dropdown-toggle ng-disabled="disabled">
+                <span class="custom-navbar-text">Manage Data<span class="caret"></span></span>
+            </a>
+            <br><br>
+            <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="single-button">
+                <li role="menuitem"><a href="/import">Import</a></li>
+                <li role="menuitem"><a href="/export">Export</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>

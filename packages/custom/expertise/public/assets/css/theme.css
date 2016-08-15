@@ -1,0 +1,37 @@
+.link {
+  fill: none;
+  stroke: #eee;
+  stroke-width: 1.5px;
+}
+
+circle {
+  stroke: #000;
+  stroke-width: 0.1px;
+}
+
+.scrollable {
+  overflow-y: scroll;
+  /* Set this height to the appropriate size**/
+  height: 45em;
+}
+
+.node {
+  cursor: move;
+}
+
+svg {
+  border: .5px solid #ddd;
+}
+
+body {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: medium;
+}
+
+.custom-background {
+    background-color: #4169e1;
+}
+
+.custom-navbar-text {
+    color: #fff;
+}

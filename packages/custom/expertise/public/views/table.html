@@ -1,0 +1,121 @@
+<div ng-if="selectedBug">
+    <h3> {{ selectedBug.bug.title }} </h3>
+
+    <div class="scrollable" ng-if="bestUsers">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th class="col-lg-1 col-md-1">
+                        <a href="" ng-click="compare(true)" class="btn btn-default" ng-class="{disabled: selectedUsers.length < 2}">Compare</a>
+                    </th>
+                    <th class="col-lg-2 col-md-2">
+                        Email
+                    </th>
+                    <th class="col-lg-3 col-md-3">
+                        <!-- http://blog.christianperone.com/2013/09/machine-learning-cosine-similarity-for-vector-space-models-part-iii/ -->
+                        <a href="" ng-click="sort('-cosine')" uib-tooltip=" Cosine Similarity will generate a metric that says how related are two documents by looking at the angle instead of magnitude" >Cosine Score</a>
+                        <i ng-if="parameter === '-cosine'" class="fa fa-caret-down" aria-hidden="true"></i>
+                    </th>
+                    <th class="col-lg-3 col-md-3">
+                        <!-- https://www.cs.utah.edu/~jeffp/teaching/cs5955/L4-Jaccard+Shingle.pdf -->
+                        <a href="" ng-click="sort('-jaccard')" uib-tooltip=" The jaccard similarity is the quotient of the intersection and the union of the sets (words in the issue)">Jaccard Score</a>
+                        <i ng-if="parameter === '-jaccard'" class="fa fa-caret-down" aria-hidden="true"></i>
+
+                    </th>
+                    <th class="col-lg-3 col-md-3">
+                        <a href="" ng-click="sort('-ssaZScore')" uib-tooltip="This metric considers the user's questions and answers (and their popularities) to give the best assignee" >SSA Z Score</a>
+                        <i ng-if="parameter === '-ssaZScore'" class="fa fa-caret-down" aria-hidden="true"></i>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="user in bestUsers | orderBy: [parameter, 'username']" ng-class="{success: user.assignee, 'bg-primary': user.selected}" ng-init="user.selected = false">
+                    <td>
+                        <input type="checkbox" ng-click="selectUser(user)">
+                    </td>
+                    <td>
+                        <p>{{ user._id }}</p>
+                    </td>
+                    <td>
+
+                        <!-- <p class="pull-left badge" ng-if="parameter === '-cosine'">{{ $index + 1 }}</p> -->
+                        <p class="pull-right">{{ user.cosine.toFixed(2) }}</p>
+                    </td>
+                    <td>
+
+                        <!-- <p class="pull-left badge" ng-if="parameter === '-jaccard'">{{ $index + 1 }}</p> -->
+                        <p class="pull-right">{{ user.jaccard.toFixed(2) }}</p>
+                    </td>
+                    <td>
+
+                        <!-- <p class="pull-left badge" ng-if="parameter === '-ssaZScore'">{{ $index + 1 }}</p> -->
+                        <p class="pull-right">{{ user.ssaZScore.toFixed(2) }}</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <small>
+        Green row = Assignee
+    </small>
+</div>
+
+<script type="text/ng-template" id="compare-table">
+    <div class="modal-header">
+        <h3 class="modal-title">Comparison Table</h3>
+    </div>
+    <div class="modal-body">
+        <table class="table table-bordered" >
+            <thead>
+                <tr>
+                    <th class="col-lg-6 col-md-6">
+                        Username
+                    </th>
+                    <th class="col-lg-2 col-md-2">
+                        <a href="" ng-click="sort('-cosine')">Cosine Score</a>
+                        <i ng-if="parameter === '-cosine'" class="fa fa-caret-down" aria-hidden="true"></i>
+                    </th>
+                    <th class="col-lg-2 col-md-2">
+                        <a href="" ng-click="sort('-jaccard')">Jaccard Score</a>
+                        <i ng-if="parameter === '-jaccard'" class="fa fa-caret-down" aria-hidden="true"></i>
+                    </th>
+                    <th class="col-lg-2 col-md-2">
+                        <a href="" ng-click="sort('-ssaZScore')">SSA Z Score</a>
+                        <i ng-if="parameter === '-ssaZScore'" class="fa fa-caret-down" aria-hidden="true"></i>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="user in users | orderBy: [parameter, 'username']">
+                    <td>
+                        <p>{{ user._id }}</p>
+                        <p> Questions on SO: {{ user.amountQuestions }}</p>
+                        <p> Answers SO: {{ user.amountAnswers }}</p>
+                        <uib-accordion close-others="oneAtATime">
+                            <uib-accordion-group heading="Show/Hide User Tags">
+                                <p ng-repeat="tag in user.tags"> {{ tag }} </p>
+                            </uib-accordion-group>
+                        </uib-accordion>
+                    </td>
+                    <td>
+                        <p class="pull-left badge">{{ user.cosineIndex }}</p>
+                        <p class="pull-right">{{ user.cosine.toFixed(2) }}</p>
+                    </td>
+                    <td>
+                        <p class="pull-left badge">{{ user.jaccardIndex }}</p>
+                        <p class="pull-right">{{ user.jaccard.toFixed(2) }}</p>
+                    </td>
+                    <td>
+                        <p class="pull-left badge">{{ user.ssazIndex }}</p>
+                        <p class="pull-right">{{ user.ssaZScore.toFixed(2) }}</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="modal-footer">
+        <button class="btn btn-primary" type="button" ng-click="ok()">OK</button>
+    </div>
+</script>

@@ -1,0 +1,22 @@
+{
+  "name": "expertise",
+  "version": "0.0.1",
+  "description": "Some description of expertise",
+  "author": {
+    "name": "mean scaffold"
+  },
+  "mean": "0.5.5",
+  "dependencies": {
+    "fast-csv": "latest",
+    "jsdoc": "^3.4.0",
+    "jszip": "^3.1.0",
+    "python-shell": "^0.4.0"
+  },
+  "license": "MIT",
+  "scripts": {
+    "postinstall": "bower install"
+  },
+  "devDependencies": {
+    "ink-docstrap": "^1.2.1"
+  }
+}
