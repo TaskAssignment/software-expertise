@@ -2,7 +2,7 @@
     <div id='leftSelectionPanel' class='col-md-4 col-lg-3'>
         <div ng-include="'/expertise/views/projects.html'" ng-if="projects">
         </div>
-        <div class="row" ng-if="selectedRepo.name">
+        <div class="row" ng-if="project">
             <ng-include src="'/expertise/views/issues.html'"></ng-include>
         </div>
     </div>

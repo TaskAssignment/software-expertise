@@ -333,7 +333,7 @@ def saveBugs(service, data):
             bugzillabug = {
                 "_id": PREFIX[service] + id,
                 "severity": severity,
-                "bugId": PREFIX[service] + id,
+                "bug": PREFIX[service] + id,
                 "service": service,
                 "asignee": assigneeEmail,
                 "ccUsers": cc,
@@ -367,11 +367,11 @@ def saveBugs(service, data):
     This method saves all the user's comments
     on the bug to the database
 """
-def saveComment(service, bugid, commentnumber, date, comment):
+def saveComment(service, bug, commentnumber, date, comment):
     mozilla_bugs_comments = db.bugzillacomments
 
     bugCommentSchema = {
-        "bugId": PREFIX[service] + bugid,
+        "bug": PREFIX[service] + bug,
         "commentNumber": commentnumber,
         "date": date,
         "comment": comment,
@@ -389,8 +389,8 @@ def saveComment(service, bugid, commentnumber, date, comment):
     Aux method that retrieves the first comment of a bug
      by web scrapping the bug page
 """
-def saveFirstComment(service, bugid):
-    url = PROFILE_URLS[service] + bugid
+def saveFirstComment(service, bug):
+    url = PROFILE_URLS[service] + bug
     website = authRequest(url)
 
     tree = html.fromstring(website)
@@ -405,10 +405,10 @@ def saveFirstComment(service, bugid):
 
 """
     This method performs the history extraction of a given
-    service and the bugid and saves the info to the db
+    service and the bug and saves the info to the db
 """
-def extractHistory(service, bugid):
-    url = HISTORY_URLS[service] + bugid
+def extractHistory(service, bug):
+    url = HISTORY_URLS[service] + bug
     website = authRequest(url)
 
     tree = html.fromstring(website)
@@ -423,7 +423,7 @@ def extractHistory(service, bugid):
         j += 1
         if j % 5 == 0:
             historySchema = {
-                "bugId": PREFIX[service] + bugid,
+                "bug": PREFIX[service] + bug,
                 "who": auxList[0],
                 "when": auxList[1],
                 "what": auxList[2],
@@ -444,8 +444,8 @@ def extractHistory(service, bugid):
     and extracts the users related
     including in the cc list
 """
-def saveUsers(service, bugid):
-    url = PROFILE_URLS[service] + bugid
+def saveUsers(service, bug):
+    url = PROFILE_URLS[service] + bug
     website = authRequest(url)
 
     tree = html.fromstring(website)

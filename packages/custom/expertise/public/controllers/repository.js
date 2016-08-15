@@ -1,47 +1,32 @@
 'use strict';
 
-function showLoadingScreen(){
-    angular.element('#loadingImage').css('display','block');
-}
-
-function hideLoadingScreen(){
-    angular.element('#loadingImage').css('display','none');
-}
 var expertise = angular.module('mean.expertise');
 
-var RepositoryController = function ($scope, $http, $location, $resource) {
+var RepositoryController = function ($scope, $http, $location, $resource, screen) {
     $scope.$on('projects', function (event, params) {
         $scope.projects = params;
-    })
+    });
+
+    $scope.select = function (project, source) {
+        $scope.project = project;
+        $scope.projects = undefined;
+        $scope.bugs = [];
+        $scope.selectedBug = undefined;
+
+        getRepoResources('bugs', source);
+    }
     // *************** SCOPE FUNCTIONS ***************//
     /**
     * display information based on issues
     *
     * @param issue - Dictionary with id, title and body from github issue
     **/
-    $scope.selectIssue = function (issue) {
-        $scope.selectedIssue = issue;
+    $scope.selectBug = function (bug) {
+        $scope.selectedBug = bug;
         sendToTable();
     }
 
     // *************** HELPER FUNCTIONS ***************//
-
-    /**
-    * Gets the users and issues from the selected repository
-    *
-    * @param repo - The selected repository (id,name,language,description)
-    **/
-    function getRepoInformation(repo) {
-        $scope.selectedRepo = repo;
-        $scope.search = false;
-        $scope.repos = undefined;
-        $scope.issues = [];
-        $scope.selectedIssue = undefined;
-
-        showLoadingScreen();
-        getRepoResources('issues');
-        hideLoadingScreen();
-    }
 
     /**
     * Gets the github resources of the selected repository stored on the
@@ -49,32 +34,25 @@ var RepositoryController = function ($scope, $http, $location, $resource) {
     *
     * @param resource - The desired resource for this repository (issues, users)
     **/
-    function getRepoResources (resource){
-        showLoadingScreen();
+    function getRepoResources (resource, source){
+        screen.loading();
         var Resource = $resource('/api/expertise/:projectId/' + resource);
         var filter = {
-            projectId: $scope.selectedRepo._id,
+            projectId: $scope.project._id,
+            source: source,
         };
         Resource.query(filter).$promise.then(function(resources){
-            $scope.selectedRepo['empty' + resource] = false;
             $scope[resource] = resources;
-            hideLoadingScreen();
-        }, function(response){console.log(response)});
-    }
-
-    function findProject(){
-        $scope.search = true;
-        var Project = $resource('/api/expertise/project/get/:name');
-        var repoName = $location.search().repoName;
-        if(repoName){
-            Project.get({name: repoName}).$promise.then(function(project){
-                getRepoInformation(project);
-            });
-        }
+            screen.ready();
+        }, function(response){
+            console.log(response);
+            alert('Error! Contact the system administrator.');
+            screen.ready();
+        });
     }
 
     function sendToTable(){
-        hideLoadingScreen();
+        screen.ready();
         var args = {};
         if($scope.selectedIssue){
             args.issueId = $scope.selectedIssue._id;

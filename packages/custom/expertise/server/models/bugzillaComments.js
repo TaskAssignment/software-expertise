@@ -49,7 +49,7 @@ var BugzillaCommentSchema = new Schema({
     * @type {String}
     * @memberof BugzillaComment
     **/
-    bugId: {
+    bug: {
         type: String,
         ref: 'BugzillaBug',
     },

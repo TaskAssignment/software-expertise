@@ -13,7 +13,7 @@ module.exports = function (Expertise, app, database) {
     app.route(base + 'project/get/:name').get(projects.get);
     app.route(base + 'project/find').get(projects.find);
     app.route(base + 'project/new/').get(projects.save);
-    app.route(base + ':projectId/issues').get(projects.findIssues);
+    app.route(base + ':projectId/bugs').get(projects.findBugs);
 
     var importer = require(controllers + 'import')(Expertise);
     app.route(base + 'populate/:source/:option').get(importer.populate);

@@ -79,17 +79,23 @@ module.exports = function (Expertise){
             issues, it restricts the results to the newest 500 issues.
         * @todo Add pagination!
         **/
-        findIssues: function (req, res){
-            var GitHubIssue = mongoose.model('GitHubIssue');
-
+        findBugs: function (req, res){
+            var BugsModel = undefined;
             var filter = {
                 project: req.params.projectId,
-                isPR: false,
             };
-            var items = '_id bug';
+            var populate = 'bug';
+            var items = '_id bug';;
 
-            GitHubIssue.find(filter, items).populate('bug', 'title')
-              .sort('-number').limit(500).lean().exec(function(err, bugs){
+            if(req.query.source === 'bz') {
+                BugsModel = mongoose.model('BugzillaBug');
+            } else {
+                BugsModel = mongoose.model('GitHubIssue');
+                filter.isPR = false;
+            }
+
+            BugsModel.find(filter, items).populate(populate, 'title')
+              .sort('-number -createdAt').limit(500).lean().exec(function(err, bugs){
                 res.send(bugs);
             });
         }

@@ -232,7 +232,7 @@ function writeFile(modelName,
     });
 }
 function writeBugzillaHistory(){
-    var headers = ['bugId', 'who', 'removed', 'added', 'what', 'when']
+    var headers = ['bug', 'who', 'removed', 'added', 'what', 'when']
     var modelName = 'BugzillaHistory';
     var fileName = 'BugzillaBugsHistory.tsv';
     var transform = function (row) {
@@ -243,7 +243,7 @@ function writeBugzillaHistory(){
 }
 
 function writeBugzillaComments(){
-    var headers = ['bugId', 'commentNumber', 'service', 'comment', 'date']
+    var headers = ['bug', 'commentNumber', 'service', 'comment', 'date']
     var modelName = 'BugzillaComment';
     var fileName = 'BugzillaBugsComments.tsv';
     var transform = function (row) {
@@ -259,19 +259,19 @@ function writeBugzillaBugs(){
       'version', 'severity', 'op_sys', 'url', 'createdAt']
 
     var transform = function (row) {
-        row.createdAt = row.bugId.createdAt;
-        if(row.bugId.body){
-            row.body = row.bugId.body
+        row.createdAt = row.bug.createdAt;
+        if(row.bug.body){
+            row.body = row.bug.body
               .replace(/\t/g, '        ');
-            row.body = row.bugId.body
+            row.body = row.bug.body
               .replace(/(?:\r\n|\r|\n)/g, '                ');
-            row.body = row.bugId.body
+            row.body = row.bug.body
               .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
         }
-        row.status = row.bugId.status;
-        row.author = row.bugId.author;
-        row.title = row.bugId.title;
-        row.url = row.bugId.url;
+        row.status = row.bug.status;
+        row.author = row.bug.author;
+        row.title = row.bug.title;
+        row.url = row.bug.url;
 
         return row;
     }
@@ -281,7 +281,7 @@ function writeBugzillaBugs(){
     var fileName = 'Bugs.tsv';
 
     writeFile(modelName, headers, transform, fileName, '-updatedAt -__v',
-      {}, 'bugId');
+      {}, 'bug');
 }
 
 

@@ -2,26 +2,18 @@
 /**
  * Generates the expertise table
  **/
-
-function showLoadingScreen(){
-    angular.element('#loadingImage').css('display','block');
-}
-
-function hideLoadingScreen(){
-    angular.element('#loadingImage').css('display','none');
-}
-var controllerCallback = function ($scope, $resource, $uibModal) {
+var controllerCallback = function ($scope, $resource, $uibModal, screen) {
     $scope.assigneePosition = undefined
 
     var findMatches = function (event, params) {
         if(params.issueId){
             $scope.bestUsers = undefined;
-            showLoadingScreen();
+            screen.loading();
             var Match = $resource('api/expertise/find/:issueId/matches');
 
             Match.get(params).$promise.then(function (matches){
                 $scope.bestUsers = matches.similarities;
-                hideLoadingScreen();
+                screend.ready();
             });
             $scope.selectedUsers = [];
         }

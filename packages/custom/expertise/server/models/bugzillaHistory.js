@@ -48,7 +48,7 @@ var BugzillaHistorySchema = new Schema({
     * @type {String}
     * @memberof BugzillaHistory
     **/
-    bugId: {
+    bug: {
         type: String,
         ref: 'BugzillaBug',
     },

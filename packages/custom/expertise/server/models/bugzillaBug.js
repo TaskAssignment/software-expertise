@@ -47,7 +47,7 @@ var BugzillaBugSchema = new Schema({
     * @memberof BugzillaBug
     * @see Bug
     **/
-    bugId: {
+    bug: {
         type: String,
         ref: 'Bug',
     },

@@ -15,7 +15,7 @@ expertise.factory('searchProjects', function ($http, $rootScope, $location) {
 
         $http.get('/api/expertise/project/find', config).then(function (response) {
             projects[source] = response.data;
-            $location.path('/').replace();
+            $location.path('/');
             $rootScope.$broadcast('projects', projects);
         }, function (response) {
             console.log(response);
