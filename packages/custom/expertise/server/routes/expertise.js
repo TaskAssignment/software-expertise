@@ -28,5 +28,5 @@ module.exports = function (Expertise, app, database) {
     app.route(base + 'timestamps').get(exporter.timestamps);
 
     var table = require(controllers + 'table')(Expertise);
-    app.route(base + 'find/:issueId/matches').get(table.findMatches);
+    app.route(base + 'find/:source/:issueId/matches').get(table.findMatches);
 };

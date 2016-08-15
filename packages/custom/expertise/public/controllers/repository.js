@@ -10,10 +10,11 @@ var RepositoryController = function ($scope, $http, $location, $resource, screen
     $scope.select = function (project, source) {
         $scope.project = project;
         $scope.projects = undefined;
+        $scope.source = source;
         $scope.bugs = [];
         $scope.selectedBug = undefined;
 
-        getRepoResources('bugs', source);
+        getRepoResources('bugs');
     }
     // *************** SCOPE FUNCTIONS ***************//
     /**
@@ -39,7 +40,7 @@ var RepositoryController = function ($scope, $http, $location, $resource, screen
         var Resource = $resource('/api/expertise/:projectId/' + resource);
         var filter = {
             projectId: $scope.project._id,
-            source: source,
+            source: $scope.source,
         };
         Resource.query(filter).$promise.then(function(resources){
             $scope[resource] = resources;
@@ -54,8 +55,9 @@ var RepositoryController = function ($scope, $http, $location, $resource, screen
     function sendToTable(){
         screen.ready();
         var args = {};
-        if($scope.selectedIssue){
-            args.issueId = $scope.selectedIssue._id;
+        if($scope.selectedBug){
+            args.issueId = $scope.selectedBug._id;
+            args.source = $scope.source;
         }
         $scope.$broadcast('findMatches', args);
     }

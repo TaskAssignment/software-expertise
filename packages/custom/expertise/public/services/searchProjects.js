@@ -5,7 +5,7 @@ expertise.factory('searchProjects', function ($http, $rootScope, $location) {
         bz: undefined,
     }
 
-    var findProjects = function (project, source = 'gh') {
+    var findProjects = function (project, source) {
         var config = {
             params: {
                 name: project,

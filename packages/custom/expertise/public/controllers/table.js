@@ -9,11 +9,14 @@ var controllerCallback = function ($scope, $resource, $uibModal, screen) {
         if(params.issueId){
             $scope.bestUsers = undefined;
             screen.loading();
-            var Match = $resource('api/expertise/find/:issueId/matches');
+            var Match = $resource('api/expertise/find/:source/:issueId/matches');
 
             Match.get(params).$promise.then(function (matches){
                 $scope.bestUsers = matches.similarities;
-                screend.ready();
+                screen.ready();
+            }, function (error) {
+                screen.ready();
+                alert('Error! Contact the system administrator');
             });
             $scope.selectedUsers = [];
         }

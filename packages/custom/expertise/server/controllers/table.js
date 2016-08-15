@@ -285,27 +285,44 @@ module.exports = function (Expertise){
                 });
             }
 
-            var issueCallback = function (issue){
-                var filter = {
-                    'repositories': issue.project,
-                };
-                var GitHubProfile = mongoose.model('GitHubProfile');
+            var BugsModel = '';
+            var selectField = '';
+            var Profile = '';
 
-                GitHubProfile.find(filter).select('email').lean()
-                  .exec(function (err, ghUsers){
+            if(req.params.source === 'bz'){
+                BugsModel = mongoose.model('BugzillaBug');
+                selectField = '_id';
+                Profile = mongoose.model('BugzillaProfile');
+            } else {
+                BugsModel = mongoose.model('GitHubIssue');
+                selectField = 'email';
+                Profile = mongoose.model('GitHubProfile');
+            }
+            var issueCallback = function (bug){
+
+                var filter = {};
+
+                if(typeof(bug.project) === 'number'){
+                    filter.repositories = bug.project;
+                }
+
+                Profile.find(filter).select(selectField).lean()
+                .exec(function (err, users){
                     if(err){
                         console.log(err);
                     } else {
-                        var emails = ghUsers.map(function (user) {
-                            return user.email;
+                        var emails = users.map(function (user) {
+                            return user[selectField];
                         });
-                        findStackOverflowMatches(emails, issue);
+                        findStackOverflowMatches(emails, bug);
                     }
                 });
             }
 
-            var GitHubIssue = mongoose.model('GitHubIssue');
-            GitHubIssue.findOne({_id: req.params.issueId}).populate('bug')
+
+
+
+            BugsModel.findOne({_id: req.params.issueId}).populate('bug')
               .lean().exec(function (err, issue){
                 if(err){
                     console.log(err);

@@ -4,7 +4,7 @@
     <!-- Showing only 500 bugs for now. But all of them are saved! -->
     <div id='bugSelection' class='scrollable list-group' ng-if="bugs.length > 0">
         <button ng-repeat="bug in bugs" class="list-group-item"
-          ng-click="selectBug(bug)" ng-class="{active: selectedIssue._id == bug._id}">
+          ng-click="selectBug(bug)" ng-class="{active: selectedBug._id == bug._id}">
             <p>{{ bug.bug.title }}</p>
         </button>
     </div>
