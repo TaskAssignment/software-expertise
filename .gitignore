@@ -9,6 +9,7 @@ modules/views/
 /public/build/
 /packages/**/**/public/assets/lib
 packages/config/e2e/tests/results/e2e/junit
+.vagrant
 
 # --------------------
 # Node Files
