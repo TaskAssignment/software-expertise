@@ -25,3 +25,18 @@ package "python-dev"
 package "libxml2-dev"
 package "libxslt1-dev"
 package "zlib1g-dev"
+
+
+execute 'Install global npm packages' do
+  command 'npm install -g gulp forever'
+end
+
+execute 'Install npm packages' do
+  command 'npm install'
+  cwd '/vagrant'
+end
+
+execute 'Install python dependencies' do
+  command 'pip3 install -r packages/custom/expertise/server/bugzilla-python/requirements.txt'
+  cwd '/vagrant'
+end
