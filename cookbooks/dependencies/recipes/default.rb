@@ -30,15 +30,20 @@ package "python3-requests"
 
 
 execute 'Install global npm packages' do
-  command 'npm install -g gulp forever'
+  command 'npm install -g forever bower'
 end
 
 execute 'Install python dependencies' do
-    command 'pip3 install -r packages/custom/expertise/server/bugzilla-python/requirements.txt'
-    cwd '/vagrant'
+  command 'pip3 install -r packages/custom/expertise/server/bugzilla-python/requirements.txt'
+  cwd '/vagrant'
 end
 
-execute 'Install npm packages' do
+execute 'Install app dependencies' do
   command 'npm install'
   cwd '/vagrant'
+end
+
+execute 'Install module dependencies' do
+  command 'npm install'
+  cwd '/vagrant/packages/custom/expertise/'
 end
