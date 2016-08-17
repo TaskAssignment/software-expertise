@@ -51,7 +51,6 @@
     "gulp-csslint": "latest",
     "gulp-cssmin": "latest",
     "gulp-jshint": "latest",
-    "gulp-karma": "0.0.5",
     "gulp-less": "latest",
     "gulp-livereload": "latest",
     "gulp-load-plugins": "latest",
