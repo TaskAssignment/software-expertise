@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<testsuites>
- <testsuite name="a test" timestamp="2016-03-18T01:11:41" hostname="localhost" time="16.842" errors="0" tests="2" skipped="0" disabled="0" failures="0">
-  <testcase classname="a test" name="should download coOccurrences.tsv" time="8.721" />
-  <testcase classname="a test" name="should select a task/bug from project" time="8.12" />
- </testsuite>
-</testsuites>
