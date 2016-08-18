@@ -92,11 +92,12 @@
                         <p>{{ user._id }}</p>
                         <p> Questions on SO: {{ user.amountQuestions }}</p>
                         <p> Answers SO: {{ user.amountAnswers }}</p>
+                        <!-- TODO: Accordion not working :(
                         <uib-accordion close-others="oneAtATime">
                             <uib-accordion-group heading="Show/Hide User Tags">
                                 <p ng-repeat="tag in user.tags"> {{ tag }} </p>
                             </uib-accordion-group>
-                        </uib-accordion>
+                        </uib-accordion>-->
                     </td>
                     <td>
                         <p class="pull-left badge">{{ user.cosineIndex }}</p>

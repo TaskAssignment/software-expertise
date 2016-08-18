@@ -200,7 +200,7 @@ def showprojects(service):
     products = tree.xpath('//th//a/text() | //td/h2/a/text()')
 
     for i in range(len(products)):
-        print(products[i].replace("\xa0", " "))
+        print(products[i].replace("\xa0", " ").replace('\u2011', '-'))
 
 
 """

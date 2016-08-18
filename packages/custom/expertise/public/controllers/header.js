@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('mean.expertise').controller('HeaderController',
-  function ($scope, $http, $location, searchProjects) {
+  function ($scope, $http, $location, searchProjects, screen) {
     $scope.showBar = false;
     $scope.variables = {
         project: undefined,
