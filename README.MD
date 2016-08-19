@@ -1,4 +1,6 @@
-#Software Expertise
+# Software Expertise
+
+This system tries to match users and bugs automatically. If you're new to its developments, you follow the instructions here and read the entire [wiki](https://github.com/TaskAssignment/software-expertise/wiki/), **especially** the [Developers](https://github.com/TaskAssignment/software-expertise/wiki/Developers), [Bugs](https://github.com/TaskAssignment/software-expertise/wiki/Bugs) and [Tools](https://github.com/TaskAssignment/software-expertise/wiki/Tools) sections.
 
 ## Have the system up and running:
 

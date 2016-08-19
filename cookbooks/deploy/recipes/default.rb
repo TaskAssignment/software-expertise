@@ -1,5 +1,4 @@
 #### Install node and npm
-print node
 NODE_SOURCE = "/tmp/setup_node.sh"
 remote_file NODE_SOURCE do
   source "https://deb.nodesource.com/setup_6.x"
@@ -25,21 +24,34 @@ end
 
 
 #### General dependencies and goodies
-package "git"
-package "python3"
-package "python3-pip"
+package "git" do
+  not_if "git --version"
+  guard_interpreter :bash
+end
+package "python3" do
+  not_if "python3 --version"
+  guard_interpreter :bash
+end
+package "python3-pip" do
+  not_if "pip3 --version"
+  guard_interpreter :bash
+end
+package "vim" do
+  not_if "vim --version"
+  guard_interpreter :bash
+end
+
 package "python-dev"
 package "libxml2-dev"
 package "libxslt1-dev"
 package "zlib1g-dev"
 package "python3-lxml"
 package "python3-requests"
-package "vim"
 
 
 # #### npm and python dependencies
 execute "Install Forever" do
-  command "npm install -g forever bower"
+  command "npm install -g forever"
   not_if "forever --version"
   guard_interpreter :bash
 end
@@ -49,29 +61,6 @@ execute "Install Bower" do
   not_if "bower -v"
   guard_interpreter :bash
 end
-
-execute "Install python dependencies" do
-  command "pip3 install -r packages/custom/expertise/server/bugzilla-python/requirements.txt"
-  cwd "/vagrant"
-  ignore_failure true
-end
-
-execute "Install app dependencies" do
-  command "npm install"
-  cwd "/vagrant"
-  ignore_failure true
-  not_if { Dir.exists?('/vagrant/node_modules') }
-  environment ({'HOME' => '/home/vagrant', 'USER' => 'vagrant'})
-end
-
-execute "Install module dependencies" do
-  command "npm install"
-  cwd "/vagrant/packages/custom/expertise/"
-  ignore_failure true
-  not_if { Dir.exists?('/vagrant/packages/custom/expertise/node_modules') }
-  environment ({'HOME' => '/home/vagrant', 'USER' => 'vagrant'})
-end
-
 
 #### Mongodb
 file "/etc/apt/sources.list.d/mongodb-org-3.2.list" do
@@ -91,11 +80,6 @@ package "mongodb-org" do
   guard_interpreter :bash
 end
 
-directory "/home/vagrant/mongodb"
-directory "/home/vagrant/mongodb/logs"
-directory "/home/vagrant/mongodb/data"
-
-
 file "/lib/systemd/system/mongod.service" do
   content "[Unit]
 Description=High-performance, schema-free document-oriented database
@@ -105,7 +89,7 @@ Documentation=https://docs.mongodb.org/manual
 [Service]
 User=mongodb
 Group=mongodb
-ExecStart=mongod --dbpath /home/vagrant/mongodb/data --logpath /home/vagrant/mongodb/logs/log
+ExecStart=/usr/bin/mongod --quiet --config /etc/mongod.conf
 
 [Install]
 WantedBy=multi-user.target"
