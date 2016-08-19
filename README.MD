@@ -10,16 +10,17 @@ This will ensure that the online documentation found [here](https://TaskAssignme
 OBS: All these steps require you to be on the root folder of this repo, unless otherwise stated.
 
 1. Install [VirtualBox](https://www.virtualbox.org/) and [Vagrant](https://www.vagrantup.com/downloads.html) in your computer
-2. Run `cp post-commit.sample .git/hooks/post-commit`
-3. Run `cp pre-push.sample .git/hooks/pre-push`
-4. Make these two files executable: `chmod +x .git/hooks/post-commit .git/hooks/pre-push`
-5. Run `vagrant up`. This will create the VM, install all the dependencies and start
+2. Clone [the API documentation](https://github.com/TaskAssignment/TaskAssignment.github.io) on the same folder where you cloned this
+3. Run `cp post-commit.sample .git/hooks/post-commit`
+4. Run `cp pre-push.sample .git/hooks/pre-push`
+5. Make these two files executable: `chmod +x .git/hooks/post-commit .git/hooks/pre-push`
+6. Run `vagrant up`. This will create the VM, install all the dependencies and start
 mongodb. The first time may take several minutes to complete, because it will install
 **all** the dependencies.
-6. Run `vagrant ssh` to access the VM.
-7. Go to `/vagrant` to access the shared folder (this folder). Once inside it, run `./node_modules/gulp/bin/gulp.js` to start the server.
-8. Go to [localhost](http://localhost:3000) and enjoy it!
+7. Run `vagrant ssh` to access the VM.
+8. Go to `/vagrant` to access the shared folder (this folder). Once inside it, run `node --debug server.js` to start the server.
+9. Go to [localhost](http://localhost:3000) and enjoy it!
 
 #### Troubleshooting:
 
-If `npm install` or `gulp` fails it probably means that some dependencies are not up to date. Try `[sudo] npm update -g` to update npm and gulp or `npm update` to update the local dependencies.
+If `npm install` fails it probably means that some dependencies are not up to date. Try `[sudo] npm update -g` to update npm and try to install the dependencies again.
