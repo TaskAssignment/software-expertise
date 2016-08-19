@@ -70,6 +70,7 @@ file "/etc/apt/sources.list.d/mongodb-org-3.2.list" do
 end
 
 apt_update "Update ubuntu mirrors" do
+  action :update
   not_if "mongo --version"
   guard_interpreter :bash
 end

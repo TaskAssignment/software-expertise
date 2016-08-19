@@ -88,6 +88,7 @@ end
 
 apt_update "Update ubuntu mirrors" do
   not_if "mongo --version"
+  action :update
   guard_interpreter :bash
 end
 
