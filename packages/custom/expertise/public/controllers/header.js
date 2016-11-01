@@ -12,7 +12,7 @@ angular.module('mean.expertise').controller('HeaderController',
     }
 
     $scope.off = function () {
-        console.log("HERE");
+        //console.log("HERE");
         $scope.showBar = false;
         searchProjects.findProjects($scope.variables.project, 'gh');
         searchProjects.findProjects($scope.variables.project, 'bz');
