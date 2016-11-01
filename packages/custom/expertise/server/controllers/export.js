@@ -71,7 +71,7 @@ module.exports = function (Expertise){
 
                     break;
                 case 'Commit':
-                    // writeCommits();
+                    writeCommits();
                     writeCommitComments();
                     break;
                 case 'Project':
