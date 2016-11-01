@@ -11,9 +11,11 @@ var mongoose = require('mongoose');
 
 var READY = 200; //Status code to be sent when ready.
 var NOT_READY = 202; //Send accepted status code
+var issueCommentsPulled = 0;
 
 var models = ['Tag', 'CoOccurrence', 'Bug', 'Developer', 'Commit', 'Issue',
   'CommitComment', 'IssueComment', 'Language', 'Project', 'Event', 'Contributor'];
+var andOrQuestionMark = '&';
 
 var populated = {};
 for(var model of models){
@@ -530,7 +532,8 @@ function populateIssues(projectId){
         if(lastCreated){
             var time = lastCreated.bug.createdAt;
             time.setSeconds(time.getSeconds() + 1);
-            url +='&since=' + time.toISOString();
+            // url +='&since=' + time.toISOString();
+            url += andOrQuestionMark + 'since=' + time.toISOString();
         }
 
         function save(bug, model = 'Bug') {
@@ -897,7 +900,8 @@ function populateComments(projectId, type){
             url += '/issues/comments?sort=updated&direction=asc'
             if(lastCreated){
                 lastCreated.createdAt.setSeconds(lastCreated.createdAt.getSeconds() + 1);
-                url += '&since=' + lastCreated.createdAt.toISOString();
+                // url += '&since=' + lastCreated.createdAt.toISOString();
+                url += andOrQuestionMark + 'since=' + lastCreated.createdAt.toISOString();
             }
         } else {
             url += '/comments';
@@ -951,52 +955,63 @@ function gitHubPopulate(option, specificUrl, callback, etag = undefined, finalUr
         if (!error) {
             switch (response.statusCode) {
                 case 200:
-                    var results = JSON.parse(body);
-                    if(firstRequest){
-                        selectedProject.eventsEtag = response.headers.etag;
-                        selectedProject.save();
-                        firstRequest = false;
-                    }
-                    callback(results);
-
-                    var links = response.headers.link || '';
-                    var next;
-                    for(var link of links.split(',')){
-                        if(link.lastIndexOf('next') > 0){
-                            next = link;
+                    if (issueCommentsPulled < 395){
+                        issueCommentsPulled++;
+                        var results = JSON.parse(body);
+                        if(firstRequest){
+                            selectedProject.eventsEtag = response.headers.etag;
+                            selectedProject.save();
+                            firstRequest = false;
                         }
-                    }
+                        callback(results);
 
-                    if(next){
-                        var begin = next.indexOf('<');
-                        var end = next.indexOf('>');
+                        var links = response.headers.link || '';
+                        var next;
+                        for(var link of links.split(',')){
+                            if(link.lastIndexOf('next') > 0){
+                                next = link;
+                            }
+                        }
 
-                        //This gets string = [begin, end)
-                        var new_uri = next.substring(begin + 1, end);
+                        if(next){
+                            var begin = next.indexOf('<');
+                            var end = next.indexOf('>');
 
-                        options.uri = new_uri;
+                            //This gets string = [begin, end)
+                            var new_uri = next.substring(begin + 1, end);
 
-                        setTimeout(function () {
-                            request(options, requestCallback);
-                        }, 10);
-                    } else {
-                        if(option === 'IssueComment' && results.length > 0){
-                            var last = results.length - 1;
-                            var lastUpdated = new Date(results[last].updated_at);
-                            var yesterday = new Date();
-                            yesterday.setDate(yesterday.getDate() - 1);
-                            if(yesterday > lastUpdated){
-                                lastUpdated.setSeconds(lastUpdated.getSeconds() + 1);
-                                options.uri = uri + '&since=' + lastUpdated.toISOString();
+                            options.uri = new_uri;
+
+                            setTimeout(function () {
                                 request(options, requestCallback);
+                            }, 10);
+                        } else {
+                            var doneFlag = false;
+                            if(option === 'IssueComment' && results.length > 0 && (options.uri.indexOf(andOrQuestionMark+'since=') === -1)){
+                                var last = results.length - 1;
+                                var lastUpdated = new Date(results[last].updated_at);
+                                var yesterday = new Date();
+                                yesterday.setDate(yesterday.getDate() - 1);
+                                if(yesterday > lastUpdated){
+                                    lastUpdated.setSeconds(lastUpdated.getSeconds() + 1);
+                                    options.uri = uri + andOrQuestionMark + 'since=' + lastUpdated.toISOString();
+                                    request(options, requestCallback);
+                                } else {
+                                    doneFlag = true;
+                                }
                             } else {
+                                doneFlag = true;
+                            }
+
+                            if (doneFlag){
                                 console.log('*** DONE ***', option);
                                 populated[option] = READY;
                             }
-                        } else {
-                            console.log('*** DONE ***', option);
-                            populated[option] = READY;
-                        }
+                        }//else of if (next)
+                    }//if (issueCommentsPulled < 395)
+                    else{
+                        console.log('*** Around 39,900 issue comments have been downloaded. Please try after 1 or 2 hours to avoid hitting the limits. ***', option);
+                        populated[option] = READY;
                     }
                     break;
                 case 400:
@@ -1007,15 +1022,17 @@ function gitHubPopulate(option, specificUrl, callback, etag = undefined, finalUr
                 case 500:
                 case 502:
                 case 503:
-                    console.log('Git Server Error. Trying again in one second');
+                    console.log('Git Server Error (503). Trying again in one second');
                     console.log(body, response.statusCode);
-                    remakeRequest(options, requestCallback);
+
+                    andOrQuestionMark = '?';
+                    // remakeRequest(options, requestCallback);
                     break;
                 case 403:
                     var gitResponse = JSON.parse(body);
                     console.log('Abuse Rate. Trying again in one second;');
                     console.log(body, response.statusCode);
-                    remakeRequest(options, requestCallback);
+                    // remakeRequest(options, requestCallback);
                     break;
                 case 304:
                     console.log('No new changes to the option on github');

@@ -13,5 +13,8 @@
     "web-bootstrap": "./node_modules/meanio/resources/web-bootstrap.js",
     "angular-ui-select": "latest",
     "angular-sanitize": "latest"
+  },
+  "devDependencies": {
+    "livereload-js": "^2.2.1"
   }
 }

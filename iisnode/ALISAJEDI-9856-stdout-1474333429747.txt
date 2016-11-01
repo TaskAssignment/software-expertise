@@ -1,0 +1,2 @@
+GET / 404 13 - 12.878 ms
+Mean app started on port \\.\pipe\bd415ad5-c5c9-448f-b3c9-443b722af2f9 (development) cluster.worker.id: 0

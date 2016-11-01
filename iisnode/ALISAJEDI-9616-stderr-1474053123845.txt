@@ -1,0 +1,2 @@
+Error: failed to connect to server [localhost:27017] on first connect
+**Could not connect to MongoDB. Please ensure mongod is running and restart MEAN app.**
